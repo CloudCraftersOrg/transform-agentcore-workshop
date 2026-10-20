@@ -193,7 +193,7 @@ def test_no_gate_picker_or_change_path_while_an_agent_works(env):
         at.run()
         assert at.button(key="new_run").disabled and at.segmented_control(key="mode_seg").proto.disabled
         replay = at.toggle(key="replay_on")  # P1-11: the menu says why Replay can't be switched on now
-        assert replay.disabled and replay.label == "Replay (available when no agent is running)"
+        assert replay.disabled and replay.label == "Replay (Available When No Agent Is Running)"
         assert not at.get("file_uploader")  # no requirements picker (the agent may be reading them)
         assert not {"approve", "request_changes", "approve_previous"} & keys(at)  # no gate while busy
         chat = at.chat_input(key="chat")
@@ -204,7 +204,7 @@ def test_no_gate_picker_or_change_path_while_an_agent_works(env):
     time.sleep(0.2)
     at.run()
     assert not at.button(key="new_run").disabled and "approve" in keys(at)
-    assert at.toggle(key="replay_on").label == "Replay a recorded run (offline)"
+    assert at.toggle(key="replay_on").label == "Replay a Recorded Run (Offline)"
 
 
 # ----------------------------------------------------------------------------- 11/14. result cards
@@ -228,13 +228,13 @@ def test_render_final_warns_when_a_result_comes_with_an_error():
     assert not at.exception, [e.value for e in at.exception]
     assert any("reported an error" in w.value and "ThrottlingException" in w.value for w in at.warning)
     assert not any("✅ Done" in m.value for m in at.markdown)
-    assert any("Simulated drift" in m.value and "3 hand-edit violations" in m.value for m in at.markdown)
+    assert any("Simulated Drift" in m.value and "3 hand-edit violations" in m.value for m in at.markdown)
 
 
 def test_drift_toggle_reaches_k8s_validation_only(env):
     at = app()
     toggle = at.toggle(key="simulate_drift_w")
-    assert toggle.label == "Simulate manual drift (demo)" and "detect & fix" in toggle.help
+    assert toggle.label == "Simulate Manual Drift (Demo)" and "detect & fix" in toggle.help
     toggle.set_value(True).run()
     p = start(at)
     for _ in STAGES[:4]:
@@ -243,7 +243,7 @@ def test_drift_toggle_reaches_k8s_validation_only(env):
     sent = {stage: req.options for stage, req in at.session_state["client"].calls}
     assert sent["k8s_validation"]["simulate_drift"] is True
     assert all("simulate_drift" not in o for s, o in sent.items() if s != "k8s_validation")
-    assert any("Simulated drift" in m.value for m in at.markdown)
+    assert any("Simulated Drift" in m.value for m in at.markdown)
 
 
 # ----------------------------------------------------------------------------- 7. replay default
@@ -345,8 +345,86 @@ def test_dialog_and_presenter_css():
     assert 'div[role="dialog"]' not in CSS  # N9: role="dialog" sits on a section element: never matched
     assert '[role="dialog"] [data-testid="stForm"]' in CSS
     offset = int(re.search(r"--tx-top-offset:\s*(\d+)px", PRESENTER_CSS).group(1))
-    assert offset >= 96  # N2: nothing lands under the progress strip
-    header = re.search(r'\[data-testid="stHeader"\]\s*\{([^}]*)\}', PRESENTER_CSS).group(1)
-    assert "var(--tx-canvas)" in header and "height: var(--tx-band-h)" in header  # an opaque band, not glass
+    assert offset >= 96  # N2: nothing lands under the progress strip (it lives in the sticky top bar)
+    assert re.search(r"--tx-scale:\s*1\.2\b", PRESENTER_CSS)  # presenter mode scales everything uniformly
+    sticky = re.search(r':has\(> \.st-key-topbar\)\s*\{([^}]*)\}', CSS).group(1)
+    assert "position: sticky" in sticky and "top: 0" in sticky
+    topbar = re.search(r'\.st-key-topbar \{([^}]*)\}', CSS).group(1)  # an opaque copy of the pane, not glass
+    assert "background-attachment: fixed" in topbar and "var(--tx-mesh)" in topbar
     gate = re.search(r'\[data-testid="stLayoutWrapper"\]:has\(> \.st-key-gate\)\s*\{([^}]*)\}', CSS).group(1)
     assert "bottom: var(--tx-chat-h)" in gate  # N1: flush on the bottom band, no gap to see through
+
+
+# ----------------------------------------------------------------------------- dark theme
+
+
+def styles(at: AppTest) -> str:
+    return "\n".join(h.value for h in at.get("html") if "<style>" in h.value)
+
+
+def test_theme_toggle_sets_state_and_the_url(env):
+    from ui.style import CSS, DARK_CSS, title_case
+
+    at = app()
+    assert at.session_state["theme"] == "light" and "theme" not in at.query_params
+    button = at.button(key="theme_toggle")
+    assert button.label == "Dark Theme" == title_case("dark theme") and button.help == "Dark Theme"
+    assert CSS in styles(at) and DARK_CSS not in styles(at)  # light mode: the base CSS alone
+    p = start(at)
+    click(at, "theme_toggle")
+    assert at.session_state["theme"] == "dark" and at.query_params["theme"] in ("dark", ["dark"])
+    assert at.query_params["run"] in (p.run_id, [p.run_id])  # next to run=, not instead of it
+    assert DARK_CSS in styles(at) and CSS in styles(at)  # the dark block only swaps tokens on top of the base CSS
+    button = at.button(key="theme_toggle")
+    assert button.label == "Light Theme" and button.help == "Light Theme"
+    assert at.session_state["pipeline"] is p and p.status("discovery") == AWAITING and "approve" in keys(at)
+    click(at, "theme_toggle")
+    assert at.session_state["theme"] == "light" and "theme" not in at.query_params
+    assert DARK_CSS not in styles(at)
+
+
+def test_theme_survives_a_reload_presenter_mode_and_a_new_run(env):
+    from ui.style import DARK_CSS
+
+    at = app({"theme": "dark", "presenter": "1"})  # a reload: a new session reads ?theme=dark
+    assert at.session_state["theme"] == "dark" and DARK_CSS in styles(at)
+    start(at)
+    at.run()
+    click(at, "new_run")
+    assert at.query_params["theme"] in ("dark", ["dark"]) and at.query_params["presenter"] in ("1", ["1"])
+    assert "run" not in at.query_params and DARK_CSS in styles(at)
+
+
+def test_dark_css_only_swaps_tokens_and_light_css_has_no_hard_coded_surfaces():
+    from ui.style import CSS, DARK_CSS, DARK_TOKENS, PRESENTER_CSS, style_text
+
+    light = style_text(CSS)
+    for value in ("#191823", "#0c0b13", "#ececf2", "#a9acff", "color-scheme: dark"):
+        assert value not in light, value  # nothing of the night palette leaks into light mode
+    assert not re.search(r"background(-color)?:\s*#fff\b", light.split("--tx-card:")[1].split("}", 1)[1])
+    dark = style_text(DARK_CSS)
+    assert "color-scheme: dark" in dark and f"--tx-card: {DARK_TOKENS['card']}" in dark
+    assert "--tx-ink-3: #8f8fa0" in dark and "--tx-indigo: #5e62d0" in dark and "--tx-indigo-ink: #a9acff" in dark
+    # portals and native pieces are covered: select menus, tooltips, dialogs, toasts, code, scrollbars, selection
+    for selector in ("stSelectboxVirtualDropdown", "stTooltipContent", "stChatInputTextArea", "stCode", "stJson",
+                     "::selection", "scrollbar-color", "stCheckbox", "stAlertContainer"):
+        assert selector in dark, selector
+    assert not re.search(r"font-weight:\s*(700|bold)", dark) and "orange" not in dark.lower()
+    assert PRESENTER_CSS.count("<style>") == 1
+
+
+def test_the_cost_chart_follows_the_theme():
+    from ui import views as v
+
+    def colours(chart) -> set[str]:
+        spec = chart.to_dict()
+        found = {row["color"] for rows in spec["datasets"].values() for row in rows if "color" in row}
+        found |= {str(layer.get("mark", {}).get("color")) for layer in spec["layer"]}
+        return found
+
+    light = colours(v.cost_chart(72, 623, 208, 450, 365, True))
+    dark = colours(v.cost_chart(72, 623, 208, 450, 365, True, dark=True))
+    assert {v.T["chart_today"], v.T["chart_over"], v.T["chart_optimized"]} <= light
+    palette = v.CHART_PALETTES["dark"]
+    assert {palette["today"], palette["over"], palette["optimized"], palette["ink"], palette["budget"]} <= dark
+    assert v.T["chart_today"] not in dark and palette["ink"] not in light

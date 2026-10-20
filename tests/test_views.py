@@ -17,6 +17,15 @@ RECORDED = ROOT / "samples" / "recorded-run"
 FIXTURES = ROOT / "tests" / "fixtures"
 
 
+KPI_RE = re.compile(r'<div class="tx-kpi"[^>]*><div class="tx-kpi-l">(.*?)</div><div class="tx-kpi-v">(.*?)</div>')
+
+
+def kpi_pairs(markup: list[str]) -> list[tuple[str, str]]:
+    """(label, value as text) for every HTML KPI on the page ("62/100", "$208")."""
+    return [(label, re.sub(r"<[^>]+>|\s", "", value).replace("&#36;", "$"))
+            for m in markup for label, value in KPI_RE.findall(m)]
+
+
 def recorded(stage: str) -> dict:
     return json.loads((RECORDED / stage / "result.json").read_text())
 
@@ -101,7 +110,7 @@ def test_live_card_shows_the_checklist_with_the_timeline_collapsed_and_one_sente
     [timeline] = at.status
     assert timeline.label == "Timeline · 2 steps so far" and not timeline.proto.expanded
     markup = [m.value for m in at.markdown]
-    assert any("Render the tested pattern" in m and "tx2-chip" in m for m in markup)  # the phase checklist
+    assert any("Render the Tested Pattern" in m and "tx2-chip" in m for m in markup)  # the checklist, Title Case
     [narration] = [m for m in markup if "tx2-narration" in m]
     # turns are kept apart, and the half-finished sentence before submit_result is skipped
     assert "Both tests passed." in narration and "chan" not in narration and "Migration" not in narration
@@ -164,7 +173,7 @@ def test_discovery_and_requirements_kpis():
     assert kpis[0].value == str(len(findings)) and kpis[0].delta == f"{critical} critical" and kpis[0].color == "red"
     assert kpis[1].value.endswith("/100") and kpis[2].value == "Replatform"
     req = v.stage_kpis("requirements", v.requirements_facts(fixture("requirements")["data"]))
-    assert [k.label for k in req] == ["Requirements", "Open questions", "Budget"] and req[2].value == "$450/mo"
+    assert [k.label for k in req] == ["Requirements", "Open Questions", "Budget"] and req[2].value == "$450/mo"
 
 
 def test_open_questions_count_only_unresolved_ones():
@@ -174,7 +183,7 @@ def test_open_questions_count_only_unresolved_ones():
                                {"id": "Q-03", "question": "Window?", "assumption": "Weekend"}]}
     facts = v.requirements_facts(data)
     assert facts["questions"] == 2 and facts["questions_resolved"] == 1
-    kpi = next(k for k in v.stage_kpis("requirements", facts) if k.label == "Open questions")
+    kpi = next(k for k in v.stage_kpis("requirements", facts) if k.label == "Open Questions")
     assert kpi.value == "2" and kpi.delta == "1 resolved by you"
     markup = v.questions_html(data["open_questions"])
     assert markup.count("Resolved") == 1 and "Size for today" in markup and markup.count(">Open<") == 2
@@ -203,7 +212,7 @@ def test_terraform_prefers_tool_verified_checks_and_flags_contradicting_coverage
     facts = v.terraform_facts(data)
     checks = data["spec_checks"]
     kpis = v.stage_kpis("terraform", facts)
-    assert [k.label for k in kpis] == ["Validate", "Spec checks", "Kubernetes"]
+    assert [k.label for k in kpis] == ["Validate", "Spec Checks", "Kubernetes"]
     assert kpis[1].value == f"{sum(c['status'] == 'pass' for c in checks)}/{len(checks)}"
     assert kpis[2].value == data["kubernetes_version"]  # the FinOps reveal's setup must be on screen
     odd = {"network": {"azs": 2, "nat_gateways": 1}, "database": {"multi_az": True},
@@ -248,7 +257,7 @@ def test_finops_alert_chart_and_kpis_from_the_data():
     assert title == f"Kubernetes {facts['version']} is in EKS extended support: +{v.money(surcharge)}/month"
     assert f"Upgrade to {facts['target_version']} (FO-01)" in text
     kpis = v.stage_kpis("finops", facts)
-    assert [k.label for k in kpis] == ["Today", "As designed", "Optimized"]
+    assert [k.label for k in kpis] == ["Today", "As Designed", "Optimized"]
     assert kpis[1].value == v.money(data["target_as_designed"]["monthly_usd"]) and kpis[1].color == "red"
     assert kpis[2].delta.endswith("under budget") and kpis[2].color == "green"
     chart = v.cost_chart(facts["today"], facts["designed"], facts["optimized"], facts["budget"], facts["surcharge"],
@@ -343,11 +352,11 @@ def test_finale_numbers_come_from_the_pipeline(tmp_path):
     assert tiles["Requirements"].value == str(len(p.data("requirements")["requirements"]))
     assert tiles["Tests"].value == "{}/{}".format(*v.test_counts(p.data("modernization")["tests"]))
     assert tiles["Infrastructure"].value == "Valid"
-    assert tiles["Smoke tests"].value == "5/5"
+    assert tiles["Smoke Tests"].value == "5/5"
     fin = p.data("finops")
-    assert tiles["Monthly cost"].value == " → ".join(v.money(fin[k]["monthly_usd"]) for k in
+    assert tiles["Monthly Cost"].value == " → ".join(v.money(fin[k]["monthly_usd"]) for k in
                                                      ("current", "target_as_designed", "target_optimized"))
-    assert tiles["Caught before go-live"].value == f"{v.money(v.finops_facts(fin)['surcharge'])}/mo"
+    assert tiles["Caught Before Go-Live"].value == f"{v.money(v.finops_facts(fin)['surcharge'])}/mo"
     assert v.minutes_phrase(120.4) == "About 2 minutes" and v.minutes_phrase(30) == "Under a minute"
     assert v.minutes_phrase(None) == ""
 
@@ -444,16 +453,18 @@ def test_recorded_cards_render_and_presenter_mode_hides_json_and_telemetry(prese
     at.session_state["pipeline_stub"] = BrokenPipeline()
     at.run()
     assert not at.exception, [e.value for e in at.exception]
+    markup = [m.value for m in at.markdown]
     # presenter mode drops the FinOps KPI row: the cost chart above it carries the same numbers
-    assert len(at.metric) == 3 * len(STAGES) - (3 if presenter else 0)
-    assert {m.label for m in at.metric} >= {"Findings", "Tests", "Spec checks", "Violations", "Smoke tests"}
-    assert ("As designed" in {m.label for m in at.metric}) is not presenter
-    telemetry = [c.value for c in at.caption if "tokens" in c.value]
+    labels = [label for label, _ in kpi_pairs(markup)]
+    assert len(labels) == 3 * len(STAGES) - (3 if presenter else 0)
+    assert set(labels) >= {"Findings", "Tests", "Spec Checks", "Violations", "Smoke Tests"}
+    assert ("As Designed" in labels) is not presenter
+    assert not at.metric  # KPIs are one quiet HTML row, never st.metric tiles
+    telemetry = [m for m in markup if "tx-telemetry" in m and "tokens" in m]
     if presenter:
         assert not at.json and not telemetry
     else:
         assert len(at.json) == len(STAGES) and len(telemetry) == len(STAGES)
-    markup = [m.value for m in at.markdown]
     # the model's summary: one clamped line with the full text as its tooltip, none in presenter mode; the full
     # text always opens the Overview tab
     clamped = [m for m in markup if "tx2-summary" in m]
@@ -462,8 +473,8 @@ def test_recorded_cards_render_and_presenter_mode_hides_json_and_telemetry(prese
     else:
         assert len(clamped) == len(STAGES) and all("-webkit-line-clamp:1" in m and 'title="' in m for m in clamped)
     assert sum("The model&#x27;s summary." in m or "The model's summary." in m for m in markup) == len(STAGES)
-    assert any(m.value.startswith("**In AWS Transform**") for m in at.markdown)
-    assert any("Simulated drift" in m.value for m in at.markdown)
+    assert any("tx-bridge" in m and "<b>In AWS Transform</b>" in m and "<b>Benefit</b>" in m for m in markup)
+    assert any("Simulated Drift" in m.value for m in at.markdown)
 
 
 def _render_requirements_revision():
@@ -493,23 +504,68 @@ def test_requirements_revision_says_so_and_shows_resolved_and_open_pills(present
     [questions] = [m for m in markup if "Your decision:" in m]
     assert questions.count(">Resolved<") == resolved
     assert questions.count(">Open<") == len(data["open_questions"]) - resolved
-    assert any(m.label == "Open questions" and m.value == str(len(data["open_questions"]) - resolved)
-               for m in at.metric)
+    assert ("Open Questions", str(len(data["open_questions"]) - resolved)) in kpi_pairs(markup)
 
 
-def _rem_sizes(markup: str) -> list[float]:
-    """Every font-size in px (at the shell's 18 px root)."""
-    return [float(x) * 18 for x in re.findall(r"font-size:([\d.]+)rem", markup)]
+def test_small_text_stays_legible_and_no_robot_or_sparkle_icons():
+    """Small labels may be 12 px now (the delicate look), never smaller than 11.5 px; the tertiary grey keeps
+    WCAG AA on white; no robot or sparkle icons."""
+    from ui.style import CSS, TOKENS
 
+    sizes = [float(x) * 15 for x in re.findall(r"font-size:\s*([\d.]+)rem", CSS)]
+    assert sizes and min(sizes) >= 11.5
+    inline = v.chip("tool") + v.chip("model") + v.evidence_html("17 findings", "Replatform") + v.kv_html(
+        [("Instance", "t3.large")]) + v.phases_html(v.phase_views("discovery", _tools(("scan_codebase", ""))))
+    assert not re.findall(r"font-size:\s*[\d.]+px", inline)  # sizes come from the CSS classes
 
-def test_small_labels_are_at_least_14px_and_no_robot_or_sparkle_icons():
-    assert min(_rem_sizes(v.chip("tool") + v.chip("model"))) >= 14
-    assert min(_rem_sizes(v.evidence_html("17 findings", "Replatform"))) >= 14
-    assert min(_rem_sizes(v.kv_html([("Instance", "t3.large")]))) >= 14
-    assert min(_rem_sizes(v.phases_html(v.phase_views("discovery", _tools(("scan_codebase", "")))))) >= 14
+    def luminance(hex_colour: str) -> float:
+        rgb = [int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        lin = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb]
+        return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+    assert TOKENS["ink3"] == "#737380" and (1.05 / (luminance(TOKENS["ink3"]) + 0.05)) >= 4.5
     source = (ROOT / "ui" / "views.py").read_text()
     assert "smart_toy" not in source and "auto_awesome" not in source
     assert v.AGENT_AVATAR == ":material/hub:" and "lightbulb" in v.chip("model")
+
+
+def test_hero_numbers_are_thin_with_quiet_units():
+    """GUIDELINES.md "Numbers": a leading "$" at 70%, units and denominators small and grey, arrows quieter."""
+    assert v.figure_html("62/100") == "62<small> / 100</small>"
+    assert v.figure_html("$450/mo") == '<span class="tx-cur">&#36;</span>450<small>/mo</small>'
+    assert v.figure_html("4 → 0") == '4<span class="tx-arr">→</span>0'
+    assert v.figure_html("Replatform") == "Replatform" and v.figure_html("<b>") == "&lt;b&gt;"
+    markup = v.kpis_html([v.Kpi("Findings", "17", "3 critical", "red"), v.Kpi("Readiness", "50/100", "some prep")])
+    assert 'class="tx-kpi-s tx-bad">3 critical' in markup and ">Some prep<" in markup  # captions: sentence case
+    from ui.style import CSS
+    value = re.search(r"\.tx-kpi-v \{([^}]*)\}", CSS).group(1)
+    assert "font-weight: 300" in value and "tabular-nums lining-nums" in value and "-.02em" in value
+
+
+def test_no_bold_700_anywhere():
+    """Inter 300/400/500/600 only: no 700 in the CSS, the theme or the font files."""
+    from ui.style import CSS
+
+    assert not re.search(r"font-weight:\s*(700|bold)", CSS + v.CSS)
+    config = (ROOT / "ui" / ".streamlit" / "config.toml").read_text()
+    weights = sorted(int(w) for w in re.findall(r"^weight = (\d+)", config, re.M))
+    assert weights == [300, 400, 500, 600] and "Inter-Bold" not in config
+    assert "700" not in re.search(r"headingFontWeights = \[([^]]*)\]", config).group(1)
+    for name in ("Inter-Light", "Inter-Regular", "Inter-Medium", "Inter-SemiBold", "MaterialSymbolsRounded"):
+        assert (ROOT / "ui" / "static" / f"{name}.woff2").exists(), name
+
+
+def test_tables_are_quiet_html():
+    markup = v.table_html(fixture("discovery")["data"]["findings"][:2],
+                          [*v.FINDING_COLUMNS, ("Evidence", "evidence")],
+                          kinds={"Severity": "sev", "ID": "id", "Evidence": "code"})
+    assert markup.startswith('<div class="tx-tbl-wrap"><table class="tx-tbl">') and "<th>Severity</th>" in markup
+    assert 'class="tx-sev tx-t-' in markup and 'td class="tx-id tx-nw"' not in markup and 'class="tx-code"' in markup
+    assert v.table_html([], [("A", "a")]) == ""
+    long = v.table_html([{"a": i} for i in range(9)], [("A", "a")], scroll_after=7)
+    assert "tx-tscroll" in long and "max-height" in long
+    assert v.result_html("✓\u00a0Pass") == '<span class="tx-sev tx-t-ok"><i></i>Pass</span>'
+    assert v.table_html([{"x": "y"}], [("column header", "x")]).count("<th>Column Header</th>") == 1
 
 
 def test_headline_clamps_the_summary_to_one_line():
@@ -523,6 +579,33 @@ def test_headline_clamps_the_summary_to_one_line():
 def test_finale_tiles_fit_without_truncation():
     tiles = v.finale_tiles({"stages": {"finops": {"today": 72, "designed": 623, "optimized": 208, "extended": True,
                                                   "surcharge": 365}}})
-    caught = next(t for t in tiles if t.label == "Caught before go-live")
+    caught = next(t for t in tiles if t.label == "Caught Before Go-Live")
     assert caught.value == "$365/mo" and caught.delta == "EKS extended support"
-    assert ".st-key-finale [data-testid=\"stMetricDelta\"]" in v.CSS  # a long caption wraps instead of "supp…"
+    # the cost path gets the widest column, and a long caption wraps instead of "supp…"
+    (row, grid), = [r for r in v.finale_rows(tiles) if any(t.label == "Monthly Cost" for t in r[0])]
+    assert grid.split()[[t.label for t in row].index("Monthly Cost")] == "minmax(0,2.2fr)"
+    from ui.style import CSS
+    caption = re.search(r"\.tx-kpi-s \{([^}]*)\}", CSS).group(1)
+    assert "ellipsis" not in caption and "nowrap" not in caption
+
+
+def test_title_case_for_labels_and_sentence_case_for_sentences():
+    """GUIDELINES.md "Capitalization": one helper Title Cases labels that name things; sentences stay as they are."""
+    from ui.style import STAGE_META, STATUS_WORDS, sentence_case, title_case
+
+    cases = {"Approve and continue": "Approve and Continue", "live deploy to kind": "Live Deploy to kind",
+             "finops right-sizing": "FinOps Right-Sizing", "ask for changes": "Ask for Changes",
+             "what the six agents do": "What the Six Agents Do", "the legacy estate": "The Legacy Estate",
+             "show aws transform notes": "Show AWS Transform Notes", "start migration": "Start Migration",
+             "download all artifacts": "Download All Artifacts", "caught before go-live": "Caught Before Go-Live",
+             "in progress": "In Progress", "scale up": "Scale Up", "agentcore": "AgentCore",
+             "Nova 2 Lite": "Nova 2 Lite", "DeepSeek V3.2": "DeepSeek V3.2", "open app.py": "Open app.py",
+             "saves / month": "Saves / Month", "how (model-written)": "How (Model-Written)", "": ""}
+    for raw, expected in cases.items():
+        assert title_case(raw) == expected, raw
+    assert title_case(title_case("live deploy to kind")) == "Live Deploy to kind"  # idempotent
+    assert all(title_case(w) == w for w in STATUS_WORDS.values())
+    assert all(title_case(m.title) == m.title and title_case(m.short) == m.short for m in STAGE_META.values())
+    assert sentence_case("some preparation needed") == "Some preparation needed"
+    assert sentence_case("3 critical") == "3 critical" and sentence_case("") == ""
+    assert sentence_case("terraform validate · 2 runs") == "terraform validate · 2 runs"  # a command stays as typed

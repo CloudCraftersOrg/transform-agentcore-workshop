@@ -31,17 +31,20 @@ from transform_agents.core import STAGES
 from transform_agents.core.runner import LEAKED_MARKER_RE, TextScrubber
 
 from .bridge import StageJob
-from .style import STAGE_META, TOKENS
+from .style import STAGE_META, TOKENS, sentence_case, title_case
 
 _TOKEN_DEFAULTS = {
-    "canvas": "#F6F4FB", "card": "#FFFFFF", "border": "#E0E0E0", "text": "#242424", "text2": "#616161",
-    "disabled": "#707070", "indigo": "#5B5FC7", "indigo_pressed": "#4F52B2", "indigo_tint": "#EBEBF8",
-    "success": "#0E700E", "success_bg": "#F1FAF1", "warning": "#8A3707", "warning_bg": "#FFF9F5",
-    "danger": "#C50F1F", "danger_bg": "#FDF3F4", "info": "#0F6CBD", "info_bg": "#EBF3FC",
-    "chart_today": "#8A8886", "chart_over": "#C50F1F", "chart_optimized": "#5B5FC7", "chart_budget": "#616161",
+    "ink": "#18181d", "ink2": "#5d5d69", "ink3": "#737380", "hair": "rgba(20,20,40,.08)", "hair2": "rgba(20,20,40,.05)",
+    "indigo": "#5b5fc7", "indigo_ink": "#4b4fb4", "indigo_wash": "rgba(91,95,199,.07)",
+    "ok": "#1f7a3a", "warn": "#a15c07", "bad": "#c4314b", "dot_ok": "#34a853", "dot_warn": "#e0a106",
+    "dot_idle": "#c7c7d1", "chart_today": "#c9c9d3", "chart_designed": "#efc6cd", "chart_over": "#c4314b",
+    "chart_optimized": "#5b5fc7", "chart_budget": "#737380", "chart_grid": "rgba(20,20,40,.06)",
+    "text": "#18181d", "text2": "#5d5d69", "disabled": "#737380", "border": "rgba(20,20,40,.08)",
+    "indigo_pressed": "#4b4fb4", "indigo_tint": "rgba(91,95,199,.07)", "success": "#1f7a3a", "warning": "#a15c07",
+    "danger": "#c4314b",
 }
 T = {**_TOKEN_DEFAULTS, **(TOKENS if isinstance(TOKENS, dict) else {})}
-DESIGNED_OVER = "#E58A93"  # the as-designed bar when it is over budget; its extended-support segment is chart_over
+DESIGNED_OVER = T["chart_designed"]  # the as-designed bar when it is over budget; its extended-support segment is chart_over
 
 AGENT_AVATAR = ":material/hub:"
 LIVE_TOOL_LINES = 12
@@ -49,18 +52,13 @@ LANGUAGES = {".py": "python", ".md": "markdown", ".tf": "hcl", ".hcl": "hcl", ".
              ".yml": "yaml", ".json": "json", ".sql": "sql", ".sh": "bash", ".toml": "toml", ".html": "html",
              ".ini": "ini", ".cfg": "ini", ".conf": "nginx", ".service": "ini", ".txt": "text"}
 
-# Extra CSS for app.py to inject. The markup below is styled inline (TOKENS), so this only adds motion and the
-# finale tiles' wrapping. Never write a less-than sign followed by a letter in here (tests/test_ui.py): the HTML
-# sanitizer would drop the whole style block.
+# Extra CSS for app.py to inject. The cards are styled by classes in ui/style.py (CSS); this only keeps the spinner
+# available when views.py is used on its own. Never write a less-than sign followed by a letter in here
+# (tests/test_ui.py): the HTML sanitizer would drop the whole style block.
 CSS = """
 <style>
 @keyframes tx2-spin { to { transform: rotate(360deg); } }
 .tx2-spin { animation: tx2-spin 1.1s linear infinite; }
-.tx2-row:last-child { border-bottom: none !important; }
-.tx2-timeline { max-height: none; }
-.st-key-finale [data-testid="stMetricLabel"], .st-key-finale [data-testid="stMetricLabel"] *,
-.st-key-finale [data-testid="stMetricDelta"], .st-key-finale [data-testid="stMetricDelta"] * {
-  white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
 </style>
 """
 
@@ -318,191 +316,150 @@ def meta_attr(stage: str, name: str, default: str = "") -> str:
     return str(getattr(meta_of(stage), name, "") or default)
 
 
-# --------------------------------------------------------------------------- inline HTML (styled with TOKENS)
-
-_ICON_STYLE = ("font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;line-height:1;"
-               "letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;"
-               "font-feature-settings:'liga';-webkit-font-smoothing:antialiased;vertical-align:middle;flex:none;")
+# --------------------------------------------------------------------------- inline HTML (classes from ui/style.py)
 
 
 def rem(px: float) -> str:
-    """Sizes in px at the 18 px root the shell uses, emitted in rem so presenter mode scales them."""
-    return f"{px / 18:.4g}rem"
+    """Sizes in px at the 15 px root the shell uses, emitted in rem so presenter mode scales them."""
+    return f"{px / 15:.4g}rem"
 
 
-def ic(name: str, color: str | None = None, size: float = 20, spin: bool = False) -> str:
-    style = f"{_ICON_STYLE}font-size:{rem(size)};" + (f"color:{color};" if color else "")
+def ic(name: str, color: str | None = None, size: float | None = None, spin: bool = False) -> str:
+    """A Material Symbols glyph (weight 300 by the shell CSS); colour and size only when they mean something."""
+    style = (f"font-size:{rem(size)};" if size else "") + (f"color:{color};" if color else "")
     cls = "tx-ms tx2-spin" if spin else "tx-ms"
-    return f'<span class="{cls}" aria-hidden="true" style="{style}">{esc(name)}</span>'
+    attr = f' style="{style}"' if style else ""
+    return f'<span class="{cls}" aria-hidden="true"{attr}>{esc(name)}</span>'
 
 
-def tile(symbol: str, size: int = 40) -> str:
-    return (f'<div style="flex:none;width:{rem(size)};height:{rem(size)};border-radius:{rem(12)};'
-            f'background:{T["indigo_tint"]};display:flex;align-items:center;justify-content:center">'
-            f'{ic(symbol or "hub", T["indigo"], size * 0.6)}</div>')
+def tile(symbol: str, large: bool = False) -> str:
+    return f'<div class="tx-tile{" tx-lg" if large else ""}">{ic(symbol or "hub")}</div>'
 
 
 def chip(kind: str) -> str:
+    """Who did a step: deterministic code ("Tool") or the model ("Model")."""
     if kind == "model":
-        bg, fg, icon, text = T["indigo_tint"], T["indigo_pressed"], "lightbulb", "Model"
-    else:
-        bg, fg, icon, text = "#F0F0F0", T["text2"], "build", "Tool"
-    return (f'<span class="tx2-chip" style="flex:none;display:inline-flex;align-items:center;gap:3px;'
-            f'padding:1px 9px 1px 7px;border-radius:999px;background:{bg};color:{fg};font-size:{rem(14)};'
-            f'font-weight:600;line-height:1.5">{ic(icon, fg, 15)}{text}</span>')
+        return f'<span class="tx2-chip tx-model">{ic("lightbulb")}Model</span>'
+    return f'<span class="tx2-chip">{ic("build")}Tool</span>'
 
 
 def muted_html(text: str, icon: str | None = None) -> str:
-    lead = ic(icon, T["text2"], 18) if icon else ""
-    return (f'<div style="display:flex;gap:8px;align-items:center;color:{T["text2"]};font-size:{rem(15)};'
-            f'line-height:1.45">{lead}<span>{esc(text)}</span></div>')
+    return f'<div class="tx-note">{ic(icon) if icon else ""}<span>{esc(text)}</span></div>'
 
 
 def header_html(stage: str, attempt: int, right: str, title: str | None = None, overline: str | None = None) -> str:
-    """Icon tile, "Step n of 6 · <title>" (or an overline plus a big title), and something on the right."""
+    """Icon tile, "Step n of 6" over the stage title (or an overline over a custom title), and a quiet state."""
     meta_title = meta_attr(stage, "title", humanize(stage))
-    step = f"Step {step_number(stage)} of {len(STAGES)} · {meta_title}"
+    step = f"Step {step_number(stage)} of {len(STAGES)}"
     revision = f" · revision {attempt - 1}" if (whole(attempt) or 1) > 1 else ""
     if title is None:
-        text = (f'<div style="font-size:{rem(18)};font-weight:600;line-height:1.35;color:inherit">{esc(step)}'
-                f'<span style="color:{T["text2"]};font-weight:500">{esc(revision)}</span></div>')
+        text = f'<div class="tx-step">{esc(step)}{esc(revision)}</div><div class="tx-title">{esc(meta_title)}</div>'
     else:
-        text = (f'<div style="font-size:{rem(14)};font-weight:600;color:{T["text2"]};line-height:1.4">'
-                f'{esc(overline or step)}{esc(revision)}</div>'
-                f'<div style="font-size:{rem(21)};font-weight:600;line-height:1.3;color:inherit">{title}</div>')
-    return (f'<div style="display:flex;align-items:center;gap:{rem(12)}">{tile(meta_attr(stage, "symbol"))}'
-            f'<div style="flex:1;min-width:0">{text}</div>'
-            f'<div style="flex:none;display:flex;align-items:center;gap:{rem(8)};flex-wrap:wrap;'
-            f'justify-content:flex-end">{right}</div></div>')
+        text = (f'<div class="tx-step">{esc(overline or f"{step} · {meta_title}")}{esc(revision)}</div>'
+                f'<div class="tx-title">{title}</div>')
+    return f'<div class="tx-head">{tile(meta_attr(stage, "symbol"))}<div class="tx-head-t">{text}</div>{right}</div>'
+
+
+STATE_ICONS = {"done": "check_circle", "warning": "warning", "failed": "error", "running": "progress_activity"}
 
 
 def status_pill(state: str, text: str) -> str:
-    icon, fg, bg = {"done": ("check_circle", T["success"], T["success_bg"]),
-                    "warning": ("warning", T["warning"], T["warning_bg"]),
-                    "failed": ("error", T["danger"], T["danger_bg"]),
-                    "running": ("progress_activity", T["indigo_pressed"], T["indigo_tint"])}.get(
-        state, ("info", T["text2"], "#F5F5F5"))
-    return (f'<span style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px 3px 8px;'
-            f'border-radius:999px;background:{bg};color:{fg};font-size:{rem(14)};font-weight:600;white-space:nowrap">'
-            f'{ic(icon, fg, 18, spin=state == "running")}{esc(text)}</span>')
+    """The card's state on the right of its header: quiet grey text with a small coloured icon."""
+    icon = STATE_ICONS.get(state, "info")
+    return f'<span class="tx-state tx-{esc(state)}">{ic(icon, spin=state == "running")}{esc(text)}</span>'
 
 
 def plain_pill(text: str, icon: str | None = None) -> str:
-    lead = ic(icon, T["text2"], 16) if icon else ""
-    return (f'<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;'
-            f'border:1px solid {T["border"]};background:#FFFFFF;color:{T["text2"]};font-size:{rem(14)};'
-            f'font-weight:600;white-space:nowrap">{lead}{esc(text)}</span>')
+    return f'<span class="tx-state">{ic(icon) if icon else ""}{esc(text)}</span>'
 
 
 def headline_html(headline: str, summary: str = "", revised: bool = False) -> str:
     """The deterministic headline, the model's summary clamped to ONE line (the full text is the tooltip and opens
     the Overview tab; presenter mode passes no summary) and, on a revision, "Revised after your feedback"."""
-    out = (f'<div class="tx2-headline" style="font-size:{rem(20)};font-weight:600;line-height:1.4;color:inherit">'
-           f'{esc(headline)}</div>') if headline else ""
+    out = f'<div class="tx-h tx2-headline">{esc(headline)}</div>' if headline else ""
     if summary:
-        out += (f'<div class="tx2-summary" title="{esc(summary)}" style="margin-top:2px;color:{T["text2"]};'
-                f'font-size:{rem(15.5)};line-height:1.5;display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;'
-                f'-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere">{esc(summary)}</div>')
+        out += (f'<div class="tx-lede tx2-summary" title="{esc(summary)}" style="display:-webkit-box;'
+                f'-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;'
+                f'overflow-wrap:anywhere">{esc(summary)}</div>')
     if revised:
-        out += f'<div style="margin-top:2px">{muted_html("Revised after your feedback", "edit_note")}</div>'
-    return f"<div>{out}</div>" if out else ""
+        out += f'<div class="tx-revised">{ic("edit_note")}Revised after your feedback</div>'
+    return f'<div class="tx-lead">{out}</div>' if out else ""
 
 
 def summary_html(summary: str) -> str:
-    """The model's full summary, at the top of the Overview tab (the card clamps it to one line, or hides it)."""
-    return (f'<div style="display:flex;gap:8px;align-items:flex-start;color:{T["text2"]};font-size:{rem(15.5)};'
-            f'line-height:1.5">{ic("lightbulb", T["indigo_pressed"], 18)}<div style="min-width:0">'
-            f'<span style="font-weight:600;color:{T["text"]}">The model\'s summary.</span> {esc(summary)}</div></div>')
+    """The model's full summary, in the Overview tab (the card clamps it to one line, or hides it)."""
+    return (f'<div class="tx-summary">{ic("lightbulb")}<div><b>The model\'s summary.</b> {esc(summary)}</div></div>')
 
 
 def evidence_html(found: str, decided: str) -> str:
-    def box(icon: str, label: str, text: str, bg: str, fg: str, border: str) -> str:
-        return (f'<div style="border:1px solid {border};border-radius:{rem(14)};padding:{rem(10)} {rem(14)};'
-                f'background:{bg};min-width:0">'
-                f'<div class="tx2-ev-label" style="display:flex;align-items:center;gap:6px;font-size:{rem(14)};'
-                f'font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:{fg}">{ic(icon, fg, 17)}'
-                f'{esc(label)}</div>'
-                f'<div style="margin-top:4px;font-size:{rem(16.5)};font-weight:600;line-height:1.4;color:{T["text"]}">'
-                f'{esc(text)}</div></div>')
-
-    return (f'<div class="tx2-evidence" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));'
-            f'gap:{rem(12)}">'
-            + box("build", "Tools found", found or "–", "#FFFFFF", T["text2"], T["border"])
-            + box("lightbulb", "Model decided", decided or "–", T["indigo_tint"], T["indigo_pressed"], "#D6D7F3")
-            + "</div>")
+    """One quiet row: what the tools found, and what the model decided."""
+    return ('<div class="tx2-evidence tx-ev2">'
+            f'<div class="tx-ev"><span class="tx-ev-l">{ic("build")}Tools Found</span>'
+            f'<span class="tx-ev-v">{esc(found or "–")}</span></div>'
+            f'<div class="tx-ev tx-ev-model"><span class="tx-ev-l">{ic("lightbulb")}Model Decided</span>'
+            f'<span class="tx-ev-v">{esc(decided or "–")}</span></div></div>')
 
 
 def alert_html(title: str, text: str) -> str:
-    """A Fluent MessageBar: danger colour bar, icon, title and text."""
-    return (f'<div role="alert" style="display:flex;gap:{rem(10)};align-items:flex-start;padding:{rem(10)} {rem(14)};'
-            f'border-radius:{rem(10)};background:{T["danger_bg"]};border:1px solid #F3C4C8;'
-            f'border-left:4px solid {T["danger"]}">{ic("warning", T["danger"], 22)}'
-            f'<div style="line-height:1.45;min-width:0"><div style="font-weight:700;font-size:{rem(16.5)};'
-            f'color:{T["danger"]}">{esc(title)}</div>'
-            f'<div style="font-size:{rem(15.5)};color:{T["text"]}">{esc(text)}</div></div></div>')
+    """A soft danger message: icon, title and text on a faint red tint."""
+    body = f'<div class="tx-alert-x">{esc(text)}</div>' if text else ""
+    return (f'<div class="tx-alert" role="alert">{ic("warning")}<div><div class="tx-alert-t">{esc(title)}</div>'
+            f'{body}</div></div>')
 
 
-def kv_html(pairs: Iterable[tuple[str, Any]], min_width: int = 190) -> str:
+def kv_html(pairs: Iterable[tuple[str, Any]], min_width: int = 180) -> str:
+    """Facts as a quiet grid: a small grey label over the value, no boxes."""
     cells = []
     for key, value in pairs:
         if value is None or value == "" or value == [] or value == {}:
             continue
-        cells.append(f'<div style="padding:{rem(8)} {rem(12)};border:1px solid {T["border"]};border-radius:{rem(10)};'
-                     f'background:#FFFFFF;min-width:0"><div class="tx2-kv-label" style="font-size:{rem(14.5)};'
-                     f'color:{T["text2"]}">'
-                     f'{esc(key)}</div><div style="font-weight:600;font-size:{rem(15.5)};overflow-wrap:anywhere;'
-                     f'color:{T["text"]}">{esc(fmt_value(value))}</div></div>')
+        cells.append(f'<div><div class="tx-kv-l tx2-kv-label">{esc(title_case(key))}</div>'
+                     f'<div class="tx-kv-v">{esc(fmt_value(value))}</div></div>')
     if not cells:
         return ""
-    return (f'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax({min_width}px,1fr));'
-            f'gap:{rem(8)}">{"".join(cells)}</div>')
+    return (f'<div class="tx-kv" style="grid-template-columns:repeat(auto-fill,minmax({rem(min_width)},1fr))">'
+            f'{"".join(cells)}</div>')
 
 
 def flow_html(found: int, fixed: int, left: int) -> str:
-    """4 found → 4 fixed → 0 left, as three pills."""
-    def pill(icon: str, value: int, word: str, fg: str, bg: str) -> str:
-        return (f'<span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;'
-                f'background:{bg};color:{fg};font-size:{rem(16)};font-weight:600">{ic(icon, fg, 20)}'
-                f'<span style="font-size:{rem(20)}">{value}</span> {esc(word)}</span>')
+    """4 found → 4 fixed → 0 left, as thin numbers in one line."""
+    arrow = '<span class="tx-arr">→</span>'
+    return (f'<div class="tx-flow" aria-label="{found} found, {fixed} fixed, {left} left">'
+            f'<span><b>{found}</b>found</span>{arrow}<span><b>{fixed}</b>fixed</span>{arrow}'
+            f'<span class="{"tx-good" if left == 0 else "tx-bad"}"><b>{left}</b>left</span></div>')
 
-    arrow = ic("arrow_forward", T["text2"], 20)
-    left_bg, left_fg = (T["success_bg"], T["success"]) if left == 0 else (T["danger_bg"], T["danger"])
-    return (f'<div aria-label="{found} found, {fixed} fixed, {left} left" style="display:flex;align-items:center;'
-            f'gap:10px;flex-wrap:wrap">{pill("report", found, "found", T["warning"], T["warning_bg"])}{arrow}'
-            f'{pill("build", fixed, "fixed", T["indigo_pressed"], T["indigo_tint"])}{arrow}'
-            f'{pill("check_circle" if left == 0 else "error", left, "left", left_fg, left_bg)}</div>')
+
+def dot_html(text: str, tone: str = "") -> str:
+    """A status word with a 7 px dot in front (tone: c | h | m | l for severities, ok | warn | bad | idle)."""
+    return f'<span class="tx-sev tx-t-{esc(tone or "m")}"><i></i>{esc(text)}</span>'
 
 
 def questions_html(questions: list[dict]) -> str:
-    """Open questions: "Resolved" (success pill + the reviewer's decision) or "Open" (+ the agent's assumption)."""
+    """Open questions: "Resolved" (and the reviewer's decision) or "Open" (and the agent's assumption)."""
     rows = []
     for q in rows_of(questions):
         settled = str(q.get("status") or "").strip().lower() == "resolved"
         if settled:
-            pill = status_pill("done", "Resolved")
+            status = dot_html("Resolved", "ok")
             body = f"Your decision: {plain(q.get('resolution')) or 'resolved in review'}"
         else:
-            pill = plain_pill("Open", "help")
+            status = dot_html("Open", "warn")
             body = f"Assumption: {plain(q.get('assumption')) or 'none recorded'}"
             if q.get("impact"):
                 body += f" · Impact: {plain(q.get('impact'))}"
-        qid = f'<span style="color:{T["text2"]};font-weight:600">{esc(plain(q.get("id")))}</span> ' if q.get("id") else ""
-        rows.append(f'<div class="tx2-row" style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;'
-                    f'border-bottom:1px solid #EFEFEF"><div style="flex:none;width:{rem(118)}">{pill}</div>'
-                    f'<div style="min-width:0;line-height:1.45"><div style="font-weight:600;font-size:{rem(16)}">'
-                    f'{qid}{esc(plain(q.get("question")) or "?")}</div><div style="color:{T["text2"]};'
-                    f'font-size:{rem(15)}">{esc(body)}</div></div></div>')
-    return f'<div style="display:flex;flex-direction:column">{"".join(rows)}</div>' if rows else ""
+        rows.append(f'<tr class="tx2-row-q"><td class="tx-nw">{status}</td><td class="tx-id">{esc(nb(q.get("id")))}</td>'
+                    f'<td>{esc(plain(q.get("question")) or "?")}</td><td class="tx-muted">{esc(body)}</td></tr>')
+    if not rows:
+        return ""
+    return ('<div class="tx-tbl-wrap"><table class="tx-tbl"><thead><tr><th>Status</th><th>ID</th><th>Question</th>'
+            f'<th>Assumption or Decision</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>')
 
 
 def html_block(markup: str, slot: Any = None) -> None:
-    """Inline HTML through st.markdown (one line, so markdown never re-parses it). Streamlit pulls every markdown
-    block up by 1rem to swallow a paragraph's bottom margin, which raw HTML does not have: without the padding the
-    next element overlaps the block's last line (a clipped "Revised after your feedback"). The padding gives that
-    space back minus 10 px, so a block sits 6 px above whatever follows it, at any presenter scale."""
+    """Inline HTML through st.markdown, on one line so markdown never re-parses it. The .tx-blk wrapper tells the
+    shell CSS to drop Streamlit's -1rem paragraph pull-up, which raw HTML has nothing to cancel."""
     if markup:
-        (slot or st).markdown(f'<div style="padding-bottom:calc(1rem - 10px)">{markup}</div>'.replace("\n", " "),
-                              unsafe_allow_html=True)
+        (slot or st).markdown(f'<div class="tx-blk">{markup}</div>'.replace("\n", " "), unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------- tools, phases and the timeline
@@ -924,26 +881,27 @@ def phase_views(stage: str, tools: list[dict], running: bool = True) -> list[Pha
     return views
 
 
-PHASE_LOOK = {"done": ("check_circle", "success", "Done"), "current": ("progress_activity", "indigo", "In progress"),
-              "next": ("radio_button_unchecked", "disabled", "Next"),
-              "skipped": ("do_not_disturb_on", "disabled", "Not needed"), "failed": ("error", "danger", "Failed")}
+# icon, colour (a CSS token, so the dark theme recolours it), word
+PHASE_LOOK = {"done": ("check_circle", "var(--tx-dot-ok)", "Done"),
+              "current": ("progress_activity", "var(--tx-accent)", "In Progress"),
+              "next": ("radio_button_unchecked", "var(--tx-dot-idle)", "Next"),
+              "skipped": ("do_not_disturb_on", "var(--tx-dot-idle)", "Not Needed"),
+              "failed": ("error", "var(--tx-bad)", "Failed")}
 
 
 def phases_html(views: list[PhaseView]) -> str:
+    """The live checklist: one quiet row per phase (state icon, name, who does it, what came out)."""
     rows = []
     for view in views:
         icon, color, word = PHASE_LOOK.get(view.state, PHASE_LOOK["next"])
-        label_color = T["text"] if view.state in ("done", "current", "failed") else T["text2"]
+        quiet = "" if view.state in ("done", "current", "failed") else " tx-quiet"
         note = view.outcome if view.state in ("done", "failed") and view.outcome else word
         if view.state == "current" and view.outcome:
-            note = f"In progress · {view.outcome}"
-        rows.append(f'<div class="tx2-row" style="display:flex;align-items:center;gap:10px;padding:5px 0;'
-                    f'border-bottom:1px solid #EFEFEF">{ic(icon, T[color], 20, spin=view.state == "current")}'
-                    f'<span style="font-weight:600;font-size:{rem(16)};color:{label_color};white-space:nowrap">'
-                    f'{esc(view.label)}</span>{chip(view.kind)}<span style="flex:1;min-width:0;color:{T["text2"]};'
-                    f'font-size:{rem(15)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{esc(note)}</span>'
-                    f'</div>')
-    return f'<div style="display:flex;flex-direction:column">{"".join(rows)}</div>' if rows else ""
+            note = f"In Progress · {view.outcome}"
+        rows.append(f'<div class="tx2-row">{ic(icon, color, spin=view.state == "current")}'
+                    f'<span class="tx-row-l{quiet}">{esc(title_case(view.label))}</span>{chip(view.kind)}'
+                    f'<span class="tx-row-n">{esc(note)}</span></div>')
+    return f'<div class="tx-phases">{"".join(rows)}</div>' if rows else ""
 
 
 def tool_duration(tool: dict, now: float | None = None) -> float | None:
@@ -962,21 +920,17 @@ def timeline_html(tools: list[dict], limit: int | None = None, now: float | None
     rows = [muted_html(f"{plural(hidden, 'earlier step')} above", "more_horiz")] if hidden else []
     for tool in tools[hidden:]:
         status = tool.get("status")
-        icon, color = {"running": ("progress_activity", T["indigo"]), "error": ("error", T["danger"])}.get(
-            status, ("check_circle", T["success"]))
+        icon, color = {"running": ("progress_activity", "var(--tx-accent)"), "error": ("error", "var(--tx-bad)")}.get(
+            status, ("check_circle", "var(--tx-dot-ok)"))
         info = tool_info(tool.get("name"))
         seconds = tool_duration(tool, now)
         duration = f"{seconds:.1f} s" if seconds is not None and seconds >= 0.1 else ""
         outcome = tool_outcome(tool) or ("Working…" if status == "running" else "")
-        rows.append(f'<div class="tx2-row" style="display:flex;align-items:center;gap:10px;padding:5px 0;'
-                    f'border-bottom:1px solid #EFEFEF">{ic(icon, color, 18, spin=status == "running")}'
-                    f'<span style="font-weight:600;font-size:{rem(15)};white-space:nowrap">'
-                    f'{esc(tool_label(tool.get("name"), tool.get("input")))}</span>{chip(info.kind)}'
-                    f'<span style="flex:1;min-width:0;color:{T["text2"]};font-size:{rem(14.5)};white-space:nowrap;'
-                    f'overflow:hidden;text-overflow:ellipsis">{esc(outcome)}</span>'
-                    f'<span style="flex:none;color:{T["text2"]};font-size:{rem(14)};'
-                    f'font-variant-numeric:tabular-nums">{esc(duration)}</span></div>')
-    return f'<div class="tx2-timeline" style="display:flex;flex-direction:column">{"".join(rows)}</div>'
+        rows.append(f'<div class="tx2-row">{ic(icon, color, spin=status == "running")}'
+                    f'<span class="tx-row-l">{esc(title_case(tool_label(tool.get("name"), tool.get("input"))))}</span>'
+                    f'{chip(info.kind)}<span class="tx-row-n">{esc(outcome)}</span>'
+                    f'<span class="tx-row-t">{esc(duration)}</span></div>')
+    return f'<div class="tx2-timeline tx-timeline">{"".join(rows)}</div>'
 
 
 def status_note(message: Any) -> str:
@@ -989,23 +943,22 @@ def status_note(message: Any) -> str:
 
 def live_header_html(stage: str, attempt: int, elapsed: float, status: str, model: str, hide_model: bool) -> str:
     doing = meta_attr(stage, "doing") or f"Working on {meta_attr(stage, 'title', humanize(stage))}"
-    title = (f'{esc(doing)} <span style="color:{T["text2"]};font-weight:500;font-variant-numeric:tabular-nums">'
-             f'· {max(int(elapsed), 0)} s</span>')
-    right = status_pill("running", "Working")
-    if model and not hide_model:
-        right += plain_pill(friendly_model(model), "memory")
+    title = f'{esc(doing)} <span class="tx-elapsed">· {max(int(elapsed), 0)} s</span>'
+    who = f'<span class="tx-sep">·</span>{esc(friendly_model(model))}' if model and not hide_model else ""
+    right = f'<span class="tx-state tx-running">{ic("progress_activity", spin=True)}Working{who}</span>'
     out = header_html(stage, attempt, right, title=title)
+    notes = []
     if note := status_note(status):
-        out += f'<div style="margin-top:8px">{muted_html(note, "info")}</div>'
+        notes.append(muted_html(note, "info"))
     if idea := IDEAS.get(stage):
-        out += f'<div style="margin-top:6px">{muted_html(idea, "lightbulb")}</div>'
+        notes.append(muted_html(idea, "lightbulb"))
+    if notes:
+        out += f'<div class="tx-live-notes">{"".join(notes)}</div>'
     return out
 
 
 def narration_html(line: str) -> str:
-    return (f'<div class="tx2-narration" style="display:flex;gap:8px;align-items:flex-start;color:{T["text2"]};'
-            f'font-style:italic;'
-            f'font-size:{rem(15.5)};line-height:1.5">{ic("chat_bubble", T["text2"], 18)}<span>{esc(line)}</span></div>')
+    return f'<div class="tx2-narration">{ic("chat_bubble")}<span>{esc(line)}</span></div>'
 
 
 # --------------------------------------------------------------------------- facts: what each result says, in numbers
@@ -1015,7 +968,7 @@ class Kpi(NamedTuple):
     label: str
     value: str
     delta: str | None = None
-    color: str = "gray"  # st.metric delta_color
+    color: str = "gray"  # caption tone: red | green | orange carry meaning; anything else is neutral
     help: str | None = None
 
 
@@ -1291,10 +1244,45 @@ def coverage_conflicts(d: dict) -> dict[str, str]:
 # --------------------------------------------------------------------------- KPIs, headlines, evidence
 
 
-def show_metric(kpi: Kpi, slot: Any = None) -> None:
-    """st.metric renders label, value and delta as markdown: "$" is escaped so "$72 → $623" never turns into math."""
-    (slot or st).metric(md(kpi.label), md(kpi.value), delta=md(kpi.delta) if kpi.delta else None,
-                        delta_color=kpi.color, delta_arrow="off", help=kpi.help, width="stretch")
+KPI_TONE = {"red": "tx-bad", "green": "tx-good", "orange": "tx-warn"}  # colour only where it carries meaning
+_FIGURE_RE = re.compile(r"^(\$?)(\d[\d,]*(?:\.\d+)?)(?:\s*/\s*(\d[\d,]*))?(\s?(?:/mo|/month|ms|s|%|k))?$")
+
+
+def figure_html(value: Any) -> str:
+    """A hero number, thin and tabular (GUIDELINES.md): a leading "$" at 70%, units and denominators ("/ 100", "/mo",
+    "%", "s") in small grey, arrows quieter still. Anything that is not a number is shown as it is."""
+    out = []
+    for part in re.split(r"\s*→\s*", plain(value)):
+        m = _FIGURE_RE.match(part)
+        if not m:
+            out.append(esc(part))
+            continue
+        currency, number, denominator, unit = m.groups()
+        markup = ('<span class="tx-cur">&#36;</span>' if currency else "") + esc(number)
+        if denominator:
+            markup += f"<small> / {esc(denominator)}</small>"
+        if unit:
+            unit = unit.strip()
+            markup += f"<small>{esc(unit if unit.startswith('/') or unit in ('%', 'k') else chr(0x2009) + unit)}</small>"
+        out.append(markup)
+    return '<span class="tx-arr">→</span>'.join(out)
+
+
+def kpis_html(kpis: Iterable[Kpi], columns: int | None = None, grid: str | None = None) -> str:
+    """KPIs as one row with hairline dividers: a Title Case label, a thin number and a sentence-case caption.
+    `grid` overrides the even columns (grid-template-columns)."""
+    kpis = [k for k in kpis if isinstance(k, Kpi)]
+    if not kpis:
+        return ""
+    cells = []
+    for k in kpis:
+        tip = f' title="{esc(k.help)}"' if k.help else ""
+        sub = (f'<div class="tx-kpi-s {KPI_TONE.get(k.color, "")}">{esc(sentence_case(plain(k.delta)))}</div>'
+               if k.delta else "")
+        cells.append(f'<div class="tx-kpi"{tip}><div class="tx-kpi-l">{esc(title_case(k.label))}</div>'
+                     f'<div class="tx-kpi-v">{figure_html(k.value)}</div>{sub}</div>')
+    grid = grid or f"repeat({columns or max(3, len(kpis))},minmax(0,1fr))"
+    return f'<div class="tx-kpis" style="grid-template-columns:{grid}">{"".join(cells)}</div>'
 
 
 def stage_kpis(stage: str, f: dict) -> list[Kpi]:
@@ -1303,14 +1291,14 @@ def stage_kpis(stage: str, f: dict) -> list[Kpi]:
         if f.get("findings") is not None:
             crit = f.get("critical") or 0
             k.append(Kpi("Findings", str(f["findings"]), f"{crit} critical" if crit else "none critical",
-                         "red" if crit else "green"))
+                         "red" if crit else "gray"))
         if f.get("readiness") is not None:
             r = f["readiness"]
             word, color = ("blockers first", "orange") if r < 50 else (
-                ("some prep needed", "gray") if r < 75 else ("ready to move", "green"))
+                ("some preparation needed", "gray") if r < 75 else ("ready to move", "gray"))
             k.append(Kpi("Readiness", f"{r:.0f}/100", word, color))
         if f.get("strategy"):
-            k.append(Kpi("Strategy", cap(f["strategy"]), "the model's call", "violet"))
+            k.append(Kpi("Strategy", cap(f["strategy"]), "the model's call", "gray"))
     elif stage == "requirements":
         if f.get("requirements") is not None:
             traced = f.get("traced") or 0
@@ -1319,9 +1307,9 @@ def stage_kpis(stage: str, f: dict) -> list[Kpi]:
         if f.get("questions") is not None:
             resolved = f.get("questions_resolved") or 0
             if resolved:
-                k.append(Kpi("Open questions", str(f["questions"]), f"{resolved} resolved by you", "green"))
+                k.append(Kpi("Open Questions", str(f["questions"]), f"{resolved} resolved by you", "gray"))
             else:
-                k.append(Kpi("Open questions", str(f["questions"]),
+                k.append(Kpi("Open Questions", str(f["questions"]),
                              "assumptions recorded" if f["questions"] else "none", "gray"))
         if f.get("budget") is not None:
             k.append(Kpi("Budget", f"{money(f['budget'])}/mo",
@@ -1329,15 +1317,15 @@ def stage_kpis(stage: str, f: dict) -> list[Kpi]:
     elif stage == "modernization":
         p, t, ok = f.get("tests_passed"), f.get("tests_total"), f.get("tests_ok")
         if t:
-            k.append(Kpi("Tests", f"{p}/{t}", "passing" if p == t else f"{t - p} failing", "green" if p == t else "red"))
+            k.append(Kpi("Tests", f"{p}/{t}", "passing" if p == t else f"{t - p} failing", "gray" if p == t else "red"))
         elif ok is not None:
-            k.append(Kpi("Tests", "Passed" if ok else "Failed", None, "green" if ok else "red"))
+            k.append(Kpi("Tests", "Passed" if ok else "Failed", None, "gray" if ok else "red"))
         if f.get("routes_total"):
             missing = f.get("routes_missing") or 0
-            k.append(Kpi("API routes", f"{f['routes_ported']} ported",
-                         "contract kept" if not missing else f"{missing} missing", "green" if not missing else "red"))
+            k.append(Kpi("API Routes", f"{f['routes_ported']} ported",
+                         "contract kept" if not missing else f"{missing} missing", "gray" if not missing else "red"))
         elif f.get("endpoints"):
-            k.append(Kpi("API endpoints", str(f["endpoints"]), None))
+            k.append(Kpi("API Endpoints", str(f["endpoints"]), None))
         if f.get("files") is not None:
             k.append(Kpi("Files", str(f["files"]), plural(f.get("changes"), "change") if f.get("changes") else None))
     elif stage == "terraform":
@@ -1346,11 +1334,11 @@ def stage_kpis(stage: str, f: dict) -> list[Kpi]:
             note = "terraform validate" if level in (None, "terraform") else f"{level} checks only"
             if f.get("attempts"):
                 note += f" · {plural(f['attempts'], 'run')}"
-            k.append(Kpi("Validate", "Passed" if f["valid"] else "Not passed", note, "green" if f["valid"] else "red"))
+            k.append(Kpi("Validate", "Passed" if f["valid"] else "Not passed", note, "gray" if f["valid"] else "red"))
         if f.get("checks_total"):
             p, t = f.get("checks_passed") or 0, f["checks_total"]
-            k.append(Kpi("Spec checks", f"{p}/{t}", "tool-verified" if p == t else f"{t - p} mismatched",
-                         "green" if p == t else "red"))
+            k.append(Kpi("Spec Checks", f"{p}/{t}", "tool-verified" if p == t else f"{t - p} mismatched",
+                         "gray" if p == t else "red"))
         if f.get("k8s"):
             k.append(Kpi("Kubernetes", str(f["k8s"]), "from the spec", "gray"))
     elif stage == "k8s_validation":
@@ -1358,20 +1346,20 @@ def stage_kpis(stage: str, f: dict) -> list[Kpi]:
         if found:
             k.append(Kpi("Violations", f"{found} → {left}", f"{fixed} fixed", "green" if not left else "orange"))
         elif found == 0:
-            k.append(Kpi("Violations", "0", "none found", "green"))
+            k.append(Kpi("Violations", "0", "none found", "gray"))
         elif f.get("checks_total"):
             k.append(Kpi("Checks", f"{f.get('checks_pass', 0)}/{f['checks_total']}", "passing", "gray"))
         if f.get("smoke_total"):
             sp, stt = f.get("smoke_passed") or 0, f["smoke_total"]
             note = "oversell blocked (409)" if f.get("oversell_blocked") and sp == stt else (
                 "all passing" if sp == stt else f"{stt - sp} failing")
-            k.append(Kpi("Smoke tests", f"{sp}/{stt}", note, "green" if sp == stt else "red"))
+            k.append(Kpi("Smoke Tests", f"{sp}/{stt}", note, "gray" if sp == stt else "red"))
         elif f.get("score") is not None:
             k.append(Kpi("Score", f"{f['score']:.0f}/100", None))
         deploy = f.get("deploy")
         if deploy:
             if deploy == "pass":
-                k.append(Kpi("Deploy", "Live on kind", "rolled out", "green"))
+                k.append(Kpi("Deploy", "Live on kind", "rolled out", "gray"))
             elif deploy == "fail":
                 k.append(Kpi("Deploy", "Failed", "see Details", "red"))
             else:
@@ -1383,11 +1371,11 @@ def stage_kpis(stage: str, f: dict) -> list[Kpi]:
         if designed is not None:
             if budget:
                 over = designed > budget
-                k.append(Kpi("As designed", money(designed),
+                k.append(Kpi("As Designed", money(designed),
                              f"{money(abs(designed - budget))} {'over' if over else 'under'} budget",
                              "red" if over else "green"))
             else:
-                k.append(Kpi("As designed", money(designed), "per month", "gray"))
+                k.append(Kpi("As Designed", money(designed), "per month", "gray"))
         if optimized is not None:
             if budget:
                 over = optimized > budget
@@ -1530,146 +1518,216 @@ def finops_alert(f: dict) -> tuple[str, str] | None:
 # --------------------------------------------------------------------------- the FinOps chart
 
 CHART_HEIGHT = 230  # px: with the alert above it, it fits above the sticky gate when the card lands at 1280x720
+CHART_FONT = "Inter, -apple-system, system-ui, sans-serif"
+# The chart is drawn by Vega (canvas), so it can't read the CSS tokens: each theme passes its own colours. The meaning
+# stays the same: today muted grey, the over-budget design a soft red with the surcharge in red, optimized indigo.
+CHART_PALETTES = {
+    "light": {"today": T["chart_today"], "designed": T["chart_designed"], "over": T["chart_over"],
+              "optimized": T["chart_optimized"], "budget": T["chart_budget"], "grid": T["chart_grid"],
+              "ink": T["ink"], "ink2": T["ink2"], "ink3": T["ink3"]},
+    "dark": {"today": "#5a5a6e", "designed": "#5a3242", "over": "#f2708a", "optimized": "#6f73e6",
+             "budget": "#8f8fa0", "grid": "rgba(255,255,255,.07)", "ink": "#ececf2", "ink2": "#b3b3c2", "ink3": "#8f8fa0"},
+}
+
+
+def dark_theme() -> bool:
+    try:
+        return st.session_state.get("theme") == "dark"
+    except Exception:  # noqa: BLE001 - outside a script run
+        return False
 
 
 def cost_chart(today: float | None, designed: float | None, optimized: float | None, budget: float | None,
-               surcharge: float = 0.0, over_budget: bool | None = None) -> alt.LayerChart:
-    """Today / as designed / optimized, coloured by meaning, with the extended-support surcharge as its own red
-    segment and a dashed budget line."""
+               surcharge: float = 0.0, over_budget: bool | None = None, scale: float = 1.0,
+               dark: bool = False) -> alt.LayerChart:
+    """Today / as designed / optimized as thin bars with a small top radius: muted grey, a soft red tint for an
+    over-budget design with the extended-support surcharge as its own red segment, indigo for the optimized target,
+    hairline gridlines and a thin dashed budget line. `scale` grows type and bars uniformly (presenter mode); `dark`
+    picks the colours that read on the dark card."""
+    c = CHART_PALETTES["dark" if dark else "light"]
     today, designed, optimized = num(today) or 0.0, num(designed) or 0.0, num(optimized) or 0.0
     budget, surcharge = num(budget), max(num(surcharge) or 0.0, 0.0)
     surcharge = min(surcharge, designed)
     over = over_budget if over_budget is not None else bool(budget and designed > budget)
-    order = ["Today", "As designed", "Optimized"]
-    bars = pd.DataFrame([
-        {"scenario": "Today", "usd": today, "color": T["chart_today"], "order": 0},
-        {"scenario": "As designed", "usd": designed - surcharge, "color": DESIGNED_OVER if over else T["chart_today"],
-         "order": 0},
-        {"scenario": "As designed", "usd": surcharge, "color": T["chart_over"], "order": 1},
-        {"scenario": "Optimized", "usd": optimized, "color": T["chart_optimized"], "order": 0},
-    ])
-    bars = bars[bars["usd"] > 0]
+    order = ["Today", "As Designed", "Optimized"]
+    base_color = c["designed"] if over else c["today"]
+    rounded = [{"scenario": "Today", "y0": 0.0, "y1": today, "color": c["today"]},
+               {"scenario": "Optimized", "y0": 0.0, "y1": optimized, "color": c["optimized"]}]
+    square = []
+    if surcharge > 0:
+        square.append({"scenario": "As Designed", "y0": 0.0, "y1": designed - surcharge, "color": base_color})
+        rounded.append({"scenario": "As Designed", "y0": designed - surcharge, "y1": designed, "color": c["over"]})
+    else:
+        rounded.append({"scenario": "As Designed", "y0": 0.0, "y1": designed, "color": base_color})
+    rounded = pd.DataFrame([r for r in rounded if r["y1"] > r["y0"]])
+    square = pd.DataFrame([r for r in square if r["y1"] > r["y0"]])
     totals = pd.DataFrame({"scenario": order, "usd": [today, designed, optimized],
                            "label": [money(today), money(designed), money(optimized)]})
     top = max([today, designed, optimized, budget or 0.0]) or 1.0
-    y_scale = alt.Scale(domain=[0, top * 1.18], nice=False)
+    height = round(CHART_HEIGHT * scale)
+    y_scale = alt.Scale(domain=[0, top * 1.22], nice=False)
     x = alt.X("scenario:N", sort=order, title=None,
-              axis=alt.Axis(labelAngle=0, labelFontSize=17, labelColor=T["text"], labelFontWeight=600, ticks=False,
-                            domainColor=T["border"], labelPadding=8, labelLimit=0))
-    layers: list[Any] = [
-        alt.Chart(bars).mark_bar(size=96, cornerRadiusTopLeft=0, cornerRadiusTopRight=0).encode(
-            x=x,
-            y=alt.Y("usd:Q", stack="zero", scale=y_scale, title=None,
-                    axis=alt.Axis(format="$,.0f", labelFontSize=16, labelColor=T["text2"], grid=True,
-                                  gridColor="#EDEDED", domain=False, ticks=False, tickCount=4)),
-            color=alt.Color("color:N", scale=None, legend=None),
-            order=alt.Order("order:Q", sort="ascending"),
-            tooltip=[alt.Tooltip("scenario:N", title="Scenario"), alt.Tooltip("usd:Q", title="USD / month",
-                                                                                format="$,.2f")]),
-        alt.Chart(totals).mark_text(dy=-12, fontSize=18, fontWeight="bold", color=T["text"]).encode(
-            x=alt.X("scenario:N", sort=order), y=alt.Y("usd:Q", scale=y_scale), text="label:N"),
-    ]
+              axis=alt.Axis(labelAngle=0, labelFontSize=13 * scale, labelColor=c["ink2"], labelFontWeight=500,
+                            labelFont=CHART_FONT, ticks=False, domain=False, labelPadding=10 * scale, labelLimit=0))
+    y_axis = alt.Axis(format="$,.0f", labelFontSize=12 * scale, labelColor=c["ink3"], labelFont=CHART_FONT,
+                      grid=True, gridColor=c["grid"], gridWidth=1, domain=False, ticks=False, tickCount=4,
+                      labelPadding=8 * scale)
+    bar = 44 * scale
+    tooltip = [alt.Tooltip("scenario:N", title="Scenario"), alt.Tooltip("y1:Q", title="USD / month", format="$,.2f")]
+    layers: list[Any] = []
+    if not square.empty:
+        layers.append(alt.Chart(square).mark_bar(size=bar).encode(
+            x=x, y=alt.Y("y0:Q", scale=y_scale, title=None, axis=y_axis), y2="y1:Q",
+            color=alt.Color("color:N", scale=None, legend=None), tooltip=tooltip))
+    layers.append(alt.Chart(rounded).mark_bar(size=bar, cornerRadiusTopLeft=4 * scale,
+                                              cornerRadiusTopRight=4 * scale).encode(
+        x=x, y=alt.Y("y0:Q", scale=y_scale, title=None, axis=y_axis), y2="y1:Q",
+        color=alt.Color("color:N", scale=None, legend=None), tooltip=tooltip))
+    layers.append(alt.Chart(totals).mark_text(dy=-12 * scale, fontSize=21 * scale, fontWeight=300, font=CHART_FONT,
+                                              color=c["ink"], baseline="bottom").encode(
+        x=alt.X("scenario:N", sort=order), y=alt.Y("usd:Q", scale=y_scale), text="label:N"))
     if surcharge > 0:
         # A two-line callout right of the red segment, kept clear of the dashed budget line: centred on the segment
         # when the line is far, else just above it (or just below when the bar ends too close above the line).
-        px = top * 1.18 / CHART_HEIGHT  # USD per pixel
-        centre = designed - surcharge / 2  # of the two-line block (36 px tall)
-        if budget and abs(centre - budget) < 26 * px:
-            centre = budget + 28 * px if designed - budget > 50 * px else budget - 28 * px
-        note = pd.DataFrame({"scenario": ["As designed"], "usd": [centre + 9 * px],  # the first line's middle
+        px = top * 1.22 / height  # USD per pixel
+        centre = designed - surcharge / 2  # of the two-line block (32 px tall)
+        if budget and abs(centre - budget) < 24 * scale * px:
+            centre = budget + 26 * scale * px if designed - budget > 46 * scale * px else budget - 26 * scale * px
+        note = pd.DataFrame({"scenario": ["As Designed"], "usd": [centre + 8 * scale * px],  # the first line's middle
                              "label": [f"+{money(surcharge)}/mo\nextended support"]})
-        layers.append(alt.Chart(note).mark_text(align="left", baseline="middle", dx=56, fontSize=15,
-                                                fontWeight="bold", color=T["chart_over"], lineBreak="\n",
-                                                lineHeight=18).encode(
+        layers.append(alt.Chart(note).mark_text(align="left", baseline="middle", dx=bar / 2 + 12 * scale,
+                                                fontSize=12 * scale, fontWeight=500, font=CHART_FONT,
+                                                color=c["over"], lineBreak="\n", lineHeight=16 * scale).encode(
             x=alt.X("scenario:N", sort=order), y=alt.Y("usd:Q", scale=y_scale), text="label:N"))
     if budget:
         rule = alt.Chart(pd.DataFrame({"usd": [budget]}))
-        layers.append(rule.mark_rule(color=T["chart_budget"], strokeDash=[6, 4], strokeWidth=2).encode(
+        layers.append(rule.mark_rule(color=c["budget"], strokeDash=[4, 4], strokeWidth=1, opacity=.8).encode(
             y=alt.Y("usd:Q", scale=y_scale)))
-        layers.append(rule.mark_text(align="right", baseline="bottom", dy=-5, x="width", fontSize=16,
-                                     fontWeight="bold", color=T["chart_budget"]).encode(
+        layers.append(rule.mark_text(align="right", baseline="bottom", dy=-5 * scale, x="width", fontSize=12 * scale,
+                                     fontWeight=500, font=CHART_FONT, color=c["budget"]).encode(
             y=alt.Y("usd:Q", scale=y_scale), text=alt.value(f"Budget {money(budget)}")))
-    return alt.layer(*layers).properties(height=CHART_HEIGHT, background="transparent").configure_view(strokeWidth=0)
+    return (alt.layer(*layers).properties(height=height, background="transparent")
+            .configure_view(strokeWidth=0).configure(font=CHART_FONT))
 
 
 # --------------------------------------------------------------------------- tables and sections
 
-
-def _severity_css(value: Any) -> str:
-    v = str(value).strip().lower()
-    if v.startswith("critical"):
-        return f"color:{T['danger']};font-weight:700"
-    if v.startswith("high"):
-        return f"color:{T['warning']};font-weight:700"
-    return ""
+SEVERITY_TONES = {"critical": "c", "high": "h", "medium": "m", "low": "l"}
 
 
-def _result_css(value: Any) -> str:
-    v = str(value).lower()
-    if "pass" in v or v.startswith("yes"):
-        return f"color:{T['success']};font-weight:600"
-    if "fail" in v or v.startswith("no"):
-        return f"color:{T['danger']};font-weight:600"
-    if "warn" in v:
-        return f"color:{T['warning']};font-weight:600"
-    return ""
+def severity_html(value: Any) -> str:
+    """Severity as a 7 px dot and the word: red critical, amber high, grey medium and low."""
+    word = cap(value) or "–"
+    return dot_html(word, SEVERITY_TONES.get(str(value or "").strip().lower(), "m"))
 
 
-RESULT_WORDS = {"pass": "✓\u00a0Pass", "fail": "✗\u00a0Fail", "warn": "!\u00a0Warning", "skipped": "–\u00a0Skipped",
-                "skip": "–\u00a0Skipped"}
-YES, NO = "✓\u00a0Yes", "✗\u00a0No"
+def result_tone(value: Any) -> str:
+    v = str(value or "").lower()
+    if "pass" in v or v.startswith(("yes", "✓")):
+        return "ok"
+    if "fail" in v or v.startswith(("no", "✗")):
+        return "bad"
+    if "warn" in v or v.startswith("!"):
+        return "warn"
+    return "idle"
+
+
+RESULT_WORDS = {"pass": "✓ Pass", "fail": "✗ Fail", "warn": "! Warning", "skipped": "– Skipped",
+                "skip": "– Skipped"}
+YES, NO = "✓ Yes", "✗ No"
 
 
 def result_word(status: Any) -> str:
     return RESULT_WORDS.get(str(status or "").strip().lower(), cap(status) or "–")
 
 
+def result_html(value: Any) -> str:
+    """"✓ Pass" and friends as a dot and the word (green pass or yes, red fail or no, amber warning, grey skipped)."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    word = re.sub(r"^[✓✗!–]\s*", "", text.replace(" ", " ")).strip() or text
+    return dot_html(word, result_tone(text))
+
+
 Column = tuple[str, str | Callable[[dict], Any]]
+# How a column renders: id (tertiary, no wrap), code (monospace), sev (severity dot), result (pass/fail dot),
+# num (right-aligned figures), muted (secondary text).
+CELL_KINDS = ("id", "code", "sev", "result", "num", "muted")
 
 
-def table(rows: Any, columns: list[Column], *, styles: dict[str, Callable[[Any], str]] | None = None,
-          nowrap: Iterable[str] = (), scroll_after: int = 7, empty: str = "Nothing to show.") -> None:
-    """A static, wrapping table with human headers (st.table), scrolling inside the card when it is long."""
-    rows = rows_of(rows)
+def table_html(rows: Any, columns: list[Column], *, kinds: dict[str, str] | None = None, nowrap: Iterable[str] = (),
+               scroll_after: int = 7) -> str:
+    """An HTML table in the mockup's style: 12 px grey Title Case headers, hairline rows, no box, no vertical lines.
+    A long table scrolls inside the card with its header pinned."""
+    rows, kinds, keep = rows_of(rows), dict(kinds or {}), set(nowrap)
     if not rows:
-        st.caption(empty)
-        return
-    data = {}
-    for label, getter in columns:
-        values = []
-        for row in rows:
+        return ""
+    head = []
+    for label, _ in columns:
+        cls = " ".join(c for c in ("tx-num" if kinds.get(label) == "num" else "",
+                                   "tx-nw" if label in keep else "") if c)
+        head.append(f'<th{f" class={chr(34)}{cls}{chr(34)}" if cls else ""}>{esc(title_case(label))}</th>')
+    body = []
+    for row in rows:
+        cells = []
+        for label, getter in columns:
             try:
-                values.append(cell(getter(row) if callable(getter) else row.get(getter)))
-            except Exception:  # noqa: BLE001
-                values.append("")
-        data[label] = values
-    frame = pd.DataFrame(data)
-    styler = frame.style.hide(axis="index")
-    for column, fn in (styles or {}).items():
-        if column in frame.columns:
-            styler = styler.map(fn, subset=[column])
-    keep = [c for c in nowrap if c in frame.columns]
-    if keep:
-        styler = styler.set_properties(subset=keep, **{"white-space": "nowrap"})
-    box = st.container(height=44 * scroll_after + 46, border=False) if len(rows) > scroll_after else st.container()
-    with box:
-        st.table(styler, hide_index=True)
+                value = cell(getter(row) if callable(getter) else row.get(getter))
+            except Exception:  # noqa: BLE001 - an odd row only loses that cell
+                value = ""
+            kind = kinds.get(label, "")
+            classes = [f"tx-{kind}"] if kind in ("id", "code", "num", "muted") else []
+            if label in keep or kind in ("sev", "result"):
+                classes.append("tx-nw")
+            if kind == "sev":
+                classes.append("tx-sevcol")
+            content = severity_html(value) if kind == "sev" else result_html(value) if kind == "result" else esc(value)
+            cls = f' class="{" ".join(classes)}"' if classes else ""
+            cells.append(f"<td{cls}>{content}</td>")
+        body.append(f"<tr>{''.join(cells)}</tr>")
+    scroll = len(rows) > scroll_after
+    style = f' style="max-height:{rem(46 * scroll_after + 42)}"' if scroll else ""
+    return (f'<div class="tx-tbl-wrap{" tx-tscroll" if scroll else ""}"{style}><table class="tx-tbl"><thead><tr>'
+            f'{"".join(head)}</tr></thead><tbody>{"".join(body)}</tbody></table></div>')
 
 
-def subhead(text: str, icon: str | None = None) -> None:
-    st.markdown(f"{f':material/{icon}: ' if icon else ''}**{md(text)}**")
+def table(rows: Any, columns: list[Column], *, kinds: dict[str, str] | None = None, nowrap: Iterable[str] = (),
+          scroll_after: int = 7, empty: str = "Nothing to show.") -> None:
+    """A static, wrapping HTML table (see table_html), or a quiet caption when there is nothing to show."""
+    markup = table_html(rows, columns, kinds=kinds, nowrap=nowrap, scroll_after=scroll_after)
+    if markup:
+        html_block(markup)
+    else:
+        st.caption(empty)
 
 
-def kv(pairs: Iterable[tuple[str, Any]], title: str | None = None, icon: str | None = None) -> None:
+def subhead(text: str, note: str = "") -> None:
+    """A section title (Title Case) with an optional quiet note in sentence case."""
+    extra = f" <span>· {esc(note)}</span>" if note else ""
+    html_block(f'<div class="tx-sub">{esc(text)}{extra}</div>')
+
+
+def kv(pairs: Iterable[tuple[str, Any]], title: str | None = None, note: str = "") -> None:
     markup = kv_html(pairs)
     if not markup:
         return
     if title:
-        subhead(title, icon)
+        subhead(title, note)
     html_block(markup)
 
 
-def raw_json(data: Any, label: str = "Raw result data") -> None:
+def text_block(text: Any) -> None:
+    if plain(text):
+        html_block(f'<div class="tx-text">{esc(plain(text))}</div>')
+
+
+def note_block(text: Any, icon: str = "info") -> None:
+    if plain(text):
+        html_block(muted_html(plain(text), icon))
+
+
+def raw_json(data: Any, label: str = "Raw Result Data") -> None:
     if presenter():
         return
     with st.expander(label, icon=":material/data_object:"):
@@ -1681,21 +1739,24 @@ def guarded(fn: Callable[..., Any], *args: Any, label: str = "this section") -> 
         fn(*args)
         return True
     except Exception as exc:  # noqa: BLE001 - agents may return partial data; never break the transcript
-        st.caption(f":material/info: Could not show {md(label)} ({type(exc).__name__}). The raw data is in Details.")
+        st.caption(f"Could not show {md(label)} ({type(exc).__name__}). The raw data is in Details.")
         return False
 
 
 # ---- discovery
 
+FINDING_COLUMNS: list[Column] = [("Severity", lambda r: r.get("severity")), ("ID", lambda r: nb(r.get("id"))),
+                                 ("Finding", "title")]
+
+
+def sorted_findings(d: dict) -> list[dict]:
+    return sorted(rows_of(d.get("findings")), key=lambda r: (
+        SEVERITY_RANK.get(str(r.get("severity") or "").lower(), 9), str(r.get("id") or "")))
+
 
 def discovery_overview(d: dict, artifacts: dict, f: dict) -> None:
-    rows = sorted(rows_of(d.get("findings")), key=lambda r: (
-        SEVERITY_RANK.get(str(r.get("severity") or "").lower(), 9), str(r.get("id") or "")))
-    subhead("Findings", "search")
-    table(rows, [("Severity", lambda r: cap(r.get("severity"))), ("ID", lambda r: nb(r.get("id"))),
-                 ("Finding", "title"), ("Category", lambda r: cap(r.get("category"))),
-                 ("Evidence", lambda r: short(r.get("evidence"), 80))],
-          styles={"Severity": _severity_css}, nowrap=["Severity", "ID"], empty="No findings.")
+    table(sorted_findings(d), [*FINDING_COLUMNS, ("Evidence", lambda r: short(r.get("evidence"), 80))],
+          kinds={"Severity": "sev", "ID": "id", "Evidence": "code"}, empty="No findings.")
 
 
 def discovery_details(d: dict, artifacts: dict, f: dict) -> None:
@@ -1703,30 +1764,36 @@ def discovery_details(d: dict, artifacts: dict, f: dict) -> None:
     strategy, deps = as_dict(d.get("strategy")), as_dict(d.get("dependencies"))
     volume = as_dict(infra.get("volume"))
     kv([("Name", app.get("name")), ("Framework", app.get("framework")), ("Language", " ".join(
-        str(x) for x in (app.get("language"), app.get("language_version")) if x)), ("Lines of code", app.get("loc")),
-        ("Files", app.get("files")), ("Entry point", app.get("entrypoint")), ("Port", app.get("listen_port"))],
-       "Application", "code")
+        str(x) for x in (app.get("language"), app.get("language_version")) if x)), ("Lines of Code", app.get("loc")),
+        ("Files", app.get("files")), ("Entry Point", app.get("entrypoint")), ("Port", app.get("listen_port"))],
+       "Application")
     kv([("Instance", infra.get("instance_type")), ("vCPU", infra.get("vcpu")), ("Memory", f"{infra['memory_gib']} GiB"
         if infra.get("memory_gib") else None), ("OS", infra.get("os")), ("Region", infra.get("region")),
-        ("Root volume", " · ".join(str(x) for x in (volume.get("type"), f"{volume['size_gib']} GiB"
+        ("Root Volume", " · ".join(str(x) for x in (volume.get("type"), f"{volume['size_gib']} GiB"
                                                     if volume.get("size_gib") else None) if x) or None),
-        ("Process manager", infra.get("process_manager")), ("Reverse proxy", infra.get("reverse_proxy")),
-        ("Source", infra.get("source"))], "Server", "dns")
+        ("Process Manager", infra.get("process_manager")), ("Reverse Proxy", infra.get("reverse_proxy")),
+        ("Source", infra.get("source"))], "Server")
     source = util.get("source")
-    kv([("CPU average", fmt_pct(util.get("cpu_avg_pct")) if util.get("cpu_avg_pct") is not None else None),
+    kv([("CPU Average", fmt_pct(util.get("cpu_avg_pct")) if util.get("cpu_avg_pct") is not None else None),
         ("CPU p95", fmt_pct(util.get("cpu_p95_pct")) if util.get("cpu_p95_pct") is not None else None),
-        ("Memory average", fmt_pct(util.get("mem_avg_pct")) if util.get("mem_avg_pct") is not None else None),
+        ("Memory Average", fmt_pct(util.get("mem_avg_pct")) if util.get("mem_avg_pct") is not None else None),
         ("Period", plural(util["period_days"], "day") if util.get("period_days") else None),
-        ("Source", "estimate (not measured)" if source == "estimate" else source)], "Utilization", "monitoring")
+        ("Source", "estimate (not measured)" if source == "estimate" else source)], "Utilization")
     db = as_dict(deps.get("database"))
-    kv([("Database", db.get("engine")), ("Tables", db.get("tables")), ("Local state", deps.get("local_state")),
-        ("Packages", deps.get("python_packages"))], "Dependencies", "deployed_code")
+    kv([("Database", db.get("engine")), ("Tables", db.get("tables")), ("Local State", deps.get("local_state")),
+        ("Packages", deps.get("python_packages"))], "Dependencies")
     if strategy.get("rationale"):
-        subhead("Why this strategy (the model's reasoning)", "lightbulb")
-        st.markdown(md(plain(strategy["rationale"])))
+        subhead("Why This Strategy", "the model's reasoning")
+        text_block(strategy["rationale"])
+    if rows_of(d.get("findings")):
+        subhead("All Findings", "with category and the full evidence")
+        table(sorted_findings(d), [*FINDING_COLUMNS, ("Category", lambda r: cap(r.get("category"))),
+                                   ("Evidence", "evidence")],
+              kinds={"Severity": "sev", "ID": "id", "Evidence": "code"}, scroll_after=8)
     if rows_of(d.get("components")):
-        subhead("Components", "widgets")
-        table(d.get("components"), [("Component", "name"), ("Kind", "kind"), ("Routes", "routes"), ("Notes", "notes")])
+        subhead("Components")
+        table(d.get("components"), [("Component", "name"), ("Kind", "kind"), ("Routes", "routes"), ("Notes", "notes")],
+              kinds={"Routes": "code", "Notes": "muted"})
 
 
 # ---- requirements
@@ -1735,65 +1802,69 @@ def discovery_details(d: dict, artifacts: dict, f: dict) -> None:
 def requirements_overview(d: dict, artifacts: dict, f: dict) -> None:
     questions = rows_of(d.get("open_questions"))
     resolved = sum(1 for q in questions if question_resolved(q))
-    subhead("Open questions" + (f" ({resolved} resolved by you)" if resolved else " (assumptions the agent made)"),
-            "help")
+    subhead("Open Questions", f"{resolved} resolved by you" if resolved else "assumptions the agent made")
     if questions:
         html_block(questions_html(questions))
     else:
         st.caption("No open questions.")
-    subhead("Requirements", "checklist")
+    subhead("Requirements")
     table(d.get("requirements"), [("ID", lambda r: nb(r.get("id"))), ("Priority", lambda r: cap(r.get("priority"))),
                                   ("Category", lambda r: cap(r.get("category"))), ("Requirement", "text"),
-                                  ("Traces to", lambda r: nb(r.get("traces_to")))], scroll_after=5)
+                                  ("Traces To", lambda r: nb(r.get("traces_to")))],
+          kinds={"ID": "id", "Traces To": "id"}, scroll_after=6)
 
 
 def requirements_details(d: dict, artifacts: dict, f: dict) -> None:
-    for key, title, icon in (("target", "Target", "cloud"), ("workload", "Workload", "speed"),
-                             ("data", "Data", "database"), ("nfr", "Reliability", "health_and_safety"),
-                             ("security", "Security", "shield"), ("finops", "Budget", "savings")):
-        kv([(humanize(k), v) for k, v in as_dict(d.get(key)).items()], title, icon)
+    for key, title in (("target", "Target"), ("workload", "Workload"), ("data", "Data"), ("nfr", "Reliability"),
+                       ("security", "Security"), ("finops", "Budget")):
+        kv([(humanize(k), v) for k, v in as_dict(d.get(key)).items()], title)
     if rows_of(d.get("conflicts")):
-        subhead("Conflicts and how they were resolved", "balance")
-        table(d.get("conflicts"), [("Conflict", "description"), ("Resolution", "resolution")])
+        subhead("Conflicts and How They Were Resolved")
+        table(d.get("conflicts"), [("Conflict", "description"), ("Resolution", "resolution")],
+              kinds={"Resolution": "muted"})
     if rows_of(d.get("gaps")):
-        subhead("How each discovery finding is handled", "link")
-        table(d.get("gaps"), [("Finding", lambda r: nb(r.get("finding_id"))), ("Handling", "handling")])
+        subhead("How Each Discovery Finding Is Handled")
+        table(d.get("gaps"), [("Finding", lambda r: nb(r.get("finding_id"))), ("Handling", "handling")],
+              kinds={"Finding": "id"})
     if any(r.get("acceptance") for r in rows_of(d.get("requirements"))):
-        subhead("Acceptance criteria", "task_alt")
-        table(d.get("requirements"), [("ID", lambda r: nb(r.get("id"))), ("Acceptance", "acceptance")])
+        subhead("Acceptance Criteria")
+        table(d.get("requirements"), [("ID", lambda r: nb(r.get("id"))), ("Acceptance", "acceptance")],
+              kinds={"ID": "id"}, scroll_after=8)
 
 
 # ---- modernization
 
 
 def modernization_overview(d: dict, artifacts: dict, f: dict) -> None:
-    subhead("What changed", "edit_document")
+    subhead("What Changed")
     table(d.get("changes"), [("File", lambda r: str(r.get("file") or "").removeprefix("microservice/")),
-                             ("Change", "change"), ("Addresses", "addresses")], empty="No changes listed.")
+                             ("Change", "change"), ("Addresses", "addresses")],
+          kinds={"File": "code", "Addresses": "id"}, empty="No changes listed.")
     parity = as_dict(d.get("api_parity"))
     if dropped := [plain(x) for x in as_list(parity.get("dropped")) if x]:
-        st.caption(":material/info: Not ported by design: " + md("; ".join(dropped)))
+        note_block("Not ported by design: " + "; ".join(dropped))
 
 
 def modernization_details(d: dict, artifacts: dict, f: dict) -> None:
     image, endpoints = as_dict(d.get("image")), as_dict(d.get("endpoints"))
     resources, scaling = as_dict(d.get("resources")), as_dict(d.get("scaling"))
-    kv([("Repository", image.get("repository")), ("Tag", image.get("tag")), ("Local tag", image.get("local_tag")),
-        ("Dockerfile", image.get("dockerfile")), ("Port", image.get("port"))], "Container image", "inventory_2")
+    kv([("Repository", image.get("repository")), ("Tag", image.get("tag")), ("Local Tag", image.get("local_tag")),
+        ("Dockerfile", image.get("dockerfile")), ("Port", image.get("port"))], "Container Image")
     kv([("Health", endpoints.get("health")), ("Readiness", endpoints.get("readiness")),
-        ("API routes", endpoints.get("api"))], "Endpoints", "api")
+        ("API Routes", endpoints.get("api"))], "Endpoints")
     kv([("Requests", as_dict(resources.get("requests"))), ("Limits", as_dict(resources.get("limits"))),
         ("Replicas", f"{scaling['replicas_min']}–{scaling['replicas_max']}" if scaling.get("replicas_min") else None),
-        ("CPU target", fmt_pct(scaling["cpu_target_pct"]) if scaling.get("cpu_target_pct") else None)],
-       "Resources and scaling", "tune")
+        ("CPU Target", fmt_pct(scaling["cpu_target_pct"]) if scaling.get("cpu_target_pct") else None)],
+       "Resources and Scaling")
     if rows_of(d.get("env")):
-        subhead("Configuration", "settings")
+        subhead("Configuration")
         table(d.get("env"), [("Variable", "name"), ("Source", "source"), ("Required", "required"),
-                             ("Description", "description")], nowrap=["Variable"])
-    kv([(humanize(k), v) for k, v in as_dict(d.get("validation")).items()], "Validation", "rule")
+                             ("Description", "description")], kinds={"Variable": "code", "Description": "muted"},
+              nowrap=["Variable"])
+    kv([(humanize(k), v) for k, v in as_dict(d.get("validation")).items()], "Validation")
     tests = as_dict(d.get("tests"))
     if tests.get("output"):
-        subhead(f"Tests · {tests.get('command') or 'pytest'}", "science")
+        html_block(f'<div class="tx-sub">Tests <span>· {esc(tests.get("command") or "pytest")}</span></div>')
         st.code(str(tests["output"]), language="text", height=160 if str(tests["output"]).count("\n") > 6 else "content")
 
 
@@ -1803,47 +1874,44 @@ def modernization_details(d: dict, artifacts: dict, f: dict) -> None:
 def terraform_overview(d: dict, artifacts: dict, f: dict) -> None:
     checks = rows_of(d.get("spec_checks"))
     if checks:
-        subhead("Spec checks, verified by the tools", "fact_check")
+        subhead("Spec Checks", "verified by the tools")
         table(checks, [("Check", lambda r: humanize(r.get("check"))), ("Expected", "expected"), ("Actual", "actual"),
                        ("Result", lambda r: result_word(r.get("status")))],
-              styles={"Result": _result_css}, nowrap=["Result"], scroll_after=8)
+              kinds={"Result": "result"}, scroll_after=8)
     else:
         compute, db, net = as_dict(d.get("compute")), as_dict(d.get("database")), as_dict(d.get("network"))
-        kv([("Nodes", compute.get("node_instance_types")), ("Node count", f"{compute.get('node_min')}–"
+        kv([("Nodes", compute.get("node_instance_types")), ("Node Count", f"{compute.get('node_min')}–"
             f"{compute.get('node_max')}" if compute.get("node_min") else None), ("Database", db.get("instance_class")),
-            ("Multi-AZ", db.get("multi_az")), ("AZs", net.get("azs")), ("NAT gateways", net.get("nat_gateways"))],
-           "Target infrastructure", "stacks")
+            ("Multi-AZ", db.get("multi_az")), ("AZs", net.get("azs")), ("NAT Gateways", net.get("nat_gateways"))],
+           "Target Infrastructure")
     if conflicts := as_dict(f.get("conflicts")):
-        st.caption(f":material/info: {plural(len(conflicts), 'model-written coverage note')} "
-                   f"({', '.join(conflicts)}) {'disagrees' if len(conflicts) == 1 else 'disagree'} with the "
-                   "tool-verified values; the checks above win. See Details.")
+        note_block(f"{plural(len(conflicts), 'model-written coverage note')} ({', '.join(conflicts)}) "
+                   f"{'disagrees' if len(conflicts) == 1 else 'disagree'} with the tool-verified values; the checks "
+                   "above win. See Details.")
 
 
 def terraform_details(d: dict, artifacts: dict, f: dict) -> None:
     compute, db, net = as_dict(d.get("compute")), as_dict(d.get("database")), as_dict(d.get("network"))
     kv([("Cluster", d.get("cluster_name")), ("Region", d.get("region")), ("Kubernetes", d.get("kubernetes_version")),
-        ("Node types", compute.get("node_instance_types")),
+        ("Node Types", compute.get("node_instance_types")),
         ("Nodes", f"{compute['node_min']}–{compute['node_max']}" if compute.get("node_min") else None),
-        ("Capacity", compute.get("capacity_type")), ("Architecture", compute.get("architecture"))],
-       "Cluster", "hub")
-    kv([(humanize(k), v) for k, v in db.items()], "Database", "database")
-    kv([(humanize(k), v) for k, v in net.items()], "Network", "lan")
+        ("Capacity", compute.get("capacity_type")), ("Architecture", compute.get("architecture"))], "Cluster")
+    kv([(humanize(k), v) for k, v in db.items()], "Database")
+    kv([(humanize(k), v) for k, v in net.items()], "Network")
     if rows_of(d.get("modules")):
-        subhead("Pinned modules", "extension")
-        table(d.get("modules"), [("Module", "source"), ("Version", "version")])
+        subhead("Pinned Modules")
+        table(d.get("modules"), [("Module", "source"), ("Version", "version")], kinds={"Module": "code"})
     if d.get("validate_output"):
-        subhead("terraform validate", "verified")
+        html_block('<div class="tx-sub">terraform validate</div>')
         st.code(str(d["validate_output"]), language="text")
     coverage = rows_of(d.get("spec_coverage"))
     if coverage:
         conflicts = as_dict(f.get("conflicts"))
-        subhead("Spec coverage, as the model explains it", "lightbulb")
-        st.caption("Written by the model. Where it disagrees with the tool-verified spec checks, the checks win.")
-        table(coverage, [("Requirement", "requirement"), ("How (model-written)", "how"),
-                         ("Tool data", lambda r: f"Disagrees · {conflicts[str(r.get('requirement'))]}"
+        subhead("Spec Coverage", "as the model explains it; where it disagrees with the tool-verified checks, the checks win")
+        table(coverage, [("Requirement", "requirement"), ("How (Model-Written)", "how"),
+                         ("Tool Data", lambda r: f"Disagrees · {conflicts[str(r.get('requirement'))]}"
                           if str(r.get("requirement")) in conflicts else "")],
-              styles={"Tool data": lambda v: f"color:{T['warning']};font-weight:600" if v else ""},
-              nowrap=["Requirement"])
+              kinds={"Requirement": "id", "Tool Data": "muted"}, nowrap=["Requirement"])
 
 
 # ---- k8s validation
@@ -1854,59 +1922,62 @@ def k8s_overview(d: dict, artifacts: dict, f: dict) -> None:
         html_block(flow_html(f["found"], f.get("fixed") or 0, f.get("left") or 0))
     drift = rows_of(d.get("drift_injected"))
     if drift:
-        st.markdown(f"**Simulated drift** · {plural(len(drift), 'hand-edit violation')} injected before validation "
-                    "(a demo aid, not in the generated manifests)")
-        table(drift, [("File", lambda r: str(r.get("file") or "").removeprefix("k8s/")), ("Hand edit", "change"),
+        st.markdown(f'<div class="tx-sub">Simulated Drift <span>· {plural(len(drift), "hand-edit violation")} injected '
+                    "before validation (a demo aid, not in the generated manifests)</span></div>",
+                    unsafe_allow_html=True)
+        table(drift, [("File", lambda r: str(r.get("file") or "").removeprefix("k8s/")), ("Hand Edit", "change"),
                       ("Rule", lambda r: nb(r.get("rule"))), ("Fixed", lambda r: (YES if r["fixed"] else NO)
                                          if isinstance(r.get("fixed"), bool) else "")],
-              styles={"Fixed": _result_css}, nowrap=["Rule", "Fixed"])
+              kinds={"File": "code", "Rule": "id", "Fixed": "result"})
     live = as_dict(d.get("live_deploy"))
     smoke = smoke_rows(live.get("smoke_tests"))
     if smoke:
-        subhead(f"Smoke tests on {live.get('cluster') or 'the cluster'}", "rocket_launch")
+        html_block(f'<div class="tx-sub">Smoke Tests on {esc(live.get("cluster") or "the Cluster")}</div>')
         table(smoke, [("Request", "request"), ("Expected", lambda r: r["expected"] if r["expected"] is not None else "–"),
                       ("Actual", lambda r: r["actual"] if r["actual"] is not None else "–"),
                       ("Result", lambda r: {True: RESULT_WORDS["pass"], False: RESULT_WORDS["fail"]}.get(r["ok"], "–")),
                       ("Time", lambda r: f"{r['ms']:.0f} ms" if r.get("ms") is not None else "")],
-              styles={"Result": _result_css}, nowrap=["Expected", "Actual", "Result", "Time"])
+              kinds={"Request": "code", "Result": "result", "Time": "num"}, nowrap=["Expected", "Actual"])
     elif str(live.get("status") or "").lower() in ("skipped", ""):
-        st.caption(":material/info: Live deploy to kind was off for this run" +
-                   (f": {md(plain(live.get('reason') or live.get('rollout')))}" if live.get("reason") or
+        note_block("Live deploy to kind was off for this run" +
+                   (f": {plain(live.get('reason') or live.get('rollout'))}" if live.get("reason") or
                     live.get("rollout") else "."))
 
 
 def k8s_details(d: dict, artifacts: dict, f: dict) -> None:
-    subhead("Checks", "policy")
+    subhead("Checks")
     table(d.get("checks"), [("Result", lambda r: result_word(r.get("status"))),
                             ("Check", lambda r: " · ".join(x for x in (nb(r.get("id")), cell(r.get("title"))) if x)),
                             ("Tool", "tool"), ("Target", lambda r: r.get("target") or r.get("resource")),
                             ("Details", "details")],
-          styles={"Result": _result_css}, nowrap=["Result"], scroll_after=8)
+          kinds={"Result": "result", "Target": "code", "Details": "muted"}, scroll_after=8)
     if rows_of(d.get("fixes_applied")):
-        subhead("Fixes the model applied", "build")
-        table(d.get("fixes_applied"), [("File", "file"), ("Change", "change"), ("Resolves", lambda r: nb(r.get("resolves")))])
+        subhead("Fixes the Model Applied")
+        table(d.get("fixes_applied"), [("File", "file"), ("Change", "change"), ("Resolves", lambda r: nb(r.get("resolves")))],
+              kinds={"File": "code", "Resolves": "id"})
     live = as_dict(d.get("live_deploy"))
     timings = as_dict(live.get("timings"))
     kv([("Status", cap(live.get("status"))), ("Cluster", live.get("cluster")), ("Image", live.get("image")),
         ("Namespace", live.get("namespace")), ("Overlay", live.get("overlay")),
-        ("Total time", fmt_secs(timings["total_s"]) if timings.get("total_s") is not None else None),
-        ("Rollout", short(live.get("rollout"), 120) if live.get("rollout") else None)], "Live deploy", "rocket_launch")
+        ("Total Time", fmt_secs(timings["total_s"]) if timings.get("total_s") is not None else None),
+        ("Rollout", short(live.get("rollout"), 120) if live.get("rollout") else None)], "Live Deploy")
     if live.get("access"):
         st.code(str(live["access"]), language="bash")
     if d.get("notes"):
-        st.caption(":material/info: " + md(plain(d["notes"])))
+        note_block(d["notes"])
 
 
 # ---- finops
 
 
 def finops_header(d: dict, f: dict) -> None:
-    """The alert bar and the chart: both visible when the card lands."""
+    """The alert and the chart: both visible when the card lands."""
     if alert := finops_alert(f):
         html_block(alert_html(*alert))
     if f.get("designed") is not None:
         st.altair_chart(cost_chart(f.get("today"), f.get("designed"), f.get("optimized"), f.get("budget"),
-                                   f.get("surcharge") or 0.0, f.get("over_designed")), width="stretch")
+                                   f.get("surcharge") or 0.0, f.get("over_designed"),
+                                   scale=1.2 if presenter() else 1.0, dark=dark_theme()), width="stretch")
 
 
 def finops_overview(d: dict, artifacts: dict, f: dict) -> None:
@@ -1914,26 +1985,26 @@ def finops_overview(d: dict, artifacts: dict, f: dict) -> None:
     fo1 = f.get("fo1") if isinstance(f.get("fo1"), dict) else None
     if fo1:
         saving = money(fo1.get("monthly_savings_usd"))
-        label = plain(fo1.get("id")) or "Top recommendation"
+        label = plain(fo1.get("id")) or "Top Recommendation"
         if num(fo1.get("monthly_savings_usd")):
             label += f" · saves {saving}/month"
         label += f" · {plain(fo1.get('title'))}" if fo1.get("title") else ""
         with st.expander(md(label), icon=":material/lightbulb:"):
-            html_block(kv_html([("Saves per month", money(fo1.get("monthly_savings_usd"), cents=True)),
+            html_block(kv_html([("Saves per Month", money(fo1.get("monthly_savings_usd"), cents=True)),
                                 ("Effort", cap(fo1.get("effort"))), ("Risk", cap(fo1.get("risk"))),
-                                ("Applies to", cap(fo1.get("applies_to"))), ("Scope", fo1.get("scope"))]))
+                                ("Applies To", cap(fo1.get("applies_to"))), ("Scope", fo1.get("scope"))]))
             if fo1.get("change"):
-                st.markdown(f"**Change.** {md(plain(fo1['change']))}")
+                html_block(f'<div class="tx-text"><b>Change.</b> {esc(plain(fo1["change"]))}</div>')
             if fo1.get("rationale") and plain(fo1["rationale"]) != plain(fo1.get("change")):
-                st.markdown(f"**Why.** {md(plain(fo1['rationale']))}")
+                html_block(f'<div class="tx-text"><b>Why.</b> {esc(plain(fo1["rationale"]))}</div>')
     others = [r for r in recs if r is not fo1]
     if others:
-        subhead("Other recommendations", "savings")
+        subhead("Other Recommendations")
         table(others, [("ID", lambda r: nb(r.get("id"))), ("Recommendation", "title"),
-                       ("Saves / month", lambda r: money(r.get("monthly_savings_usd"), cents=True)),
+                       ("Saves / Month", lambda r: money(r.get("monthly_savings_usd"), cents=True)),
                        ("Effort", lambda r: cap(r.get("effort"))), ("Risk", lambda r: cap(r.get("risk"))),
-                       ("Applies to", lambda r: cap(r.get("applies_to"))), ("Scope", "scope")],
-              nowrap=["ID", "Saves / month", "Effort", "Risk"])
+                       ("Applies To", lambda r: cap(r.get("applies_to"))), ("Scope", "scope")],
+              kinds={"ID": "id", "Saves / Month": "num", "Scope": "muted"}, nowrap=["Effort", "Risk"])
 
 
 def rightsizing_pairs(rs: dict) -> list[tuple[str, Any]]:
@@ -1964,29 +2035,29 @@ def rightsizing_pairs(rs: dict) -> list[tuple[str, Any]]:
 
 
 def finops_details(d: dict, artifacts: dict, f: dict) -> None:
-    kv(rightsizing_pairs(d.get("rightsizing")), "Right-sizing", "straighten")
+    kv(rightsizing_pairs(d.get("rightsizing")), "Right-Sizing")
     items = []
     for key, label in (("current", "Today"), ("target_as_designed", "As designed"), ("target_optimized", "Optimized")):
         items += [{**i, "scenario": label} for i in rows_of(as_dict(d.get(key)).get("items"))]
     if items:
-        subhead("Cost line items, per month", "receipt_long")
+        subhead("Cost Line Items", "per month")
         table(items, [("Scenario", "scenario"), ("Item", "item"),
-                      ("Per month", lambda r: money(r.get("monthly_usd"), cents=True)), ("How", "calc")],
-              nowrap=["Scenario", "Per month"], scroll_after=8)
+                      ("Per Month", lambda r: money(r.get("monthly_usd"), cents=True)), ("How", "calc")],
+              kinds={"Per Month": "num", "How": "code"}, nowrap=["Scenario"], scroll_after=8)
     if rows_of(d.get("node_fit")):
-        subhead("Node fit (cheapest first)", "grid_view")
-        table(d.get("node_fit"), [("Node type", "instance_type"), ("Nodes", "nodes"),
-                                  ("Per month", lambda r: money(r.get("monthly_usd"), cents=True)),
+        subhead("Node Fit", "cheapest first")
+        table(d.get("node_fit"), [("Node Type", "instance_type"), ("Nodes", "nodes"),
+                                  ("Per Month", lambda r: money(r.get("monthly_usd"), cents=True)),
                                   ("Fits", lambda r: (YES if r["fits"] else NO)
                                    if isinstance(r.get("fits"), bool) else "")],
-              styles={"Fits": _result_css})
+              kinds={"Node Type": "code", "Nodes": "num", "Per Month": "num", "Fits": "result"})
     notes = [plain(n) for n in as_list(as_dict(d.get("assumptions")).get("notes")) if n]
     if notes:
         with st.expander("Assumptions", icon=":material/rule:"):
             st.markdown("\n".join(f"- {md(n)}" for n in notes))
     if d.get("pricing_source"):
-        st.caption(f":material/sell: Prices: {md(plain(d['pricing_source']))}"
-                   + (f" (fetched {md(plain(d['pricing_date']))})" if d.get("pricing_date") else ""))
+        note_block(f"Prices: {plain(d['pricing_source'])}"
+                   + (f" (fetched {plain(d['pricing_date'])})" if d.get("pricing_date") else ""), "sell")
 
 
 # A field every contract-conforming result has (docs/CONTRACTS.md); without it the highlights would be empty.
@@ -2142,20 +2213,21 @@ class StageView:
                 pass
 
     def _process_row(self, failed: bool) -> None:
-        """The collapsed timeline and the full narration, side by side under the card."""
+        """The collapsed timeline and the full narration, side by side under the card, as quiet disclosures."""
         tools, story = list(self.tools.values()), self.narration()
         if not tools and not story:
             return
-        left, right = st.columns(2) if tools and story else (st.container(), None)
-        if tools:
-            with left:
-                box = st.status(f"Timeline · {plural(len(tools), 'step')}", expanded=False,
-                                state="error" if failed else "complete")
-                with box:
-                    html_block(timeline_html(tools))
-        if plain(story):
-            with right or left, st.expander("What the agent said", icon=":material/chat:"):
-                st.markdown(md(story))
+        with keyed_container(f"process-{self.stage}-{self.attempt}-{self.job.id}", self.job.id):
+            left, right = st.columns(2) if tools and story else (st.container(), None)
+            if tools:
+                with left:
+                    box = st.status(f"Timeline · {plural(len(tools), 'step')}", expanded=False,
+                                    state="error" if failed else "complete")
+                    with box:
+                        html_block(timeline_html(tools))
+            if plain(story):
+                with right or left, st.expander("What the Agent Said", icon=":material/chat:"):
+                    st.markdown(md(story))
 
 
 def follow(job: StageJob, view: StageView, poll: float = 0.15) -> None:
@@ -2176,14 +2248,16 @@ def follow(job: StageJob, view: StageView, poll: float = 0.15) -> None:
 
 def card_header(stage: str, attempt: int, metrics: dict, warning: str = "") -> str:
     seconds = num(as_dict(metrics).get("latency_s"))
-    state, word = ("warning", "Done, with a warning") if warning else ("done", "Done")
-    right = status_pill(state, f"{word} · {fmt_secs(seconds)}" if seconds is not None else word)
-    return header_html(stage, attempt, right)
+    if warning:
+        state, text = "warning", "Done with a Warning" + (f" · {fmt_secs(seconds)}" if seconds is not None else "")
+    else:
+        state, text = "done", f"Done in {fmt_secs(seconds)}" if seconds is not None else "Done"
+    return header_html(stage, attempt, status_pill(state, text))
 
 
 def render_failure(stage: str, attempt: int, error: str, fallback: str = "") -> None:
     with keyed_container(container_key("card", stage, attempt), fallback):
-        html_block(header_html(stage, attempt, status_pill("failed", "Didn't finish")))
+        html_block(header_html(stage, attempt, status_pill("failed", "Didn't Finish")))
         st.error(error or "The agent stream ended without a result.", icon=":material/error:")
 
 
@@ -2210,27 +2284,25 @@ def render_result(stage: str, result: dict, key: str, *, attempt: int = 1, warni
             lead = first_sentence(summary)
             rest = summary[len(first_sentence(summary, 10_000)):].strip()
         # one line of summary at most, none in presenter mode: the hero must clear the sticky gate
-        html_block(headline_html(lead, "" if presenter() else rest, revised))
+        hero = headline_html(lead, "" if presenter() else rest, revised)
         # FinOps in presenter mode: the chart above already carries today / as designed / optimized
-        if kpis := [] if charted and presenter() else stage_kpis(stage, facts):
-            with keyed_container(container_key("kpis", stage, attempt), key, horizontal=True, gap="medium"):
-                for k in kpis:
-                    show_metric(k)
+        hero += kpis_html([] if charted and presenter() else stage_kpis(stage, facts))
         if pair := evidence(stage, facts):
-            html_block(evidence_html(*pair))
+            hero += evidence_html(*pair)
         if not presenter() and (line := telemetry_line(metrics)):
-            st.caption(f":material/memory: {md(line)}")
+            hero += f'<div class="tx-telemetry">{esc(line)}</div>'
+        html_block(hero)
         if not follows:
             st.info(f"This result doesn't follow the {stage} contract (a stand-in agent?), so the details show its "
                     "raw data.", icon=":material/info:")
         overview, details, files = st.tabs(["Overview", "Details", "Files"])
         with overview:
             if follows:
+                guarded(OVERVIEW[stage], data, artifacts, facts, label="the overview")
                 if summary:  # the card shows one line of it at most
                     html_block(summary_html(summary))
-                guarded(OVERVIEW[stage], data, artifacts, facts, label="the overview")
             elif summary:
-                st.markdown(md(summary))
+                text_block(summary)
         with details:
             if follows:
                 guarded(DETAILS[stage], data, artifacts, facts, label="the details")
@@ -2243,14 +2315,17 @@ def render_result(stage: str, result: dict, key: str, *, attempt: int = 1, warni
             bridge_strip(stage, attempt, key)
 
 
-def bridge_strip(stage: str, attempt: int = 1, fallback: str = "") -> None:
+def bridge_html(stage: str) -> str:
     bridge, benefit = meta_attr(stage, "bridge"), meta_attr(stage, "benefit")
     if not (bridge or benefit):
-        return
-    lines = ([f"**In AWS Transform** · {md(bridge)}"] if bridge else []) + (
-        [f"**Benefit** · {md(benefit)}"] if benefit else [])
-    with keyed_container(container_key("bridge", stage, attempt), fallback):
-        st.markdown("\n\n".join(lines))
+        return ""
+    rows = (f"<b>In AWS Transform</b><span>{esc(bridge)}</span>" if bridge else "") + (
+        f"<b>Benefit</b><span>{esc(benefit)}</span>" if benefit else "")
+    return f'<div class="tx-bridge">{rows}</div>'
+
+
+def bridge_strip(stage: str, attempt: int = 1, fallback: str = "") -> None:
+    html_block(bridge_html(stage))
 
 
 # --------------------------------------------------------------------------- finale
@@ -2314,22 +2389,38 @@ def finale_tiles(f: dict) -> list[Kpi]:
     if mod.get("tests_total"):
         ok = mod.get("tests_passed") == mod["tests_total"]
         tiles.append(Kpi("Tests", f"{mod['tests_passed']}/{mod['tests_total']}", "passing" if ok else "failing",
-                         "green" if ok else "red"))
+                         "gray" if ok else "red"))
     if tf.get("valid") is not None:
         tiles.append(Kpi("Infrastructure", "Valid" if tf["valid"] else "Not valid",
                          f"{tf.get('checks_passed', 0)}/{tf['checks_total']} spec checks" if tf.get("checks_total")
-                         else "terraform validate", "green" if tf["valid"] else "red"))
+                         else "terraform validate", "gray" if tf["valid"] else "red"))
     if k8s.get("smoke_total"):
         ok = k8s.get("smoke_passed") == k8s["smoke_total"]
-        tiles.append(Kpi("Smoke tests", f"{k8s['smoke_passed']}/{k8s['smoke_total']}",
-                         "live on kind" if k8s.get("deploy") == "pass" else None, "green" if ok else "red"))
+        tiles.append(Kpi("Smoke Tests", f"{k8s['smoke_passed']}/{k8s['smoke_total']}",
+                         "live on kind" if k8s.get("deploy") == "pass" else None, "gray" if ok else "red"))
     path = [money(fin[k]) for k in ("today", "designed", "optimized") if fin.get(k) is not None]
     if len(path) >= 2:
-        tiles.append(Kpi("Monthly cost", " → ".join(path), "today → as designed → optimized"
+        tiles.append(Kpi("Monthly Cost", " → ".join(path), "today → as designed → optimized"
                          if len(path) == 3 else None, "gray"))
     if fin.get("extended") and fin.get("surcharge"):
-        tiles.append(Kpi("Caught before go-live", f"{money(fin['surcharge'])}/mo", "EKS extended support", "green"))
+        tiles.append(Kpi("Caught Before Go-Live", f"{money(fin['surcharge'])}/mo", "EKS extended support", "green"))
     return tiles
+
+
+def finale_rows(tiles: list[Kpi]) -> list[tuple[list[Kpi], str]]:
+    """Two KPI rows: four counts, then the cost path (it needs the width) between the others. Each row comes with
+    its grid columns."""
+    wide = next((t for t in tiles if t.label == "Monthly Cost"), None)
+    first = [t for t in tiles if t is not wide][:4]
+    rest = [t for t in tiles if t is not wide and t not in first]
+    second = [*rest[:1], *([wide] if wide else []), *rest[1:]]
+    rows = []
+    if first:
+        rows.append((first, f"repeat({max(len(first), 3)},minmax(0,1fr))"))
+    if second:
+        rows.append((second, " ".join("minmax(0,2.2fr)" if t is wide else "minmax(0,1.3fr)" if t.label.startswith(
+            "Caught") else "minmax(0,1fr)" for t in second)))
+    return rows
 
 
 def render_finale(pipeline: Any) -> None:
@@ -2340,21 +2431,11 @@ def render_finale(pipeline: Any) -> None:
         with keyed_container("finale", "finale"):
             title = finale_title(f)
             lead, _, tail = title.partition(" You approved")
-            second = f'<div style="color:{T["indigo_pressed"]}">You approved{esc(tail)}</div>' if tail else ""
-            html_block(f'<div style="display:flex;align-items:center;gap:{rem(16)}">{tile("verified", 52)}'
-                       f'<div style="font-size:{rem(26)};line-height:1.3;font-weight:700;color:inherit">'
-                       f'<div>{esc(lead)}</div>{second}</div></div>')
-            wide = next((t for t in tiles if t.label == "Monthly cost"), None)
-            first = [t for t in tiles if t is not wide][:4]
-            rest = [t for t in tiles if t is not wide and t not in first]
-            for row, weights in ((first, None), ([*rest[:1], *([wide] if wide else []), *rest[1:]], "wide")):
-                if not row:
-                    continue
-                # the cost path needs its width; "EKS extended support" fits beside it (CSS wraps it if it must)
-                spec = [2.4 if t is wide else 1.5 if t.label.startswith("Caught") else 0.9 for t in row] if weights \
-                    else len(row)
-                for col, t in zip(st.columns(spec), row, strict=False):
-                    show_metric(t, col)
+            second = f'<div class="tx-finale-t2">You approved{esc(tail)}</div>' if tail else ""
+            markup = (f'<div class="tx-finale-head">{tile("verified", large=True)}<div>'
+                      f'<div class="tx-finale-t">{esc(lead)}</div>{second}</div></div>')
+            for row, columns in finale_rows(tiles):
+                markup += kpis_html(row, grid=columns)
             caption = []
             if f.get("seconds"):
                 caption.append(f"Machine time {fmt_secs(f['seconds'])}")
@@ -2363,10 +2444,11 @@ def render_finale(pipeline: Any) -> None:
             if f.get("run_id"):
                 caption.append(f"run {f['run_id']}")
             if caption:
-                st.caption(":material/schedule: " + md(" · ".join(caption)))
+                markup += f'<div class="tx-telemetry">{esc(" · ".join(caption))}</div>'
+            html_block(markup)
             merged = _call(lambda: pipeline.merged_artifacts()) or {}
             if merged:
-                st.download_button("Download all artifacts", zip_bytes(merged), type="primary",
+                st.download_button("Download All Artifacts", zip_bytes(merged), type="primary",
                                    icon=":material/download:", file_name=f"{f.get('run_id') or 'migration'}-artifacts.zip",
                                    mime="application/zip", key="zip-finale", on_click="ignore")
     except Exception:  # noqa: BLE001 - the wrap-up must never break the page
@@ -2422,7 +2504,7 @@ def files_tab(files: dict[str, str], key: str, stage: str) -> None:
     if tree.count("\n") >= 8:
         left, right = st.columns([2, 5])
         with left:
-            st.caption(f":material/folder: {plural(len(files), 'file')}")
+            st.caption(plural(len(files), "file"))
             with st.container(height=420, border=False):
                 st.code(tree, language="text")
         with right:
@@ -2441,7 +2523,7 @@ def artifacts_browser(files: dict[str, str], key: str, zip_name: str) -> None:
                           key=f"zip-{key}", on_click="ignore", icon=":material/download:", width="stretch")
     content = files.get(path, "")
     language = language_for(path)
-    if language == "markdown" and not st.toggle("Show source", key=f"src-{key}"):
+    if language == "markdown" and not st.toggle("Show Source", key=f"src-{key}"):
         with st.container(height=420, border=True):
             st.markdown(content)
     else:

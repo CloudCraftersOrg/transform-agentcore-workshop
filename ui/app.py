@@ -1,7 +1,8 @@
 """Transform × AgentCore workshop: upload the requirements, watch each agent work, approve or ask for changes.
 
 Run from the repo root: `make ui` (= uv run streamlit run ui/app.py). Theme: ui/.streamlit/config.toml; CSS and
-design tokens: ui/style.py. Add `?presenter=1` to the URL for presenter mode (bigger type, no sidebar, no raw JSON).
+design tokens: ui/style.py (the approved look: docs/design/). Add `?presenter=1` to the URL for presenter mode
+(everything scaled uniformly, the nav collapsed, no raw JSON).
 """
 
 import os
@@ -35,12 +36,13 @@ from ui import views
 from ui.bridge import StageJob, run_registry
 from ui.style import (
     CSS,
+    DARK_CSS,
     FOCUS_JS,
     NAV_JS,
     PRESENTER_CSS,
     STAGE_META,
     agents_html,
-    brand_html,
+    crumb_html,
     css_block,
     legacy_html,
     nav_html,
@@ -53,19 +55,24 @@ from ui.views import StageView, follow, zip_bytes
 
 LIVE_MODES = ("local", "agentcore")  # the top-bar switch; Replay (and Fake) live in the "…" menu
 MODE_LABELS = {"local": ":material/laptop_mac: Local", "agentcore": ":material/cloud: AgentCore",
-               "replay": "Replay (offline)", "fake": "Fake (demo data)"}
+               "replay": "Replay (Offline)", "fake": "Fake (Demo Data)"}
 FAKE_ENABLED = os.getenv("UI_ENABLE_FAKE") == "1"
 MODES = [*LIVE_MODES, "replay"] + (["fake"] if FAKE_ENABLED else [])
 NEXT_STEP = {"discovery": "requirements", "requirements": "code modernization",
              "modernization": "infrastructure as code", "terraform": "Kubernetes validation",
              "k8s_validation": "FinOps right-sizing", "finops": "the wrap-up"}
 USER_AVATAR, GUIDE_AVATAR = ":material/person:", ":material/explore:"
+RUNTIME = {"local": "on Amazon Bedrock", "agentcore": "on Amazon Bedrock AgentCore",
+           "replay": "replayed offline", "fake": "demo data"}  # the nav's footnote under the model names
 
 PRESENTER = st.query_params.get("presenter") == "1"
 st.set_page_config(page_title="Transform × AgentCore workshop", page_icon=":material/conversion_path:",
                    layout="wide", initial_sidebar_state="collapsed" if PRESENTER else "expanded")
-st.html(CSS + css_block(getattr(views, "CSS", "")) + (PRESENTER_CSS if PRESENTER else ""))  # style only: no layout slot
 ss = st.session_state
+ss.setdefault("theme", "dark" if st.query_params.get("theme") == "dark" else "light")  # ?theme=dark survives a reload
+# style only (no layout slot); the dark block swaps the design tokens, so light mode is the base CSS alone
+st.html(CSS + css_block(getattr(views, "CSS", "")) + (PRESENTER_CSS if PRESENTER else "")
+        + (DARK_CSS if ss.theme == "dark" else ""))
 REG = run_registry()  # process-wide pipelines and live jobs: a page reload (new session) re-attaches to them
 ss.setdefault("transcript", [])  # [{"kind": "user" | "note", "text"} | {"kind": "stage", "job": StageJob}]
 ss.setdefault("pipeline", None)  # the same object as REG's pipeline for that run id
@@ -337,6 +344,19 @@ def keep_run() -> None:
     ss.new_run_menu = False
 
 
+def toggle_theme() -> None:
+    ss.theme = "light" if ss.get("theme") == "dark" else "dark"
+
+
+def sync_theme_param() -> None:
+    """The URL carries ?theme=dark next to run= and presenter=, so a reload or a resume keeps the theme."""
+    if ss.theme == "dark":
+        if st.query_params.get("theme") != "dark":
+            st.query_params["theme"] = "dark"
+    elif "theme" in st.query_params:
+        del st.query_params["theme"]
+
+
 def on_mode_switch() -> None:
     choice = ss.get("mode_seg")
     if choice in LIVE_MODES:  # None = the selected segment was clicked again: keep the mode
@@ -444,7 +464,7 @@ def paint_nav(slot: DeltaGenerator) -> None:
         if entry["kind"] == "stage":
             anchors[entry["job"].stage] = f"stage-{entry['job'].id}"
     rows = [(s, stage_status(s), model_label(s), s == active, anchors.get(s, "") if p else "") for s in STAGES]
-    slot.markdown(nav_html(rows), unsafe_allow_html=True)
+    slot.markdown(nav_html(rows, RUNTIME.get(ss.mode, "")), unsafe_allow_html=True)
 
 
 def paint_strip(slot: DeltaGenerator | None) -> None:
@@ -484,14 +504,22 @@ def sync_mode_widgets() -> None:
 
 def new_run_menu() -> None:
     p, working = pipeline(), busy()
-    with st.popover("New run", icon=":material/add:", type="primary", key="new_run_menu", on_change="rerun",
+    with st.popover("New Run", icon=":material/add:", type="primary", key="new_run_menu", on_change="rerun",
                     disabled=p is None, help="Start over with a fresh run"):
-        st.markdown("**Start a new run?**")
+        st.markdown('<div class="tx-pop-t">Start a new run?</div>', unsafe_allow_html=True)
         st.caption("This clears the conversation on screen. The current run stays saved, and you can resume it "
                    "from the menu next to this button.")
         with st.container(horizontal=True, gap="small"):
-            st.button("Start a new run", key="new_run", type="primary", on_click=new_run, disabled=working)
-            st.button("Keep this run", key="keep_run", on_click=keep_run)
+            st.button("Start a New Run", key="new_run", type="primary", on_click=new_run, disabled=working)
+            st.button("Keep This Run", key="keep_run", on_click=keep_run)
+
+
+def theme_button() -> None:
+    """A ghost icon button left of "…": the moon switches to the dark theme, the sun back to the light one."""
+    dark = ss.theme == "dark"
+    label = "Light Theme" if dark else "Dark Theme"
+    st.button(label, key="theme_toggle", icon=":material/light_mode:" if dark else ":material/dark_mode:", help=label,
+              on_click=toggle_theme)
 
 
 def menu_toggle(label: str, key: str, tip: str | None = None) -> None:
@@ -503,26 +531,26 @@ def more_menu() -> None:
     p, working = pipeline(), busy()
     with st.popover("", icon=":material/more_horiz:", key="more_menu", on_change="rerun",
                     help="Runs, live options and Plan B"):
-        st.markdown('<div class="tx-menu-h">This run</div>', unsafe_allow_html=True)
+        st.markdown('<div class="tx-menu-h">This Run</div>', unsafe_allow_html=True)
         if p:
             where = p.dir.relative_to(ROOT) if p.dir.is_relative_to(ROOT) else p.dir
             st.caption(f"Run `{p.run_id}` · open `{where}/workspace` in your IDE")
             if merged := p.merged_artifacts():
-                st.download_button("Download all artifacts (.zip)", zip_bytes(merged), on_click="ignore",
+                st.download_button("Download All Artifacts (.zip)", zip_bytes(merged), on_click="ignore",
                                    icon=":material/download:", file_name=f"{p.run_id}-artifacts.zip",
                                    mime="application/zip", key="zip-all", width="stretch")
-        st.selectbox("Resume a run", Pipeline.list_runs(), index=None, key="resume_id", placeholder="Select a run…")
+        st.selectbox("Resume a Run", Pipeline.list_runs(), index=None, key="resume_id", placeholder="Select a run…")
         st.button("Resume", key="resume", icon=":material/history:", on_click=resume,
                   disabled=working or not ss.get("resume_id"), width="stretch")
 
-        st.markdown('<div class="tx-menu-h">Live options</div>', unsafe_allow_html=True)
-        menu_toggle("Live AWS discovery (EC2 + CloudWatch)", "live_aws")
-        menu_toggle("Live deploy to kind", "live_deploy")
-        menu_toggle("Simulate manual drift (demo)", "simulate_drift",
+        st.markdown('<div class="tx-menu-h">Live Options</div>', unsafe_allow_html=True)
+        menu_toggle("Live AWS Discovery (EC2 + CloudWatch)", "live_aws")
+        menu_toggle("Live Deploy to kind", "live_deploy")
+        menu_toggle("Simulate Manual Drift (Demo)", "simulate_drift",
                     "Injects typical hand-edit violations before validation so the agent shows detect & fix "
                     "(K8s Validation stage only).")
-        menu_toggle("Live AWS pricing", "live_pricing")
-        menu_toggle("Show AWS Transform notes", "show_bridges",
+        menu_toggle("Live AWS Pricing", "live_pricing")
+        menu_toggle("Show AWS Transform Notes", "show_bridges",
                     "Under each result, how that step maps to AWS Transform and what it buys you.")
         if ss.mode == "local" and (overrides := current_client().modules):
             st.caption("Stand-ins: " + ", ".join(f"{k} → {v}" for k, v in overrides.items()))
@@ -534,40 +562,37 @@ def more_menu() -> None:
 
         st.markdown('<div class="tx-menu-h">Plan B</div>', unsafe_allow_html=True)
         # switching mid-stage would orphan the running agent, so it waits; WORKSHOP.md has the fresh-tab fallback
-        st.toggle("Replay (available when no agent is running)" if working else "Replay a recorded run (offline)",
+        st.toggle("Replay (Available When No Agent Is Running)" if working else "Replay a Recorded Run (Offline)",
                   key="replay_on", on_change=on_replay_toggle, disabled=working)
         if ss.mode == "replay":
             runs = [d for d in recorded_runs() if not p or d.name != p.run_id]
             complete = {d.name for d in runs if is_complete_run(d)}
             sources = (["recorded"] if recording_available() else []) + ["fixtures"] + [d.name for d in runs]
             labels = {"recorded": "samples/recorded-run (tracked)", "fixtures": "tests/fixtures"}
-            st.selectbox("Replay from", sources, key="replay_from", disabled=working,
+            st.selectbox("Replay From", sources, key="replay_from", disabled=working,
                          format_func=lambda s: labels.get(s) or f"runs/{s}{' · complete' if s in complete else ''}")
         if FAKE_ENABLED:
-            st.toggle("Fake agents (demo data)", key="fake_on", on_change=on_fake_toggle, disabled=working)
+            st.toggle("Fake Agents (Demo Data)", key="fake_on", on_change=on_fake_toggle, disabled=working)
 
 
 def topbar() -> DeltaGenerator | None:
-    """Title (+ the Recorded run chip), the Local · AgentCore switch, New run and the "…" menu. Returns the
+    """The breadcrumb (+ the Recorded Run chip), the Local · AgentCore switch, the "…" menu and New Run. Returns the
     presenter progress strip slot (repainted once the page is done), or None outside presenter mode."""
     sync_mode_widgets()
+    p = pipeline()
+    chip = "Recorded Run" if ss.mode == "replay" else "Demo Data" if ss.mode == "fake" else None  # honest Plan B
     with st.container(key="topbar"):
         with st.container(key="tb-row", horizontal=True, vertical_alignment="center", gap="small"):
-            with st.container(key="tb-left", gap=None):  # the title, and under it the Recorded run chip
-                st.markdown(brand_html(), unsafe_allow_html=True, width="content")
-                if ss.mode == "replay":  # honest Plan B: say it is a recording
-                    with st.container(key="recorded-chip", width="content"):
-                        st.markdown(":material/history: Recorded run")
-                elif ss.mode == "fake":
-                    with st.container(key="fake-chip", width="content"):
-                        st.markdown(":material/science: Demo data")
+            with st.container(key="tb-left", gap=None):
+                st.markdown(crumb_html(p.run_id if p else None, chip), unsafe_allow_html=True)
             with st.container(key="tb-mid", horizontal=True, horizontal_alignment="center"):
-                st.segmented_control("Agent runtime", list(LIVE_MODES), key="mode_seg", format_func=MODE_LABELS.get,
+                st.segmented_control("Agent Runtime", list(LIVE_MODES), key="mode_seg", format_func=MODE_LABELS.get,
                                      on_change=on_mode_switch, disabled=busy(), label_visibility="collapsed")
             with st.container(key="tb-right", horizontal=True, horizontal_alignment="right",
                               vertical_alignment="center", gap="small"):
-                new_run_menu()
+                theme_button()
                 more_menu()
+                new_run_menu()
         if not PRESENTER:
             return None
         strip = st.empty()
@@ -584,7 +609,7 @@ def take_upload(upload, key: str) -> None:
 def requirements_ready() -> None:
     if ss.requirements:
         name, text = ss.requirements
-        with st.expander(f"Requirements ready: `{name}` · {len(text.splitlines())} lines",
+        with st.expander(f"Requirements Ready · `{name}` · {len(text.splitlines())} lines",
                          icon=":material/description:"):
             st.markdown(text)
 
@@ -593,22 +618,22 @@ def requirements_picker(key: str) -> None:
     """Upload or pick the sample; disabled while an agent works (the requirements stage may be reading them)."""
     working = busy()
     left, right = st.columns([3, 1.3], vertical_alignment="bottom")
-    upload = left.file_uploader("Migration requirements (.md / .txt)", type=["md", "txt", "markdown"],
+    upload = left.file_uploader("Migration Requirements (.md / .txt)", type=["md", "txt", "markdown"],
                                 key=f"upload-{key}", disabled=working)
-    right.button("Use sample requirements", key=f"sample-{key}", on_click=use_sample, width="stretch",
+    right.button("Use Sample Requirements", key=f"sample-{key}", on_click=use_sample, width="stretch",
                  icon=":material/description:", disabled=working)
     take_upload(upload, key)
     requirements_ready()
 
 
-@st.dialog("What the six agents do", width="medium", icon=":material/groups:")
+@st.dialog("What the Six Agents Do", width="medium", icon=":material/groups:")
 def agents_dialog() -> None:
     st.markdown("Each agent does one job with deterministic tools and a Bedrock model, then stops so you can "
                 "review the result. Nothing moves on until you approve it.")
     st.markdown(agents_html(), unsafe_allow_html=True)
 
 
-@st.dialog("The legacy estate", width="medium", icon=":material/dns:")
+@st.dialog("The Legacy Estate", width="medium", icon=":material/dns:")
 def legacy_dialog() -> None:
     st.markdown('**Legacy Inventory & Orders**, the "before" picture: a Flask monolith "temporarily" deployed by '
                 "hand on a single EC2 instance. The six agents discover it, modernize it and right-size it.")
@@ -622,34 +647,34 @@ def replay_card_wanted() -> bool:
 
 
 def welcome() -> None:
-    st.markdown('<h1 class="tx-hello">Hi, let\'s migrate your legacy app.</h1>'
-                '<p class="tx-hello-sub">Six agents, one legacy server. You approve every step.</p>',
+    st.markdown('<div class="tx-hero"><div class="tx-hello">Hi, let\'s migrate your legacy app.</div>'
+                '<div class="tx-hello-sub">Six agents, one legacy server. You approve every step.</div></div>',
                 unsafe_allow_html=True)
     with st.container(key="welcome-input", horizontal=True, vertical_alignment="center", gap="small", wrap=False):
         upload = st.file_uploader("Drop the business requirements here, or pick a suggestion below",
                                   type=["md", "txt", "markdown"], key="upload-welcome", label_visibility="collapsed")
-        st.button("Start migration", key="start", type="primary", icon=":material/arrow_forward:",
+        st.button("Start Migration", key="start", type="primary", icon=":material/arrow_forward:",
                   icon_position="right", on_click=start_migration)
         take_upload(upload, "welcome")
     requirements_ready()
     with st.container(key="suggestions", horizontal=True, gap="medium"):
         with st.container(key="sg-sample"):
-            st.markdown(suggestion_html("description", "Start with the <b>sample requirements</b>",
+            st.markdown(suggestion_html("description", "Start with the <em>sample requirements</em>",
                                         "Inventory & Orders · $450/month budget"), unsafe_allow_html=True)
             st.button("Start with the sample requirements", key="suggest-sample", on_click=start_with_sample)
         show_legacy = False
         if replay_card_wanted():
             with st.container(key="sg-replay"):
-                st.markdown(suggestion_html("history", "Replay the <b>recorded run</b>", "Offline, same screens"),
+                st.markdown(suggestion_html("history", "Replay the <em>recorded run</em>", "Offline, same screens"),
                             unsafe_allow_html=True)
                 st.button("Replay the recorded run", key="suggest-replay", on_click=switch_to_replay)
         else:
             with st.container(key="sg-legacy"):
-                st.markdown(suggestion_html("dns", "See the <b>legacy estate</b>", "What the agents will migrate"),
+                st.markdown(suggestion_html("dns", "See the <em>legacy estate</em>", "What the agents will migrate"),
                             unsafe_allow_html=True)
                 show_legacy = st.button("See the legacy estate", key="suggest-legacy")
         with st.container(key="sg-agents"):
-            st.markdown(suggestion_html("groups", "What will <b>the six agents</b> do?", "One minute overview"),
+            st.markdown(suggestion_html("groups", "What will <em>the six agents</em> do?", "One-minute overview"),
                         unsafe_allow_html=True)
             show_agents = st.button("What will the six agents do?", key="suggest-agents")
     st.markdown('<div class="tx-foot">A transparent re-creation of the loop AWS Transform\'s agents run, '
@@ -680,7 +705,7 @@ def render_transcript() -> None:
                     st.rerun()  # re-render everything with the final result and the approval gate
 
 
-@st.dialog("Ask for changes", width="medium", icon=":material/edit:", on_dismiss=close_feedback)
+@st.dialog("Ask for Changes", width="medium", icon=":material/edit:", on_dismiss=close_feedback)
 def feedback_dialog(stage: str) -> None:
     if not ss.show_feedback:  # sent: close the dialog with a full rerun that shows the revision live
         st.rerun()
@@ -694,28 +719,28 @@ def feedback_dialog(stage: str) -> None:
                      placeholder="e.g. Size the database for 3x traffic next year")
         if ss.pop("feedback_hint", False):
             st.caption("Write what the agent should change first.")
-        st.form_submit_button("Send to the agent", key="send_feedback", type="primary", icon=":material/send:",
+        st.form_submit_button("Send to the Agent", key="send_feedback", type="primary", icon=":material/send:",
                               on_click=send_feedback_form, args=(stage,))
 
 
 def review_buttons(stage: str, approve_label: str, approve_key: str, retry_revision: bool = False) -> None:
-    with st.container(horizontal=True, gap="small", vertical_alignment="center"):
+    with st.container(horizontal=True, gap="small", vertical_alignment="center"):  # the primary action on the right
+        st.button("Ask for Changes", key="request_changes", on_click=open_feedback, icon=":material/edit:")
+        if retry_revision:
+            st.button("Retry Revision", key="retry", on_click=retry, args=(stage,), icon=":material/refresh:")
         st.button(approve_label, type="primary", key=approve_key, on_click=approve, args=(stage,),
                   icon=":material/check:")
-        if retry_revision:
-            st.button("Retry revision", key="retry", on_click=retry, args=(stage,), icon=":material/refresh:")
-        st.button("Ask for changes", key="request_changes", on_click=open_feedback, icon=":material/edit:")
 
 
 def recap(p: Pipeline) -> None:
     """Fallback finale when views.render_finale is not there."""
     with st.container(key="recap"):
-        st.markdown("### Migration complete")
+        st.markdown("### Migration Complete")
         st.markdown("One legacy server, six agents, and you approved every step.")
         pills = "".join(f'<span class="tx-pill">{STAGE_META[s].short}</span>' for s in STAGES)
         st.markdown(f'<div class="tx-recap-row">{pills}</div>', unsafe_allow_html=True)
         if merged := p.merged_artifacts():
-            st.download_button("Download all artifacts (.zip)", zip_bytes(merged), type="primary",
+            st.download_button("Download All Artifacts (.zip)", zip_bytes(merged), type="primary",
                                icon=":material/download:", file_name=f"{p.run_id}-artifacts.zip",
                                mime="application/zip", key="zip-final", on_click="ignore")
 
@@ -741,11 +766,11 @@ def gate(slot: DeltaGenerator) -> None:
             st.warning(f"**The revision of step {n} of {total} didn't finish:** {p.state.stages[stage].error}. "
                        "The previous result above is unchanged: approve it, retry the revision, or ask for "
                        "something else.", icon=":material/warning:")
-            review_buttons(stage, "Approve previous result", "approve_previous", retry_revision=True)
+            review_buttons(stage, "Approve Previous Result", "approve_previous", retry_revision=True)
     elif status == AWAITING:  # one row: the step on the left, the buttons on the right (they wrap when narrow)
         with slot.container(key="gate"), st.container(key="gate-row", horizontal=True, vertical_alignment="center"):
             st.markdown(f"**Step {n} of {total} is ready for review.** Next: {NEXT_STEP[stage]}.")
-            review_buttons(stage, "Approve and continue", "approve")
+            review_buttons(stage, "Approve and Continue", "approve")
     elif status == RUNNING:  # driven by another process: nothing to follow here
         with slot.container(key="gate-step"):
             st.markdown(f"**{meta.title}** is running in another process. Refresh when it finishes.")
@@ -803,6 +828,7 @@ def landing_scroll(slot: DeltaGenerator) -> None:
 
 # --------------------------------------------------------------------------- page
 
+sync_theme_param()
 attach_from_url()
 nav_slot = sidebar()
 strip_slot = topbar()

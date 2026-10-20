@@ -73,6 +73,18 @@ def text(at: AppTest) -> str:
     return "\n".join(m.value for m in at.markdown)
 
 
+KPI_RE = re.compile(r'<div class="tx-kpi"[^>]*><div class="tx-kpi-l">(.*?)</div><div class="tx-kpi-v">(.*?)</div>')
+
+
+def kpis(at: AppTest) -> dict[str, str]:
+    """The KPI rows (HTML now, not st.metric): label -> value as text ("62/100", "$208")."""
+    out = {}
+    for m in at.markdown:
+        for label, value in KPI_RE.findall(m.value):
+            out[label] = re.sub(r"<[^>]+>|\s", "", value).replace("&#36;", "$")
+    return out
+
+
 def test_welcome_page(env):
     at = app()
     assert "let's migrate your legacy app." in text(at) and "You approve every step." in text(at)
@@ -81,7 +93,8 @@ def test_welcome_page(env):
     assert switch.options == ["Local", "AgentCore"]
     assert switch.value is None and at.toggle(key="fake_on").value  # UI_MODE=fake lives in the "…" menu
     assert not at.toggle(key="replay_on").value and at.toggle(key="show_bridges_w").value
-    assert nav(at).count("Not started") == 6 and "Nova 2 Lite" in nav(at) and "DeepSeek V3.2" in nav(at)
+    assert nav(at).count("Not Started") == 6 and "Nova 2 Lite" in nav(at) and "DeepSeek V3.2" in nav(at)
+    assert "Migration Workshop" in nav(at)  # the brand lives in the nav, Title Case
     assert not at.chat_input  # the chat bar is hidden until a run exists
     copy = text(at)
     assert "transparent re-creation of the loop AWS Transform's agents run" in copy
@@ -96,10 +109,10 @@ def test_the_shell_has_no_emoji():
 
 
 def test_css_survives_the_html_sanitizer():
-    from ui.style import CSS, PRESENTER_CSS
+    from ui.style import CSS, DARK_CSS, PRESENTER_CSS
 
     # st.html runs DOMPurify, which drops a whole <style> block whose text contains "<" + a letter
-    for css in (CSS, PRESENTER_CSS, getattr(views, "CSS", "<style></style>")):
+    for css in (CSS, PRESENTER_CSS, DARK_CSS, getattr(views, "CSS", "<style></style>")):
         assert css.count("<style>") == css.count("</style>") >= 1
         for body in css.split("<style>")[1:]:
             assert not re.search(r"<[a-zA-Z/!]", body.split("</style>")[0]), body[:80]
@@ -108,9 +121,9 @@ def test_css_survives_the_html_sanitizer():
 def test_six_agents_dialog_and_replay_suggestion(env):
     at = app()
     click(at, "suggest-agents")
-    assert "Inventory the EC2 box" in text(at) and "In AWS Transform: Test &amp; validation" in text(at)
+    assert "Inventory the EC2 box" in text(at) and "In AWS Transform: Test &amp; Validation" in text(at)
     click(at, "suggest-replay")
-    assert at.session_state["mode"] == "replay" and "Recorded run" in text(at)
+    assert at.session_state["mode"] == "replay" and "Recorded Run" in text(at)
     assert at.session_state["pipeline"] is None  # switching to Replay does not start anything
 
 
@@ -120,11 +133,11 @@ def test_start_and_approve_every_gate(env):
     assert p.status("discovery") == AWAITING
     assert p.requirements()[0] == "requirements/migration-requirements.md"
     assert {"approve", "request_changes"} <= keys(at)
-    assert at.button(key="approve").label == "Approve and continue"
-    assert at.button(key="request_changes").label == "Ask for changes"
-    assert "**Step 1 of 6 is ready for review.** Next: requirements." in text(at)
-    assert any(m.label.endswith("Readiness") and m.value == "62/100" for m in at.metric)
-    assert "tx-awaiting_approval tx-active" in nav(at) and "Needs review" in nav(at)
+    assert at.button(key="approve").label == "Approve and Continue"
+    assert at.button(key="request_changes").label == "Ask for Changes"
+    assert "**Step 1 of 6 is ready for review.** Next: requirements." in text(at)  # a sentence: sentence case
+    assert kpis(at)["Readiness"] == "62/100"
+    assert "tx-awaiting_approval tx-active" in nav(at) and "Needs Review" in nav(at)
     assert any(".st-key-stage-" in h.value and "tx-scroll" in h.value for h in at.get("html"))  # result in view
     assert any("var sel = " in h.value and "land = true" in h.value for h in at.get("html"))  # above the gate
 
@@ -138,7 +151,7 @@ def test_start_and_approve_every_gate(env):
     assert at.chat_input(key="chat").proto.disabled
     stage_entries = [e for e in at.session_state["transcript"] if e["kind"] == "stage"]
     assert [e["job"].stage for e in stage_entries] == STAGES
-    assert any("Optimized" in m.label for m in at.metric)  # finops card rendered
+    assert "Optimized" in kpis(at)  # finops card rendered
     assert (p.dir / "workspace" / "reports" / "finops-report.md").exists()
 
 
@@ -175,9 +188,9 @@ def test_mode_switch_and_plan_b_toggles(env):
     assert at.session_state["mode"] == "agentcore" and not at.toggle(key="fake_on").value
     at.toggle(key="replay_on").set_value(True).run()
     assert at.session_state["mode"] == "replay" and at.segmented_control(key="mode_seg").value is None
-    assert "Recorded run" in text(at)
+    assert "Recorded Run" in text(at)
     at.toggle(key="replay_on").set_value(False).run()  # back to the live mode it came from
-    assert at.session_state["mode"] == "agentcore" and "Recorded run" not in text(at)
+    assert at.session_state["mode"] == "agentcore" and "Recorded Run" not in text(at)
     at.segmented_control(key="mode_seg").set_value("local").run()
     assert at.session_state["mode"] == "local"
 
@@ -203,7 +216,7 @@ def test_show_aws_transform_notes_toggle(env):
     at = app()
     assert at.session_state["show_bridges"] is True
     toggle = at.toggle(key="show_bridges_w")  # the widget mirrors the state key views.py reads
-    assert toggle.label == "Show AWS Transform notes"
+    assert toggle.label == "Show AWS Transform Notes"
     toggle.set_value(False).run()
     assert at.session_state["show_bridges"] is False and not at.toggle(key="show_bridges_w").value
     start(at)
@@ -220,7 +233,7 @@ def test_replay_mode_replays_a_recorded_run(env):
     at.toggle(key="replay_on").set_value(True).run()
     at.selectbox(key="replay_from").set_value(recorded.run_id).run()
     p = start(at)
-    assert "Recorded run" in text(at)
+    assert "Recorded Run" in text(at)
     assert p.run_id != recorded.run_id and p.status("discovery") == AWAITING
     assert at.session_state["client"].source == recorded.dir  # replayed from the picked run, not a live agent
     assert p.data("discovery") == recorded.data("discovery")
