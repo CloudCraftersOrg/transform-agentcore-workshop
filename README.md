@@ -20,4 +20,15 @@ make ui                      # http://localhost:8501
 | [transform_agents/](transform_agents/) | The six agents, the shared core and the orchestrator |
 | [ui/](ui/) | Streamlit chatbot |
 | [deploy/](deploy/) | Deployment to AgentCore Runtime (AgentCore CLI) |
-| [docs/](docs/) | Design plan, model benchmark and stage contracts |
+| [samples/](samples/) | The requirements file uploaded on stage, and the recorded run that Replay plays back |
+| [scripts/](scripts/) | kind cluster, repo-local tools, the legacy estate (up, load, down), preflight, the talk's numbers |
+| [tests/](tests/) | About 410 unit tests (Bedrock mocked, `make test`) plus live smoke tests (`make test-live`) |
+
+| Document | What it is |
+|---|---|
+| [WORKSHOP.md](WORKSHOP.md) | The runbook: setup, deploy, rehearsal, run of show, plan B, teardown |
+| [docs/KEYNOTE-SCRIPT.md](docs/KEYNOTE-SCRIPT.md) | The word-for-word keynote, with Q&A and the cheat sheet of numbers |
+| [docs/CONTRACTS.md](docs/CONTRACTS.md) | Stage contracts: inputs, outputs, artifacts and the `options.*` reference |
+| [docs/design/](docs/design/) | The approved UI mockups (light and dark) and [GUIDELINES.md](docs/design/GUIDELINES.md) |
+| [docs/specs/](docs/specs/) and [MAINTAINING.md](MAINTAINING.md) | The current, maintained specs |
+| [docs/PLAN.md](docs/PLAN.md) | The historical build plan (2026-10-19/20); the model benchmark lives in it |

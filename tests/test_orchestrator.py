@@ -75,7 +75,7 @@ def test_load_legacy_estate_reads_the_real_repo():
     files = load_legacy_estate()
     assert "legacy/app/app.py" in files and all(path.startswith("legacy/") for path in files)
     terraform = {p for p in files if p.startswith("legacy/terraform/")}
-    if terraform:  # legacy-infra/terraform is written by another workstream
+    if terraform:  # only when legacy-infra/terraform exists in this checkout
         assert terraform == {f"legacy/terraform/{name}" for name in (
             "versions.tf", "variables.tf", "main.tf", "outputs.tf", "user_data.sh.tftpl", "terraform.tfvars.example")}
 

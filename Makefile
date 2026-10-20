@@ -18,7 +18,7 @@ REQ ?= samples/requirements/migration-requirements.md
 # REPLAY_FROM: recorded (samples/recorded-run) | latest (newest complete run in runs/) | fixtures | runs/<id>.
 # AGENTS: a subset for deploy-agents / destroy-agents, e.g. AGENTS="hello discovery".
 # REPLAY_SPEED: replay pacing for `make replay` and the UI's Replay mode: 1 = the recorded timings, 4 = rehearsal.
-# RUN: the run directory for `make record`.  CLEAN_RUNS=1 lets `make clean` delete runs/.
+# RUN: the run directory for `make record` and `make numbers`.  CLEAN_RUNS=1 lets `make clean` delete runs/.
 MODE ?= local
 REPLAY_FROM ?= recorded
 REPLAY_SPEED ?= 1
@@ -27,13 +27,13 @@ AGENTS ?=
 RUN ?=
 CLEAN_RUNS ?=
 
-# Run a script written by another workstream, with a clear message when it is not there yet.
+# Run a repo script; if it is missing, say so and fail ("✗ <path> not found").
 define run_script
 	@if [ -f "$(1)" ]; then bash "$(1)" $(2); else echo "✗ $(1) not found"; exit 1; fi
 endef
 
-.PHONY: help install test test-live lint ui run-cli replay record legacy-up legacy-down kind-up kind-down tools \
-        deploy-agents destroy-agents preflight clean
+.PHONY: help install test test-live lint ui run-cli replay record numbers legacy-up legacy-down kind-up kind-down \
+        tools deploy-agents destroy-agents preflight clean
 
 help: ## List the targets
 	@echo "Transform × AgentCore workshop  (AWS_PROFILE=$(or $(AWS_PROFILE),<default chain>) AWS_REGION=$(AWS_REGION))"
@@ -64,6 +64,9 @@ replay: ## Replay a recorded run headless (REPLAY_FROM=recorded|latest|fixtures|
 record: ## Copy a complete run into samples/recorded-run for replay (RUN=runs/<id>)
 	@if [ -z "$(RUN)" ]; then echo "usage: make record RUN=runs/<id>"; exit 2; fi
 	$(UV) run python -m transform_agents.orchestrator.record $(RUN)
+
+numbers: ## Print the numbers the talk quotes from a run (RUN=runs/<id>, default the recording)
+	$(UV) run python scripts/demo_numbers.py $(RUN)
 
 legacy-up: ## Deploy the legacy EC2 estate (creates AWS resources)
 	$(call run_script,scripts/legacy-up.sh)

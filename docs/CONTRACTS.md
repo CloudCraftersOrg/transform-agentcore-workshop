@@ -9,6 +9,7 @@ General rules:
 - Artifact paths are relative and use the prefixes given below, so later stages can pick them up.
 - **Revision**: when `request.feedback` is non-empty, the orchestrator also passes the stage's previous artifacts in `files` and its previous data as `inputs.previous`. The agent applies the feedback by editing the existing files instead of starting over.
 - Agents never create AWS resources. Read-only AWS calls (describe, CloudWatch metrics, Pricing API) are allowed but must degrade gracefully when there are no credentials.
+- Every `options.*` key an agent reads is listed in the [Options reference](#options-reference) at the end.
 
 ---
 
@@ -80,7 +81,7 @@ On a revision, the agent resolves every open question the reviewer's feedback an
   "env": [{"name": "DATABASE_URL", "source": "secret|configmap", "required": true, "description": "..."}],
   "resources": {"requests": {"cpu": "100m", "memory": "128Mi"}, "limits": {"cpu": "500m", "memory": "256Mi"}},
   "manifests": ["k8s/base/deployment.yaml"],
-  "changes": [{"file": "microservice/app/main.py", "change": "...", "addresses": ["LF-01", "SEC5"]}],
+  "changes": [{"file": "microservice/app/api.py", "change": "...", "addresses": ["LF-01", "SEC5"]}],
   "tests": {"command": "pytest -q", "passed": true, "output": "..."}
 }
 ```
@@ -151,3 +152,29 @@ On a revision, the agent resolves every open question the reviewer's feedback an
 }
 ```
 **Artifacts**: `reports/finops-report.md`
+
+---
+
+## Options reference
+
+Every `options.*` key the agents read (`request.options.get(...)` in `transform_agents/`). Unknown keys are ignored.
+The orchestrator sends only the keys marked **yes** in the last column, from the run's `Options`
+(`transform_agents/orchestrator/pipeline.py`): the UI's **…** menu toggles, or the CLI flags `--live-aws`,
+`--live-deploy`, `--simulate-drift` and `--live-pricing`. The others are for direct requests (`deploy/invoke.sh` with a
+JSON payload, tests) and keep their defaults in a normal run.
+
+| Key | Stage | Type | Default | Effect | Orchestrator |
+|---|---|---|---|---|---|
+| `live_aws` | discovery | bool | `false` | Describe the running EC2 instance (tag `app=legacy-inventory`) and read its CloudWatch CPU. Off: the infrastructure comes from the legacy Terraform and utilization is an estimate (`source: "estimate"`). | yes (**Live AWS Discovery (EC2 + CloudWatch)**) |
+| `region` | discovery | string | `AWS_REGION`, then `AWS_DEFAULT_REGION`, then `us-west-2` | Region for the live EC2 and CloudWatch reads. | no |
+| `timeout_s` | discovery, requirements | number (s) | 60 (discovery), 90 (requirements) | Hard deadline for the model loop. Discovery then finishes with a deterministic fallback assessment; requirements keeps a valid draft spec if it has one, otherwise it ends in an `error`. | no |
+| `time_budget_s` | modernization | number (s) | 150 (env `MODERNIZATION_TIME_BUDGET_S`) | Whole-stage budget. The model loop gets the budget minus a finalize reserve (30 s, or a quarter of the budget if smaller); the deterministic finish (tests and manifests on the final files) gets the rest. | no |
+| `docker_build` | modernization | bool | `false` | Adds the `docker_build_check` tool and, at the end, builds the image and smoke-tests it read-only as UID 10001. Skipped when Docker is unavailable or less than 30 s of budget is left. | no |
+| `max_validations` | terraform | int | 4 | `terraform_validate` rounds the model gets. After the last one it is told to submit and list what is left; beyond `max_validations + 2` calls the loop stops. | no |
+| `live_deploy` | k8s_validation | bool | `false` | After the checks pass, build the image and deploy it to the local kind cluster, then run smoke tests. Needs Docker and the kind cluster, so it works only when the agent runs locally; without them `live_deploy.status` is `skipped`. | yes (**Live Deploy to kind**) |
+| `kind_cluster` | k8s_validation | string | `transform-workshop` | kind cluster to deploy to (kubectl context `kind-<name>`). | yes (always the default) |
+| `simulate_drift` | k8s_validation | bool (`true` or `"true"`) | `false` | Demo aid: before the first check, inject typical hand-edit violations, reported in `data.drift_injected` and labelled as simulated. Skipped on a revision. The fake client (`orchestrator/fakes.py`) honours it too. | yes (**Simulate Manual Drift (Demo)**) |
+| `time_budget_s` | k8s_validation | number (s) | 150 | Hard stop for the model's fix loop; the stage then re-checks, deploys if still needed and writes the report deterministically. | no |
+| `live_pricing` | finops | bool | `false` | Fetch prices from the read-only Pricing, Savings Plans, EC2 and EKS APIs instead of the committed snapshot (`knowledge/prices-us-west-2.json`). Falls back to the snapshot on any error, with a warning. Sets `data.pricing_source`. | yes (**Live AWS Pricing**) |
+| `as_of` | finops | ISO date string | today | Analysis date. Decides whether the Kubernetes version is in standard or extended EKS support (the 1.33 surcharge) and is printed in the report. | no |
+| `time_budget_s` | finops | number (s) | 55 | Deadline for the model loop; past it (or if the model never submits) the deterministic cost model completes the result (`metrics.fallback: true`). | no |

@@ -53,7 +53,7 @@ the deploy uploads about 470 MB.
    are estimates, not measurements. The script ends by writing `deploy/agent-arns.json`.
 5. **Smoke test.** `deploy/invoke.sh hello '{"prompt":"hi"}'` should stream status events and end with a `result`.
    `deploy/status.sh` should list all 7 runtimes as `READY`.
-6. **UI.** `make ui`, then choose the **☁️ AgentCore Runtime** mode in the sidebar.
+6. **UI.** `make ui`, then pick **AgentCore** in the top-bar **Local · AgentCore** switch.
 7. **After the workshop,** tear everything down: see [Teardown](#teardown).
 
 ## How it works
@@ -107,9 +107,9 @@ Two details about the runtimes:
 - AWS credentials for the target account. Use an SSO profile with rights to run CloudFormation and to create IAM
   roles, S3 objects and `bedrock-agentcore` resources (AdministratorAccess works):
   `aws sso login --profile <your-profile>`.
-- Bedrock access to the models in `transform_agents/core/config.py`: Nova 2 Lite (`us.` profile), DeepSeek V3.2 and
-  Mistral Large 3 in `us-west-2`. If the account has never used them, invoke each model once from the console or
-  the CLI first (`make preflight` checks this).
+- Bedrock access to the models in `transform_agents/core/config.py`: Nova 2 Lite (`us.` profile) and DeepSeek V3.2 in
+  `us-west-2` (Mistral Large 3 only if you override a stage with it). If the account has never used them, invoke each
+  model once from the console or the CLI first (`make preflight` checks this).
 
 ## One-time setup
 
@@ -120,8 +120,7 @@ Two details about the runtimes:
 | **CloudWatch Transaction Search** (traces in GenAI Observability) | `agentcore deploy` enables it if it is missing. Check with `aws xray get-trace-segment-destination` (→ `CloudWatchLogs`). | Console: CloudWatch → Application Signals → Transaction Search → Enable |
 
 To see whether the region is already bootstrapped, run `aws cloudformation describe-stacks --stack-name CDKToolkit`.
-The author's account (`<account-id>`) was not bootstrapped in `us-west-2` on 2026-10-20, so its first deploy
-creates `CDKToolkit` first.
+If the account is not CDK-bootstrapped in that region yet, the first deploy creates `CDKToolkit` before the runtimes.
 
 ## Day-to-day commands
 
@@ -299,7 +298,8 @@ and cached in `deploy/.cache/bin`.
 
 `transform_agents/orchestrator/clients.py` (`AgentCoreClient`) loads this file; `AGENTCORE_ARN_<STAGE>` overrides one
 entry. The client calls `bedrock-agentcore:InvokeAgentRuntime` with `qualifier=DEFAULT` and the same request payload
-as local mode, then parses the SSE stream into the same events. To use it, pick **☁️ AgentCore Runtime** in the UI, or
+as local mode, then parses the SSE stream into the same events. To use it, pick **AgentCore** in the UI's top-bar
+**Local · AgentCore** switch, or
 run `python -m transform_agents.orchestrator --mode agentcore`. The caller needs
 `bedrock-agentcore:InvokeAgentRuntime` on those ARNs. The file is rewritten after every deploy or destroy.
 `uv run python deploy/deploy_tool.py arns` regenerates it from the CLI state, or from the stack outputs on a fresh
@@ -312,10 +312,10 @@ waiting on Bedrock, is free), and memory for the session. List rates are about $
 $0.009–0.017 per GB-hour; check the AgentCore pricing page for your region.
 
 A full six-stage pipeline run comes to well under $0.10 of Runtime, plus a few cents of Bedrock tokens
-(roughly 100–200k tokens). Deployed agents that nobody invokes cost nothing. The 600 s idle session timeout caps how
+(roughly 250k tokens). Deployed agents that nobody invokes cost nothing. The 600 s idle session timeout caps how
 long a finished session keeps its memory.
 
-Fixed costs are negligible: about 0.5 GB of zips in S3 (≈ $0.01 a month), CloudWatch log and span ingestion
+Fixed costs are negligible: about 470 MB of zips in S3 per deploy (≈ $0.01 a month), CloudWatch log and span ingestion
 (cents), and an empty CDKToolkit stack.
 
 ## Troubleshooting

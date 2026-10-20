@@ -9,7 +9,8 @@ How to read this script:
 - **Plain text** is what you say. It's written to be spoken: short sentences, pauses built in.
 - **[SLIDE]**, **[CLICK]**, **[PAUSE]** and **[TERMINAL]** are stage directions.
 - **▶ Plan B** is the fallback if something breaks (details in [WORKSHOP.md §8](../WORKSHOP.md#8-plan-b-when-something-breaks-on-stage)).
-- Numbers come from the rehearsal run on 2026-10-20. Re-check them after your own rehearsal (cheat sheet at the end).
+- Numbers come from the recorded rehearsal run on 2026-10-20. Re-check them after your own rehearsal: `make numbers`
+  prints them from any run (cheat sheet at the end).
 
 | Time | Part | Goal |
 |---|---|---|
@@ -143,9 +144,11 @@ Let's migrate a server.
 
 ## Part 2: Live demo (15:00–40:00)
 
-> **Before you start:** UI open at http://localhost:8501, mode **Local**, toggles **Live AWS discovery ON**,
-> **Live deploy to kind ON**, **Simulate manual drift ON**. Then click **New run**. Terminal ready, with a large font.
-> **▶ Plan B for the whole demo:** **…** menu → **Replay a recorded run (offline)** (between stages; mid-stage, use a fresh tab). It's the same UI, and the audience won't notice.
+> **Before you start:** UI open at http://localhost:8501, **Local** selected in the top-bar **Local · AgentCore** switch.
+> In the **…** menu (top right): **Live AWS Discovery (EC2 + CloudWatch)** ON, **Live Deploy to kind** ON,
+> **Simulate Manual Drift (Demo)** ON. If an old run is on screen, click **+** (New Run) → **Start a New Run**. Terminal
+> ready, with a large font.
+> **▶ Plan B for the whole demo:** **…** menu → **Replay a Recorded Run (Offline)** (between stages; mid-stage, use a fresh tab). It's the same UI, and the audience won't notice.
 
 ### 15:00 · The patient (2 min)
 
@@ -165,9 +168,9 @@ It works. It makes money. And nobody wants to touch it. Let's hand it to the age
 
 ### 17:00 · Agent 1: Discovery & Assessment (3 min)
 
-**[CLICK: Start migration]**
+**[CLICK: Start Migration]**
 
-Watch the timeline on the left. Notice what the agent does *first*: it doesn't "think", it **uses tools**.
+Watch the checklist in the agent's card. Notice what the agent does *first*: it doesn't "think", it **uses tools**.
 It scans the code, parses the old Terraform, and reads the real instance and its CloudWatch metrics.
 
 **[Wait for the result card: about 10 seconds]**
@@ -182,28 +185,28 @@ That's why it's fast, and why you can audit every finding.
 > dependency mapping, application grouping and the business case. The benefit is weeks of archaeology turned into
 > an evidence-backed starting point.
 
-**[CLICK: ✅ Approve & continue]**
+**[CLICK: Approve and Continue]**
 
 ### 20:00 · Agent 2: Requirements (4 min)
 
 Now the human side of a migration: what does the business actually want?
 
-**[CLICK: drag in `migration-requirements.md`, or "Use sample requirements"]**
+**[CLICK: drag in `migration-requirements.md`, or "Use Sample Requirements", then "Run Requirements". If you started from the "Start with the sample requirements" card, it's already running]**
 
 This is a normal requirements document, the kind your business owner writes. Budget of $450 a month. A 99.9% SLO. Graviton. PostgreSQL.
 And, like every real document, a few vague points: "maybe 3x more traffic next year".
 
-**[Wait: about 15 seconds]**
+**[Wait: about 18 seconds]**
 
 Twenty-four requirements, each one with a priority and acceptance criteria, and every one that addresses a problem is **traced** back to what discovery found.
 The security finding becomes requirement SEC5. Nothing gets lost between the business and the engineers.
 
 And look at this: **open questions**. The agent didn't invent an answer for "3x traffic". It wrote down an assumption and the impact, and asked us.
 
-**[CLICK: ✏️ Request changes]**, then type:
+**[CLICK: Ask for Changes]**, type this, then **[CLICK: Send to the Agent]**:
 *"Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth."*
 
-**[Wait: about 8 seconds, then point at the open questions]**
+**[Wait: about 11 seconds, then point at the open questions]**
 
 Look at the open questions. Two of them are now **resolved**: growth and dev/test, with my decision in my words.
 The third, the cutover date, is still open, because I didn't answer it.
@@ -213,7 +216,7 @@ That's the human in the loop. I don't edit JSON. I talk to the agent, and it cha
 > **Real AWS Transform:** every job has the same pattern. Agents propose, humans review and approve each step.
 > The benefit is speed without giving up control.
 
-**[CLICK: ✅ Approve & continue]**
+**[CLICK: Approve and Continue]**
 
 ### 24:00 · Agent 3: Code modernization (5 min)
 
@@ -241,7 +244,7 @@ Old on the left, new on the right. Same business, modern platform.
 > mainframe reimagining, and AWS Transform custom for your own patterns. The benefit is that the repetitive 80% is done
 > consistently, so your experts spend their time on the 20% that matters.
 
-**[CLICK: ✅ Approve & continue]**
+**[CLICK: Approve and Continue]**
 
 ### 29:00 · Agent 4: Terraform (4 min)
 
@@ -254,7 +257,7 @@ our specification onto it: Graviton nodes, minimum two replicas for the SLO, a M
 
 Then it doesn't *claim* the code is valid. It **proves** it, with a real `terraform validate` plus our own checks against the specification.
 
-**[Result: about 15 seconds, ✅ valid]**
+**[Result: about 17 seconds, ✅ valid]**
 
 This is the exact task where every model failed from scratch, and where every model succeeds when it's grounded.
 
@@ -263,7 +266,7 @@ Notice one detail: Kubernetes version **1.33**, straight from the spec. Keep tha
 > **Real AWS Transform:** network and infrastructure conversion to infrastructure as code, in CloudFormation, CDK or Terraform.
 > The benefit is a landing zone in days instead of a quarter of hand-written templates.
 
-**[CLICK: ✅ Approve & continue]**
+**[CLICK: Approve and Continue]**
 
 ### 33:00 · Agent 5: Kubernetes validation + live deploy (4 min)
 
@@ -287,13 +290,13 @@ That's our 2017 server, now a microservice on Kubernetes.
 > **Real AWS Transform:** validation is part of every job, through tests, test environments and cutover checks. The benefit:
 > you don't find out in production.
 
-**[CLICK: ✅ Approve & continue]**
+**[CLICK: Approve and Continue]**
 
 ### 37:00 · Agent 6: FinOps (3 min)
 
 And finally, the question every CFO asks. What does it cost?
 
-**[Result: about 10 seconds, with the chart]**
+**[Result: about 11 seconds, with the chart]**
 
 **[PAUSE, let the chart land]**
 
@@ -311,15 +314,16 @@ What you pay for is the 99.9% SLO, a database that survives an AZ, autoscaling, 
 
 > **Real AWS Transform:** assessment and business case, so you know the cost *before* you migrate, not after the first invoice.
 
-**[CLICK: ✅ Approve & continue → wrap-up message]**
+**[CLICK: Approve and Continue → wrap-up message]**
 
 **[PAUSE]**
 
 Let's recap. One legacy server. Six agents. About two minutes of machine time. Seventeen findings, twenty-four
-requirements traced, a tested microservice, validated infrastructure, a live deployment, and a cost model that caught a
+requirements captured and traced, a tested microservice, validated infrastructure, a live deployment, and a cost model that caught a
 $365-a-month mistake. And a human approved every single step.
 
-> **Optional, if you're ahead of time (+3 min):** switch the sidebar to **AgentCore Runtime** and re-run Discovery. "Same code,
+> **Optional, if you're ahead of time (+3 min):** switch the top-bar **Local · AgentCore** control to **AgentCore**, click
+> **+** (New Run) → **Start a New Run**, then **Start Migration** to re-run Discovery. "Same code,
 > now running serverless on AgentCore." Show **CloudWatch → GenAI Observability**: every tool call is a span.
 
 ---
@@ -433,17 +437,19 @@ Thank you.
 
 ---
 
-## Cheat sheet: numbers from the rehearsal run (2026-10-20)
+## Cheat sheet: numbers from the recorded rehearsal run (2026-10-20)
+
+From `make numbers` on `samples/recorded-run`. After you re-record, run it again and update this table.
 
 | Stage | Time | Number to quote |
 |---|---|---|
-| Discovery | ~10 s | 17 findings (3 critical, SQL injection), readiness 35–50 (varies per run), replatform |
-| Requirements | ~15 s, revision ~8 s | 24 requirements (13 traced to findings), budget $450, 3 open questions; your feedback resolves 2 |
-| Modernization | ~60 s | 23 generated tests pass; API contract preserved |
-| Terraform | ~15 s | `terraform validate` passes; Graviton, Multi-AZ RDS, Kubernetes 1.33 |
-| K8s Validation | ~15 s | 4 simulated violations detected and fixed; live deploy; 200/200/200/201/409 |
-| FinOps | ~11 s | $72 today → $623 as designed → $208 optimized; 1.33 extended support +$365/month |
-| Whole pipeline | ~2 min | About 250k tokens, a few cents |
+| Discovery | 9.8 s | 17 findings (3 critical, SQL injection), readiness 50/100 (35–50, varies per run), replatform |
+| Requirements | 18.1 s, revision 11.2 s | 24 requirements (13 traced to findings), budget $450, 3 open questions; your feedback resolves 2 |
+| Modernization | 57.0 s | 23 generated tests pass; API contract preserved |
+| Terraform | 17.1 s | `terraform validate` passes; 17/17 spec checks; Graviton, Multi-AZ RDS, Kubernetes 1.33 |
+| K8s Validation | 15.8 s | 4/4 simulated violations detected and fixed; live deploy; 200/200/200/201/409 |
+| FinOps | 10.9 s | $72 today → $623 as designed → $208 optimized; 1.33 extended support +$365/month |
+| Whole pipeline | ~122 s (about 2 min) | ~251k tokens, a few cents |
 
 ## Suggested slide list
 

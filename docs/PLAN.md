@@ -1,6 +1,9 @@
 # Build plan — Transform × AgentCore workshop
 
-Goal: in a 1-hour session, show step by step what AWS Transform's agents do at a low level by rebuilding them as six Claude-powered agents on Amazon Bedrock AgentCore. A legacy Flask monolith running on one EC2 instance ends up as a containerized microservice on Kubernetes.
+> **Historical build plan (2026-10-19/20).** The current, maintained specs are in [docs/specs/](specs/) and
+> [MAINTAINING.md](../MAINTAINING.md). The model benchmark tables below are kept as the record of that decision.
+
+Goal: in a 1-hour session, show step by step what AWS Transform's agents do at a low level by rebuilding them as six Strands agents on Amazon Bedrock models (Nova, DeepSeek), hosted on Amazon Bedrock AgentCore. A legacy Flask monolith running on one EC2 instance ends up as a containerized microservice on Kubernetes.
 
 ## Target architecture
 
@@ -14,14 +17,14 @@ Streamlit chat UI ──► Orchestrator (approval gate after every stage)
                                     Dockerfile, k8s)   tf validate)    live kind deploy)   target cost)
 ```
 
-| # | Agent | AWS Transform analogue | Output artifacts |
+| # | Agent | AWS Transform analogue | Output artifacts (structured data travels in `result.data`) |
 |---|-------|------------------------|------------------|
-| 1 | Discovery & Assessment | Discovery / assessment (inventory, dependencies, 6R) | `assessment.json`, `assessment.md` |
-| 2 | Requirements | Job objective intake, HITL clarifications | `migration-spec.json`, `traceability.md` |
-| 3 | Code Modernization | Transform custom / .NET / Java code transformation, containerization | `microservice/**`, `Dockerfile`, `k8s/**` |
+| 1 | Discovery & Assessment | Discovery / assessment (inventory, dependencies, 6R) | `reports/assessment.md` |
+| 2 | Requirements | Job objective intake, HITL clarifications | `reports/migration-spec.md` (spec + traceability matrix) |
+| 3 | Code Modernization | Transform custom / .NET / Java code transformation, containerization | `microservice/**` (incl. `Dockerfile`), `k8s/**` |
 | 4 | Terraform (IaC) | Network/infra conversion to Terraform | `terraform/**` (validated) |
-| 5 | K8s Validation | Test & validation step | `validation-report.md` (+ fixed manifests) |
-| 6 | FinOps / Right-sizing | Assessment TCO / business case | `finops-report.md`, right-sized values |
+| 5 | K8s Validation | Test & validation step | `reports/validation-report.md` (+ fixed `k8s/**` manifests) |
+| 6 | FinOps / Right-sizing | Assessment TCO / business case | `reports/finops-report.md`; right-sized values in `result.data` |
 
 ## Key technical decisions
 
@@ -38,11 +41,11 @@ Streamlit chat UI ──► Orchestrator (approval gate after every stage)
   Rejected: Llama 3.3 70B and Magistral (didn't call tools), DeepSeek R1 (no tool use in Converse), Nova Premier and Llama 3.2 90B (end of life), Titan text (retired). Devstral 2 produced good code but took about 50s per turn.
 - **Blueprints over free-form generation**: in the benchmark, no model could write EKS Terraform from scratch that passed validation. Their training predates the `terraform-aws-modules/eks` v21 argument renames, and they didn't converge even with the validate errors fed back. Every model did succeed when it **adapted a curated, validated blueprint**. So the generating agents (Modernization, Terraform) start from known-good patterns in `knowledge/`, edit them with `edit_file`, and loop on deterministic validators (`terraform validate`, kubeconform, policy checks). This mirrors AWS Transform's curated transformation definitions.
 - **Structured outputs**: each agent finishes by calling a `submit_result` tool. Forced `tool_choice` is not used, and if the tool isn't called the agent falls back to parsing JSON from the final text.
-- **One contract for every agent**: the request is `{run_id, instruction, feedback?, inputs, files}`. The agent streams SSE events `status | text | tool | artifact | result | error`. The final `result` holds `{summary, data, artifacts{path: content}}`. Artifacts travel in the payload, so local and cloud modes behave the same.
+- **One contract for every agent**: the request is `{run_id, instruction, feedback?, inputs, files, options}`. The agent streams SSE events `status | text | tool_start | tool_end | artifact | result | error`. The final `result` holds `{summary, data, artifacts{path: content}, metrics}` (see [CONTRACTS.md](CONTRACTS.md)). Artifacts travel in the payload, so local and cloud modes behave the same.
 - **Orchestration**: a deterministic pipeline that builds each stage's inputs from earlier artifacts. Every run is saved to `runs/<id>/`, and every event stream is recorded so it can be replayed as an offline fallback on stage.
 - **Kubernetes**: the agent writes EKS Terraform, which can be pre-provisioned. Live validation and deployment happen on a local **kind** cluster (`make kind-up`).
-- **AgentCore features used**: Runtime (all 6 agents) and Observability (traces). If time allows: Code Interpreter (FinOps cost model) and Memory (spec and decisions per session).
-- **Cost**: Bedrock has no free tier for inference, but these models are cheap. A full 6-agent pipeline run is roughly 100–200k tokens, which costs cents.
+- **AgentCore features used**: Runtime (all 6 agents) and Observability (traces). Code Interpreter and Memory were considered but are **not** used: the FinOps cost model runs in tested Python tools, and run state (spec, decisions, feedback) lives in `runs/<id>/`.
+- **Cost**: Bedrock has no free tier for inference, but these models are cheap. A full 6-agent pipeline run is about 250k tokens, which costs cents.
 - **Deploy**: the AgentCore CLI (`@aws/agentcore`, `agentcore deploy`) is preferred. If it can't handle our layout, we fall back to Terraform `aws_bedrockagentcore_agent_runtime`. Agents that need binaries (terraform, kubeconform) degrade gracefully when the binary is missing.
 
 - **Planted demo finding**: the spec and blueprint default to Kubernetes 1.33, which entered EKS extended support on 2026-07-29 (+$365/month). The FinOps agent flags it and its optimized plan upgrades to 1.36. This is kept on purpose as the talk's "aha" moment.
@@ -54,7 +57,7 @@ legacy-infra/          current infrastructure: Flask monolith + SQLite on EC2 (T
 samples/requirements/  the requirements file uploaded during the demo
 transform_agents/
   core/                contract, LLM client, tool-runner loop → event stream, AgentCore app wrapper, workspace tools
-  discovery/ requirements/ modernization/ iac_terraform/ k8s_validation/ finops/
+  discovery/ requirements/ modernization/ terraform/ k8s_validation/ finops/
   orchestrator/        pipeline, stage inputs, AgentClient (local | agentcore | replay)
 ui/                    Streamlit chatbot
 deploy/                AgentCore Runtime deployment for all agents

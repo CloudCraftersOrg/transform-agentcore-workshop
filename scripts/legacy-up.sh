@@ -39,7 +39,7 @@ if grep -q '^No changes' "$PLAN_DIR/plan.txt"; then
   echo "==> Already deployed"
 else
   if [[ "${AUTO_APPROVE:-0}" != 1 ]]; then
-    read -r -p "Create these AWS resources (about USD 2.25 per day)? [y/N] " answer
+    read -r -p "Create these AWS resources (about USD 2.24 per day)? [y/N] " answer
     [[ "$answer" =~ ^[Yy] ]] || { echo "Aborted, nothing was created."; exit 1; }
   fi
   echo "==> terraform apply"
