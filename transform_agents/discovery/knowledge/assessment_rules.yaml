@@ -1,0 +1,107 @@
+# Curated assessment rules (the analogue of AWS Transform's built-in assessment checks).
+# The deterministic scanners (codescan.py, infra.py) emit rule `key`s with evidence; this file gives each
+# one a stable finding id, category, title and default recommendation. The LLM decides the severity.
+# `fallback_severity` is used only when the model fails to submit (offline/degraded mode).
+
+- id: LF-01
+  key: sql_injection
+  category: security
+  title: SQL built by string concatenation (SQL injection)
+  recommendation: Use bound parameters for every query and add a regression test with a malicious search string.
+  fallback_severity: critical
+- id: LF-02
+  key: hardcoded_secrets
+  category: security
+  title: Secrets hard-coded in source code
+  recommendation: Rotate the exposed values and load secrets at runtime from AWS Secrets Manager (External Secrets or the Secrets Store CSI driver).
+  fallback_severity: critical
+- id: LF-03
+  key: unauthenticated_writes
+  category: security
+  title: Write endpoints without authentication (shared static admin token)
+  recommendation: Authenticate API clients (OIDC/JWT at the ingress or in the app) and replace the shared admin token with per-client credentials.
+  fallback_severity: high
+- id: LF-04
+  key: runs_as_root
+  category: security
+  title: Service and scheduled job run as root
+  recommendation: Run the container as a non-root user with a read-only root filesystem and all capabilities dropped.
+  fallback_severity: high
+- id: LF-05
+  key: outdated_stack
+  category: security
+  title: End-of-life runtime and outdated web framework
+  recommendation: Build the image on Python 3.12+ with Flask/Werkzeug 3.x, pin versions and scan the image in CI.
+  fallback_severity: high
+- id: LF-06
+  key: public_http
+  category: security
+  title: Internet-facing plain HTTP with an open security group
+  recommendation: Terminate TLS on an AWS load balancer (ACM certificate) in front of EKS and allow traffic only from the load balancer.
+  fallback_severity: medium
+- id: LF-07
+  key: volume_encryption
+  category: security
+  title: Instance hardening gaps (EBS encryption, IMDS)
+  recommendation: Encrypt data at rest with KMS (RDS storage encryption, EBS default encryption) and enforce IMDSv2 on worker nodes.
+  fallback_severity: low
+- id: LF-08
+  key: single_instance
+  category: reliability
+  title: Single EC2 instance in one Availability Zone (single point of failure)
+  recommendation: Run at least 2 replicas spread across Availability Zones behind a load balancer, with a PodDisruptionBudget.
+  fallback_severity: high
+- id: LF-09
+  key: local_database
+  category: reliability
+  title: SQLite database on the instance's local disk
+  recommendation: Migrate the data to Amazon RDS for PostgreSQL (Multi-AZ) so the service becomes stateless and can scale out.
+  fallback_severity: high
+- id: LF-10
+  key: local_files
+  category: reliability
+  title: Reports written to the local filesystem
+  recommendation: Write report files to Amazon S3 (or another shared store) instead of the container filesystem.
+  fallback_severity: medium
+- id: LF-11
+  key: dev_server
+  category: reliability
+  title: Flask development server used in production
+  recommendation: Serve the app with a production WSGI server (gunicorn) inside the container.
+  fallback_severity: medium
+- id: LF-12
+  key: no_backups
+  category: reliability
+  title: No backups of the application data
+  recommendation: Use RDS automated backups with point-in-time recovery sized to the RPO.
+  fallback_severity: high
+- id: LF-13
+  key: hardcoded_config
+  category: operability
+  title: Configuration hard-coded in source (absolute paths, no environment variables)
+  recommendation: Read configuration from environment variables supplied by a ConfigMap and Secrets (12-factor).
+  fallback_severity: medium
+- id: LF-14
+  key: file_logging
+  category: operability
+  title: Logs written to a local file
+  recommendation: Log structured JSON to stdout and ship it with the cluster log agent (Fluent Bit to CloudWatch Logs).
+  fallback_severity: medium
+- id: LF-15
+  key: host_cron
+  category: operability
+  title: Scheduled job runs from host cron
+  recommendation: Replace the host cron entry with a Kubernetes CronJob.
+  fallback_severity: medium
+- id: LF-16
+  key: no_probes
+  category: operability
+  title: No health or readiness endpoints for an orchestrator
+  recommendation: Add /healthz (liveness) and /readyz (checks the database) and wire them to Kubernetes probes.
+  fallback_severity: medium
+- id: LF-17
+  key: overprovisioned
+  category: cost
+  title: Instance over-provisioned for its load
+  recommendation: Size pods from measured usage on small Graviton nodes, and use gp3 instead of gp2 storage.
+  fallback_severity: low

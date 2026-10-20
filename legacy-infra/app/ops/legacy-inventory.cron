@@ -1,0 +1,2 @@
+# nightly inventory report (writes CSV to local disk)
+0 2 * * * root curl -s http://127.0.0.1:5000/reports/daily >> /var/log/legacy-inventory/cron.log 2>&1

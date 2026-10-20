@@ -1,0 +1,22 @@
+# Repo-local AgentCore CLI (npm install --prefix deploy/.cli)
+.cli/node_modules/
+
+# Generated per deploy by deploy_tool.py prepare (account/region specific)
+app/
+agentcore/agentcore.json
+agentcore/aws-targets.json
+# The CLI state (agentcore/.cli/deployed-state.json) holds the account id and runtime ARNs, so it stays local even
+# though agentcore/.gitignore re-includes it: ignoring the whole directory here wins. The scripts read the
+# CloudFormation stack instead, so a fresh clone without it is safe.
+agentcore/.cli/
+agentcore/.cache/
+agentcore/.env.local
+agent-arns.json
+
+# Downloaded linux-arm64 tool binaries and other build caches
+.cache/
+
+# `agentcore package` / CDK synth outputs
+agentcore/*.zip
+agentcore/*/staging/
+agentcore/cdk/cdk.out/

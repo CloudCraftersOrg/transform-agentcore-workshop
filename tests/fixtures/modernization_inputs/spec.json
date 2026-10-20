@@ -1,0 +1,171 @@
+{
+  "service": {
+    "name": "inventory-service",
+    "description": "Inventory & Orders JSON API extracted from the legacy Flask monolith"
+  },
+  "target": {
+    "platform": "eks",
+    "region": "us-west-2",
+    "kubernetes_version": "1.33",
+    "cpu_architecture": "arm64",
+    "iac": "terraform",
+    "registry": "ecr"
+  },
+  "workload": {
+    "container_port": 8080,
+    "health_path": "/healthz",
+    "readiness_path": "/readyz",
+    "replicas_min": 2,
+    "replicas_max": 6,
+    "autoscaling_metric": "cpu",
+    "autoscaling_target_pct": 70,
+    "peak_rps": 40,
+    "p95_latency_ms": 300
+  },
+  "data": {
+    "engine": "postgres",
+    "version": "16",
+    "managed_service": "rds",
+    "migrate_from": "sqlite",
+    "multi_az": true
+  },
+  "nfr": {
+    "availability_slo_pct": 99.9,
+    "rpo_minutes": 15,
+    "rto_minutes": 60,
+    "logging": "json-stdout"
+  },
+  "security": {
+    "secrets": "aws-secrets-manager",
+    "encryption_at_rest": true,
+    "private_database": true,
+    "non_root": true,
+    "read_only_root_fs": true
+  },
+  "finops": {
+    "monthly_budget_usd": 450,
+    "prefer_graviton": true,
+    "environment": "prod",
+    "growth_factor_next_year": 3
+  },
+  "requirements": [
+    {
+      "id": "G1",
+      "text": "Move the application to Amazon EKS as an independently deployable microservice.",
+      "category": "goal",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ""
+    },
+    {
+      "id": "G2",
+      "text": "Survive the loss of one node or one Availability Zone.",
+      "category": "goal",
+      "priority": "must",
+      "traces_to": [
+        "LF-08"
+      ],
+      "acceptance": ""
+    },
+    {
+      "id": "FR1",
+      "text": "Keep the existing JSON API contract (/api/items, /api/items/{id}, /api/orders).",
+      "category": "functional",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ""
+    },
+    {
+      "id": "FR2",
+      "text": "The HTML dashboard can stay but is low priority; API consumers come first.",
+      "category": "functional",
+      "priority": "could",
+      "traces_to": [],
+      "acceptance": ""
+    },
+    {
+      "id": "FR3",
+      "text": "The nightly inventory report must keep running without depending on the local disk of a single machine.",
+      "category": "functional",
+      "priority": "must",
+      "traces_to": [
+        "LF-10"
+      ],
+      "acceptance": ""
+    },
+    {
+      "id": "FR4",
+      "text": "Order creation must never oversell stock.",
+      "category": "functional",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ""
+    },
+    {
+      "id": "NFR3",
+      "text": "Scale out automatically on CPU; at least 2 replicas at all times in production.",
+      "category": "nfr",
+      "priority": "must",
+      "traces_to": [
+        "LF-08"
+      ],
+      "acceptance": ""
+    },
+    {
+      "id": "NFR5",
+      "text": "Structured (JSON) logs to stdout; no log files on disk.",
+      "category": "nfr",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ""
+    },
+    {
+      "id": "NFR6",
+      "text": "Health and readiness endpoints for the orchestrator.",
+      "category": "nfr",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ""
+    },
+    {
+      "id": "SEC1",
+      "text": "No credentials in code or container images; secrets come from AWS Secrets Manager.",
+      "category": "security",
+      "priority": "must",
+      "traces_to": [
+        "LF-02"
+      ],
+      "acceptance": ""
+    },
+    {
+      "id": "SEC4",
+      "text": "Containers run as non-root with a read-only root filesystem where possible.",
+      "category": "security",
+      "priority": "must",
+      "traces_to": [
+        "LF-04"
+      ],
+      "acceptance": ""
+    },
+    {
+      "id": "SEC5",
+      "text": "Fix the audit finding on the search endpoint (SQL injection).",
+      "category": "security",
+      "priority": "must",
+      "traces_to": [
+        "LF-01"
+      ],
+      "acceptance": ""
+    },
+    {
+      "id": "TC5",
+      "text": "Kubernetes manifests must pass the policy baseline: requests/limits, probes, non-root, no latest tags, PodDisruptionBudget.",
+      "category": "constraint",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ""
+    }
+  ],
+  "conflicts": [],
+  "open_questions": []
+}

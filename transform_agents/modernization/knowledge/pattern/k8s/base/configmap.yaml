@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{service_name}}-config
+data:
+  PORT: "{{port}}"
+  HEALTH_PATH: {{health_path}}
+  READINESS_PATH: {{readiness_path}}
+  LOG_LEVEL: INFO
+  WEB_CONCURRENCY: "2"
+  GUNICORN_THREADS: "4"
+  DB_AUTO_MIGRATE: "true"
+  SEED_DEMO_DATA: "false"
+# DATABASE_URL and ADMIN_TOKEN come from the Secret {{service_name}}-secrets
+# (on EKS synced from AWS Secrets Manager, e.g. by External Secrets Operator; never committed here).

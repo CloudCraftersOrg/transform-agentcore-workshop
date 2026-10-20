@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head><title>Legacy Inventory</title>
+<style>body{font-family:Verdana,sans-serif;background:#eee;margin:20px}table{border-collapse:collapse;background:#fff}
+td,th{border:1px solid #999;padding:4px 8px}.low{background:#fdd}h1{color:#036}.foot{color:#777;font-size:11px}</style></head>
+<body>
+<h1>Legacy Inventory &amp; Orders</h1>
+<table>
+<tr><th>SKU</th><th>Name</th><th>Qty</th><th>Price</th></tr>
+{% for i in items %}
+<tr class="{{ 'low' if i.quantity < threshold else '' }}"><td>{{ i.sku }}</td><td>{{ i.name }}</td><td>{{ i.quantity }}</td><td>${{ '%.2f' % i.price }}</td></tr>
+{% endfor %}
+</table>
+<h3>Add item</h3>
+<form method="post" action="/items/new">
+SKU <input name="sku"> Name <input name="name"> Qty <input name="quantity" size="4"> Price <input name="price" size="6">
+<input type="submit" value="Add">
+</form>
+<h3>Last orders</h3>
+<ul>{% for o in orders %}<li>#{{ o.id }} item {{ o.item_id }} x{{ o.quantity }} at {{ o.created_at }}</li>{% endfor %}</ul>
+<p class="foot">served by {{ hostname }}</p>
+</body>
+</html>

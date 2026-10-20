@@ -1,0 +1,291 @@
+{
+  "source": "aws-pricing-api",
+  "fetched_at": "2026-10-19",
+  "region": "us-west-2",
+  "location": "US West (Oregon)",
+  "currency": "USD",
+  "hours_per_month": 730,
+  "notes": "On-demand Linux, shared tenancy. compute_sp_1yr_hourly = Compute Savings Plan 1-yr No Upfront rate; spot_hourly_avg_7d = mean spot price over the 7 days before fetched_at.",
+  "ec2": {
+    "t3.small": {
+      "vcpu": 2,
+      "memory_mib": 2048,
+      "arch": "x86_64",
+      "max_pods": 11,
+      "burstable": true,
+      "on_demand_hourly": 0.0208,
+      "compute_sp_1yr_hourly": 0.015,
+      "spot_hourly_avg_7d": 0.00671
+    },
+    "t3.medium": {
+      "vcpu": 2,
+      "memory_mib": 4096,
+      "arch": "x86_64",
+      "max_pods": 17,
+      "burstable": true,
+      "on_demand_hourly": 0.0416,
+      "compute_sp_1yr_hourly": 0.03,
+      "spot_hourly_avg_7d": 0.01392
+    },
+    "t3.large": {
+      "vcpu": 2,
+      "memory_mib": 8192,
+      "arch": "x86_64",
+      "max_pods": 35,
+      "burstable": true,
+      "on_demand_hourly": 0.0832,
+      "compute_sp_1yr_hourly": 0.06,
+      "spot_hourly_avg_7d": 0.03348
+    },
+    "m6i.large": {
+      "vcpu": 2,
+      "memory_mib": 8192,
+      "arch": "x86_64",
+      "max_pods": 29,
+      "burstable": false,
+      "on_demand_hourly": 0.096,
+      "compute_sp_1yr_hourly": 0.07053,
+      "spot_hourly_avg_7d": 0.04218
+    },
+    "c6i.large": {
+      "vcpu": 2,
+      "memory_mib": 4096,
+      "arch": "x86_64",
+      "max_pods": 29,
+      "burstable": false,
+      "on_demand_hourly": 0.085,
+      "compute_sp_1yr_hourly": 0.06142,
+      "spot_hourly_avg_7d": 0.03521
+    },
+    "t4g.small": {
+      "vcpu": 2,
+      "memory_mib": 2048,
+      "arch": "arm64",
+      "max_pods": 11,
+      "burstable": true,
+      "on_demand_hourly": 0.0168,
+      "compute_sp_1yr_hourly": 0.0121,
+      "spot_hourly_avg_7d": 0.00548
+    },
+    "t4g.medium": {
+      "vcpu": 2,
+      "memory_mib": 4096,
+      "arch": "arm64",
+      "max_pods": 17,
+      "burstable": true,
+      "on_demand_hourly": 0.0336,
+      "compute_sp_1yr_hourly": 0.0242,
+      "spot_hourly_avg_7d": 0.01368
+    },
+    "t4g.large": {
+      "vcpu": 2,
+      "memory_mib": 8192,
+      "arch": "arm64",
+      "max_pods": 35,
+      "burstable": true,
+      "on_demand_hourly": 0.0672,
+      "compute_sp_1yr_hourly": 0.0485,
+      "spot_hourly_avg_7d": 0.02769
+    },
+    "t4g.xlarge": {
+      "vcpu": 4,
+      "memory_mib": 16384,
+      "arch": "arm64",
+      "max_pods": 58,
+      "burstable": true,
+      "on_demand_hourly": 0.1344,
+      "compute_sp_1yr_hourly": 0.0969,
+      "spot_hourly_avg_7d": 0.07517
+    },
+    "m7g.medium": {
+      "vcpu": 1,
+      "memory_mib": 4096,
+      "arch": "arm64",
+      "max_pods": 8,
+      "burstable": false,
+      "on_demand_hourly": 0.0408,
+      "compute_sp_1yr_hourly": 0.03,
+      "spot_hourly_avg_7d": 0.02126
+    },
+    "m7g.large": {
+      "vcpu": 2,
+      "memory_mib": 8192,
+      "arch": "arm64",
+      "max_pods": 29,
+      "burstable": false,
+      "on_demand_hourly": 0.0816,
+      "compute_sp_1yr_hourly": 0.0599,
+      "spot_hourly_avg_7d": 0.03403
+    },
+    "m7g.xlarge": {
+      "vcpu": 4,
+      "memory_mib": 16384,
+      "arch": "arm64",
+      "max_pods": 58,
+      "burstable": false,
+      "on_demand_hourly": 0.1632,
+      "compute_sp_1yr_hourly": 0.1199,
+      "spot_hourly_avg_7d": 0.07037
+    },
+    "c7g.medium": {
+      "vcpu": 1,
+      "memory_mib": 2048,
+      "arch": "arm64",
+      "max_pods": 8,
+      "burstable": false,
+      "on_demand_hourly": 0.0363,
+      "compute_sp_1yr_hourly": 0.026,
+      "spot_hourly_avg_7d": 0.0144
+    },
+    "c7g.large": {
+      "vcpu": 2,
+      "memory_mib": 4096,
+      "arch": "arm64",
+      "max_pods": 29,
+      "burstable": false,
+      "on_demand_hourly": 0.0725,
+      "compute_sp_1yr_hourly": 0.052,
+      "spot_hourly_avg_7d": 0.03496
+    },
+    "c7g.xlarge": {
+      "vcpu": 4,
+      "memory_mib": 8192,
+      "arch": "arm64",
+      "max_pods": 58,
+      "burstable": false,
+      "on_demand_hourly": 0.145,
+      "compute_sp_1yr_hourly": 0.104,
+      "spot_hourly_avg_7d": 0.06966
+    }
+  },
+  "ebs_gb_month": {
+    "gp2": 0.1,
+    "gp3": 0.08
+  },
+  "rds_postgres": {
+    "db.t3.micro": {
+      "single_az_hourly": 0.018,
+      "ri_1yr_no_upfront_single_az_hourly": 0.0129,
+      "vcpu": 2,
+      "memory_gib": 1.0,
+      "multi_az_hourly": 0.036,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.0258
+    },
+    "db.t3.small": {
+      "single_az_hourly": 0.036,
+      "ri_1yr_no_upfront_single_az_hourly": 0.0258,
+      "vcpu": 2,
+      "memory_gib": 2.0,
+      "multi_az_hourly": 0.072,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.0517
+    },
+    "db.t4g.micro": {
+      "single_az_hourly": 0.016,
+      "ri_1yr_no_upfront_single_az_hourly": 0.0116,
+      "vcpu": 2,
+      "memory_gib": 1.0,
+      "multi_az_hourly": 0.032,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.0233
+    },
+    "db.t4g.small": {
+      "multi_az_hourly": 0.065,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.0465,
+      "single_az_hourly": 0.032,
+      "ri_1yr_no_upfront_single_az_hourly": 0.0233,
+      "vcpu": 2,
+      "memory_gib": 2.0
+    },
+    "db.t4g.medium": {
+      "multi_az_hourly": 0.129,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.093,
+      "single_az_hourly": 0.065,
+      "ri_1yr_no_upfront_single_az_hourly": 0.0465,
+      "vcpu": 2,
+      "memory_gib": 4.0
+    },
+    "db.t4g.large": {
+      "multi_az_hourly": 0.258,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.186,
+      "single_az_hourly": 0.129,
+      "ri_1yr_no_upfront_single_az_hourly": 0.093,
+      "vcpu": 2,
+      "memory_gib": 8.0
+    },
+    "db.m7g.large": {
+      "single_az_hourly": 0.168,
+      "ri_1yr_no_upfront_single_az_hourly": 0.1297,
+      "vcpu": 2,
+      "memory_gib": 8.0,
+      "multi_az_hourly": 0.337,
+      "ri_1yr_no_upfront_multi_az_hourly": 0.2595
+    }
+  },
+  "rds_storage_gb_month": {
+    "gp2": {
+      "single_az": 0.115,
+      "multi_az": 0.23
+    },
+    "gp3": {
+      "single_az": 0.115,
+      "multi_az": 0.23
+    }
+  },
+  "eks": {
+    "cluster_hourly": 0.1,
+    "extended_support_hourly": 0.5,
+    "default_version": "1.36",
+    "versions": {
+      "1.37": {
+        "status": "STANDARD_SUPPORT",
+        "end_of_standard_support": "2027-12-01",
+        "end_of_extended_support": "2028-12-01"
+      },
+      "1.36": {
+        "status": "STANDARD_SUPPORT",
+        "end_of_standard_support": "2027-08-02",
+        "end_of_extended_support": "2028-08-02"
+      },
+      "1.35": {
+        "status": "STANDARD_SUPPORT",
+        "end_of_standard_support": "2027-03-27",
+        "end_of_extended_support": "2028-03-27"
+      },
+      "1.34": {
+        "status": "STANDARD_SUPPORT",
+        "end_of_standard_support": "2026-12-02",
+        "end_of_extended_support": "2027-12-02"
+      },
+      "1.33": {
+        "status": "EXTENDED_SUPPORT",
+        "end_of_standard_support": "2026-07-29",
+        "end_of_extended_support": "2027-07-29"
+      },
+      "1.32": {
+        "status": "EXTENDED_SUPPORT",
+        "end_of_standard_support": "2026-03-23",
+        "end_of_extended_support": "2027-03-23"
+      },
+      "1.31": {
+        "status": "EXTENDED_SUPPORT",
+        "end_of_standard_support": "2025-11-26",
+        "end_of_extended_support": "2026-11-26"
+      }
+    }
+  },
+  "nat_gateway": {
+    "hourly": 0.045,
+    "per_gb": 0.045
+  },
+  "alb": {
+    "hourly": 0.0225,
+    "lcu_hourly": 0.008
+  },
+  "public_ipv4_hourly": 0.005,
+  "cloudwatch_logs": {
+    "ingest_per_gb": 0.5,
+    "storage_gb_month": 0.03
+  },
+  "data_transfer_out_per_gb": 0.09,
+  "ecr_storage_gb_month": 0.1,
+  "secrets_manager_secret_month": 0.4
+}

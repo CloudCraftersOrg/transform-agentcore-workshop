@@ -1,0 +1,27 @@
+# Picked up as the script-level config when running `streamlit run ui/app.py` from the repo root (Streamlit >= 1.4x).
+
+[theme]
+base = "dark"
+primaryColor = "#FF9900"            # AWS orange
+backgroundColor = "#0B1624"         # deep navy
+secondaryBackgroundColor = "#152238"
+textColor = "#E6EDF3"
+linkColor = "#FFB547"
+borderColor = "#24344D"
+codeBackgroundColor = "#0F1D30"
+font = "sans-serif"
+baseRadius = "medium"
+
+[theme.sidebar]
+backgroundColor = "#101D30"
+secondaryBackgroundColor = "#18294A"
+
+[server]
+maxUploadSize = 5
+runOnSave = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"

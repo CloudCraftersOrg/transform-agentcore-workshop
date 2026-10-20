@@ -1,0 +1,12 @@
+[Unit]
+Description=Legacy Inventory & Orders (Flask dev server)
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/legacy-inventory/app
+ExecStart=/usr/bin/python3 /opt/legacy-inventory/app/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

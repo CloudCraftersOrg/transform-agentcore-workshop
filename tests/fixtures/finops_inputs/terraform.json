@@ -1,0 +1,51 @@
+{
+  "valid": true,
+  "validate_output": "Success! The configuration is valid.",
+  "modules": [
+    {
+      "source": "terraform-aws-modules/vpc/aws",
+      "version": "~> 6.0"
+    },
+    {
+      "source": "terraform-aws-modules/eks/aws",
+      "version": "~> 21.0"
+    }
+  ],
+  "compute": {
+    "node_instance_types": [
+      "t4g.medium"
+    ],
+    "node_min": 2,
+    "node_max": 4,
+    "capacity_type": "ON_DEMAND",
+    "architecture": "arm64"
+  },
+  "database": {
+    "engine": "postgres",
+    "version": "16",
+    "instance_class": "db.t4g.micro",
+    "multi_az": true,
+    "storage_gib": 20
+  },
+  "network": {
+    "vpc_cidr": "10.42.0.0/16",
+    "azs": 2,
+    "nat_gateways": 1
+  },
+  "registry": {
+    "repositories": [
+      "inventory-service"
+    ]
+  },
+  "outputs": [
+    "cluster_name",
+    "ecr_repository_url",
+    "db_endpoint"
+  ],
+  "spec_coverage": [
+    {
+      "requirement": "SEC3",
+      "how": "RDS in private subnets, SG only from EKS nodes"
+    }
+  ]
+}

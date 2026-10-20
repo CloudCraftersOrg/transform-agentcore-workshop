@@ -1,0 +1,185 @@
+{
+  "service": {
+    "name": "inventory-service",
+    "description": "Inventory & Orders JSON API extracted from the legacy Flask monolith"
+  },
+  "target": {
+    "platform": "eks",
+    "region": "us-west-2",
+    "kubernetes_version": "1.33",
+    "cpu_architecture": "arm64",
+    "iac": "terraform",
+    "registry": "ecr"
+  },
+  "workload": {
+    "container_port": 8080,
+    "health_path": "/healthz",
+    "readiness_path": "/readyz",
+    "replicas_min": 2,
+    "replicas_max": 6,
+    "autoscaling_metric": "cpu",
+    "autoscaling_target_pct": 70,
+    "peak_rps": 40,
+    "p95_latency_ms": 300
+  },
+  "data": {
+    "engine": "postgres",
+    "version": "16",
+    "managed_service": "rds",
+    "migrate_from": "sqlite",
+    "multi_az": true
+  },
+  "nfr": {
+    "availability_slo_pct": 99.9,
+    "rpo_minutes": 15,
+    "rto_minutes": 60,
+    "logging": "json-stdout"
+  },
+  "security": {
+    "secrets": "aws-secrets-manager",
+    "encryption_at_rest": true,
+    "private_database": true,
+    "non_root": true,
+    "read_only_root_fs": true
+  },
+  "finops": {
+    "monthly_budget_usd": 450,
+    "prefer_graviton": true,
+    "environment": "prod",
+    "growth_factor_next_year": 3
+  },
+  "requirements": [
+    {
+      "id": "G1",
+      "text": "Move the application to Amazon EKS as an independently deployable microservice.",
+      "category": "goal",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "Service runs on EKS"
+    },
+    {
+      "id": "G2",
+      "text": "Survive the loss of one node or one Availability Zone.",
+      "category": "goal",
+      "priority": "must",
+      "traces_to": [
+        "LF-03"
+      ],
+      "acceptance": "Nodes and DB span 2 AZs"
+    },
+    {
+      "id": "G3",
+      "text": "Production cost at most USD 450 per month.",
+      "category": "goal",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "FinOps estimate <= 450"
+    },
+    {
+      "id": "FR3",
+      "text": "The nightly inventory report must not depend on the local disk of a single machine.",
+      "category": "functional",
+      "priority": "must",
+      "traces_to": [
+        "LF-04"
+      ],
+      "acceptance": "Reports written to S3"
+    },
+    {
+      "id": "NFR1",
+      "text": "Availability SLO 99.9% monthly for the API.",
+      "category": "nfr",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": ">= 2 replicas over 2 AZs"
+    },
+    {
+      "id": "NFR3",
+      "text": "Scale out automatically on CPU; at least 2 replicas at all times in production.",
+      "category": "nfr",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "HPA min 2"
+    },
+    {
+      "id": "NFR4",
+      "text": "RPO 15 minutes, RTO 1 hour.",
+      "category": "nfr",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "PITR enabled, Multi-AZ"
+    },
+    {
+      "id": "SEC1",
+      "text": "No credentials in code or images; secrets come from AWS Secrets Manager.",
+      "category": "security",
+      "priority": "must",
+      "traces_to": [
+        "LF-02"
+      ],
+      "acceptance": "RDS-managed secret"
+    },
+    {
+      "id": "SEC2",
+      "text": "Data encrypted at rest and in transit inside the VPC.",
+      "category": "security",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "KMS/AES256 + TLS"
+    },
+    {
+      "id": "SEC3",
+      "text": "The database must not be reachable from the internet.",
+      "category": "security",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "Private subnets, SG from nodes only"
+    },
+    {
+      "id": "TC1",
+      "text": "Region us-west-2.",
+      "category": "constraint",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "provider region"
+    },
+    {
+      "id": "TC2",
+      "text": "Prefer Graviton (arm64) instances for cost.",
+      "category": "constraint",
+      "priority": "should",
+      "traces_to": [],
+      "acceptance": "t4g/m7g node types"
+    },
+    {
+      "id": "TC3",
+      "text": "Target database: Amazon RDS for PostgreSQL.",
+      "category": "constraint",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "aws_db_instance postgres"
+    },
+    {
+      "id": "TC4",
+      "text": "Infrastructure as code with Terraform; container images in Amazon ECR.",
+      "category": "constraint",
+      "priority": "must",
+      "traces_to": [],
+      "acceptance": "terraform validate passes; ECR repo"
+    }
+  ],
+  "conflicts": [
+    {
+      "description": "3x traffic next year vs USD 450 budget",
+      "resolution": "Size for today; node_max leaves headroom"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q-01",
+      "question": "Size for 3x traffic now?",
+      "assumption": "No, autoscaling covers growth",
+      "impact": "node_max"
+    }
+  ]
+}
