@@ -55,3 +55,12 @@ def test_help_describes_tools_and_record(sandbox):
 def test_record_requires_a_run(sandbox):
     proc = subprocess.run(["make", "-C", str(sandbox), "record"], capture_output=True, text=True, check=False)
     assert proc.returncode != 0 and "usage: make record RUN=runs/<id>" in proc.stdout
+
+
+def test_replay_speed_is_passed_through(sandbox):
+    assert "--replay-speed 1 " in make(sandbox, "-n", "replay")  # real time by default
+    assert "--replay-speed 4 " in make(sandbox, "-n", "replay", "REPLAY_SPEED=4")
+    assert "--replay-speed 2 " in make(sandbox, "-n", "replay", env={"REPLAY_SPEED": "2"})
+    probe = '\nspeed:\n\t@echo "speed=[$$REPLAY_SPEED]"\n'
+    (sandbox / "Makefile").write_text((sandbox / "Makefile").read_text() + probe)
+    assert "speed=[4]" in make(sandbox, "speed", "REPLAY_SPEED=4")  # `make ui REPLAY_SPEED=4` reaches the UI

@@ -8,12 +8,15 @@
 
 import asyncio
 import importlib
+import itertools
 import json
+import math
 import os
+import re
 import threading
 import uuid
 from collections import Counter
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -205,8 +208,121 @@ class AgentCoreClient:
 
 # --------------------------------------------------------------------------- replay and fake
 
-# Seconds to wait before each event type when replaying (divided by REPLAY_SPEED).
-REPLAY_DELAYS = {"status": 0.3, "text": 0.01, "tool_start": 0.25, "tool_end": 0.15, "artifact": 0.04, "result": 0.3}
+# Replay pacing, in seconds at REPLAY_SPEED=1. A stage replays over its recorded duration (metrics.latency_s): tool
+# calls, artifacts and the result come in quick bursts as they do live, narration streams word by word, and the rest
+# of the time goes to the model turns (thinking, and writing the tool inputs), as in a real run.
+PACE_STATUS = 0.3  # a status after the first event (an agent's own steps, e.g. k8s_validation's preflight)
+PACE_SAME_TURN = 0.08  # tool calls requested (or finishing) together in one model turn
+PACE_TOOL = 0.4  # a tool running: tool_start -> tool_end
+PACE_ARTIFACT = 0.03
+PACE_RESULT = 0.25
+STREAM_CHARS_PER_S = 250  # narration streaming rate
+FIRST_TURN_WEIGHT = 0.5  # the first model turn gets half a share, so tool activity starts early
+FINAL_TURN_WEIGHT = 0.5  # the closing turn after the last tool call when no narration was recorded
+INPUT_CHARS_PER_TURN = 1000  # writing a tool input this long takes the model about one turn's share...
+MAX_INPUT_WEIGHT = 3.0  # ...up to three shares, so one big file never eats the whole stage
+MIN_THINK_S = 0.3  # per share; below that a short stage is compressed as a whole
+FALLBACK_THINK_S = 1.0  # per share, for a recording without metrics.latency_s
+
+
+def parse_speed(value: Any) -> float:
+    """A replay speed: a finite number > 0 (1 = the recorded timings, 4 = four times faster)."""
+    try:
+        speed = float(value)
+    except (TypeError, ValueError):
+        speed = 0.0
+    if not math.isfinite(speed) or speed <= 0:
+        raise ValueError(f"replay speed must be a number > 0, got {value!r}")
+    return speed
+
+
+def env_replay_speed() -> float:
+    """REPLAY_SPEED, or 1 (real time) when unset or invalid: a typo must never break the stage fallback."""
+    try:
+        return parse_speed(os.getenv("REPLAY_SPEED") or 1)
+    except ValueError:
+        return 1.0
+
+
+def stream_pieces(events: list[dict]) -> list[dict]:
+    """Drop empty text deltas and split the others into words, so recorded narration streams smoothly."""
+    out = []
+    for event in events:
+        if event.get("type") != "text":
+            out.append(event)
+        elif delta := event.get("delta") or "":
+            out += [{**event, "delta": word} for word in re.findall(r"\s*\S+\s*", delta) or [delta]]
+    return out
+
+
+def input_chars(event: dict) -> int:
+    """Size of a tool call's input before the timeline preview truncated it ("... (+3716 chars)")."""
+    text = str(event.get("input") or "")
+    return len(text) + sum(int(n) for n in re.findall(r"\(\+(\d+) chars\)", text))
+
+
+def pace(events: list[dict], speed: float = 1.0) -> list[tuple[float, dict]]:
+    """(seconds to wait, event) pairs that replay a recorded attempt over its recorded duration, divided by speed.
+
+    Events stamped with `t` (seconds since the attempt started) keep those timings. The pipeline does not stamp them
+    today, so the attempt is spread over the result's metrics.latency_s: fixed gaps for the mechanical events (tool
+    runs, parallel calls, artifacts, streamed words) and the remaining time shared by the model turns, the gaps
+    before a turn's narration or tool calls, weighted by the size of the tool inputs the model had to write.
+    """
+    if events and all(isinstance(e.get("t"), int | float) for e in events):
+        offsets = [0.0] + [float(e["t"]) for e in events]
+        return [(max(offsets[i + 1] - offsets[i], 0.0) / speed, e) for i, e in enumerate(events)]
+
+    events = stream_pieces(events)
+    # Model turns start after the agent's own "agent started" status (it names the model); before it, tool events
+    # are deterministic steps (k8s_validation's preflight). A recording without one is all model.
+    agent = not any(e.get("type") == "status" and e.get("model") for e in events)
+    fixed: list[float] = []
+    shares: list[float] = []  # how much of the model time comes right before each event
+    prev: dict = {}
+    first_turn = True
+    for i, event in enumerate(events):
+        kind, before = event.get("type"), prev.get("type")
+        gap = len(prev.get("delta") or "") / STREAM_CHARS_PER_S if before == "text" else 0.0
+        starts_turn, writes = False, 0
+        if kind == "status":
+            gap += PACE_STATUS
+            agent = agent or bool(event.get("model"))
+        elif kind == "text":
+            starts_turn = before != "text"
+        elif kind == "tool_start" and before == "tool_start":
+            gap += PACE_SAME_TURN  # the same message asked for several tools at once
+        elif kind == "tool_start" and not agent:
+            gap += PACE_TOOL
+        elif kind == "tool_start":
+            starts_turn = before != "text"  # after narration, the same turn goes on to write the tool inputs
+            group = list(itertools.takewhile(lambda e: e.get("type") == "tool_start", events[i:]))
+            writes = sum(input_chars(e) for e in group)
+        elif kind == "tool_end":
+            gap += PACE_SAME_TURN if before == "tool_end" else PACE_TOOL
+        else:  # artifact, result, error
+            gap += PACE_ARTIFACT if kind == "artifact" else PACE_RESULT
+        share = min(writes / INPUT_CHARS_PER_TURN, MAX_INPUT_WEIGHT)
+        if starts_turn:
+            share += FIRST_TURN_WEIGHT if first_turn else 1.0
+            first_turn = False
+        elif kind in ("artifact", "result") and before == "tool_end" and agent:
+            share += FINAL_TURN_WEIGHT
+        fixed.append(gap if prev else 0.0)
+        shares.append(share)
+        prev = event
+
+    latency = next((e.get("metrics") or {} for e in reversed(events) if e.get("type") == "result"), {}).get("latency_s")
+    total_fixed, weight = sum(fixed), sum(shares)
+    target = float(latency) if isinstance(latency, int | float) and latency > 0 else total_fixed + FALLBACK_THINK_S * weight
+    think = (target - total_fixed) / weight if weight else 0.0
+    scale = 1.0
+    if weight and think < MIN_THINK_S:  # more narration and tool calls than time: compress it all evenly
+        scale = target / (total_fixed + MIN_THINK_S * weight)
+        think = MIN_THINK_S * scale
+    elif not weight and total_fixed:
+        scale = target / total_fixed
+    return [((f * scale + w * think) / speed, e) for f, w, e in zip(fixed, shares, events, strict=True)]
 
 
 def synthesize_events(stage: str, result: dict) -> list[dict]:
@@ -272,49 +388,82 @@ def resolve_replay_source(spec: Path | str | None) -> Path | None:
     return Path(spec)
 
 
-def successful_attempts(stage_dir: Path) -> list[Path]:
-    """Recorded attempts of one stage that ended with a `result` (failed attempts are skipped), oldest first."""
+def recorded_attempts(stage_dir: Path) -> list[tuple[int, Path]]:
+    """(attempt, events file) of every recorded attempt of a stage, oldest first; the latest is <stage>/events.jsonl."""
     history = stage_dir / "history"
-    files = sorted(history.glob("attempt-*.events.jsonl"),
-                   key=lambda p: int(p.name.split("-", 1)[1].split(".", 1)[0])) if history.is_dir() else []
+    files = {int(m[1]): path for path in (history.glob("attempt-*.events.jsonl") if history.is_dir() else [])
+             if (m := re.fullmatch(r"attempt-(\d+)\.events\.jsonl", path.name))}
+    attempts = sorted(files.items())
     if (stage_dir / "events.jsonl").exists():
-        files.append(stage_dir / "events.jsonl")
+        attempts.append((max(files, default=0) + 1, stage_dir / "events.jsonl"))
+    return attempts
+
+
+def successful_recorded_attempts(stage_dir: Path) -> list[tuple[int, Path]]:
+    """Recorded attempts that ended with a `result` (failed attempts are skipped), oldest first."""
     out = []
-    for path in files:
+    for n, path in recorded_attempts(stage_dir):
         try:
             if any(event.get("type") == "result" for event in read_jsonl(path)):
-                out.append(path)
+                out.append((n, path))
         except (OSError, ValueError):
             continue
     return out
+
+
+def successful_attempts(stage_dir: Path) -> list[Path]:
+    """Events files of the recorded attempts that ended with a `result`, oldest first."""
+    return [path for _, path in successful_recorded_attempts(stage_dir)]
 
 
 class ReplayClient:
     """Replays a previous run's recorded events, falling back to tests/fixtures/<stage>_result.json.
 
     The pipeline passes its attempt number (attempt_aware): attempt n replays the n-th recorded attempt that
-    produced a result, so recorded revisions replay too and failed attempts are skipped. Past the recorded
-    attempts it replays the last good one. Called without an attempt, it counts the calls per stage.
+    produced a result, so the first run of a stage replays the recorded first attempt and "Ask for changes" the
+    recorded revision; failed attempts are skipped. Past the recorded attempts it replays the last good one.
+    Called without an attempt, it counts the calls per stage.
+
+    The stream looks like a live run: no replay status, and each attempt takes its recorded duration divided by
+    `speed` (REPLAY_SPEED, default 1 = real time). `played` keeps what was replayed per stage, for logs and tests.
     """
 
     name = "replay"
     attempt_aware = True
 
-    def __init__(self, source: Path | str | None = None, fixtures_dir: Path = FIXTURES_DIR, speed: float | None = None):
+    def __init__(self, source: Path | str | None = None, fixtures_dir: Path = FIXTURES_DIR, speed: float | None = None,
+                 sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep):
         self.source = Path(source) if source else None
         self.fixtures_dir = fixtures_dir
-        self.speed = speed or float(os.getenv("REPLAY_SPEED", "1"))
+        self.speed = parse_speed(speed) if speed is not None else env_replay_speed()
+        self.sleep = sleep
         self.calls: Counter[str] = Counter()
+        self.played: dict[str, str] = {}
 
     def recording(self, stage: str, attempt: int) -> tuple[str, list[dict]] | None:
         if self.source:
             if good := successful_attempts(self.source / stage):
-                path = good[min(max(attempt, 1), len(good)) - 1]
-                return f"{self.source.name}/{stage} attempt {good.index(path) + 1}/{len(good)}", read_jsonl(path)
+                index = min(max(attempt, 1), len(good)) - 1
+                return f"{self.source.name}/{stage} attempt {index + 1}/{len(good)}", read_jsonl(good[index])
         fixture = self.fixtures_dir / f"{stage}_result.json"
         if fixture.exists():
             return f"fixture {fixture.name}", synthesize_events(stage, json.loads(fixture.read_text()))
         return None
+
+    def revisions(self) -> dict[str, list[str]]:
+        """Feedback of every recorded revision that produced a result, per stage: what `make replay` re-enacts."""
+        try:
+            state = json.loads((self.source / "state.json").read_text()) if self.source else {}
+        except (OSError, ValueError):
+            return {}
+        out: dict[str, list[str]] = {}
+        for stage in STAGES:
+            good = {n for n, _ in successful_recorded_attempts(self.source / stage)} if self.source else set()
+            feedback = sorted(((state.get("stages") or {}).get(stage) or {}).get("feedback") or [],
+                              key=lambda f: f.get("attempt", 0))
+            if texts := [f["text"] for f in feedback if f.get("attempt") in good and f.get("text")]:
+                out[stage] = texts
+        return out
 
     async def stream(self, stage: str, request: AgentRequest, attempt: int | None = None) -> AsyncIterator[dict]:
         self.calls[stage] += 1
@@ -322,10 +471,9 @@ class ReplayClient:
         if found is None:
             yield error(stage, f"nothing to replay for {stage}: no recorded run and no tests/fixtures/{stage}_result.json")
             return
-        label, events = found
-        yield status(stage, f"replaying {label}", replay=True)
-        for event in events:
-            await asyncio.sleep(REPLAY_DELAYS.get(event.get("type", ""), 0.05) / self.speed)
+        self.played[stage], events = found
+        for delay, event in pace(events, self.speed):
+            await self.sleep(delay)
             yield event
 
 
@@ -350,17 +498,18 @@ class FakeClient:
             yield event
 
 
-def make_client(mode: str, *, replay_from: Path | str | None = None) -> AgentClient:
+def make_client(mode: str, *, replay_from: Path | str | None = None, replay_speed: float | None = None) -> AgentClient:
     """Client factory used by the CLI and the UI: local | agentcore | replay | fake.
 
     replay_from: "recorded", "latest", "fixtures"/None or a run directory (see resolve_replay_source).
+    replay_speed: replay pacing, 1 = the recorded timings; None reads REPLAY_SPEED.
     """
     if mode == "local":
         return LocalClient()
     if mode == "agentcore":
         return AgentCoreClient()
     if mode == "replay":
-        return ReplayClient(resolve_replay_source(replay_from))
+        return ReplayClient(resolve_replay_source(replay_from), speed=replay_speed)
     if mode == "fake":
         return FakeClient(delay=float(os.getenv("FAKE_DELAY", "0.02")))
     raise ValueError(f"unknown mode {mode!r}; expected local, agentcore, replay or fake")

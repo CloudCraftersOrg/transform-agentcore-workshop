@@ -2,10 +2,11 @@
 
     uv run python -m transform_agents.orchestrator.record runs/<id>      (= make record RUN=runs/<id>)
 
-Keeps what a replay needs (state.json, inputs/, <stage>/events.jsonl, result.json, history/) and drops what is
-large or volatile: workspace/ (rebuilt from the results), lock and temp files, and any file over 2 MB. Local
-paths (the repo root, then the home directory) are replaced by `<repo>` and `~`. Only complete runs (six
-approved stages from local or AgentCore agents) are accepted unless --force is given.
+Keeps what a replay needs: state.json, inputs/ and every attempt of every stage (<stage>/events.jsonl and
+result.json, earlier attempts in <stage>/history/), so a recorded revision replays when the presenter clicks
+"Ask for changes". Drops what is large or volatile: workspace/ (rebuilt from the results), lock and temp files, and
+any other file over 2 MB. Local paths (the repo root, then the home directory) are replaced by `<repo>` and `~`.
+Only complete runs (six approved stages from local or AgentCore agents) are accepted unless --force is given.
 """
 
 import argparse
@@ -13,7 +14,9 @@ import shutil
 import sys
 from pathlib import Path
 
-from .clients import is_complete_run
+from transform_agents.core import STAGES
+
+from .clients import ReplayClient, is_complete_run, successful_attempts
 from .paths import RECORDED_RUN, ROOT
 
 MAX_FILE_BYTES = 2_000_000
@@ -21,10 +24,26 @@ SKIP_DIRS = {"workspace", "__pycache__"}
 SKIP_NAMES = {".running", ".DS_Store"}
 
 
+def replay_needs(rel: Path) -> bool:
+    """state.json and each attempt's events and result: copied whatever their size."""
+    return rel.name == "state.json" or rel.name.endswith(("events.jsonl", "result.json"))
+
+
 def keep(rel: Path, size: int) -> bool:
     if rel.parts[0] in SKIP_DIRS or rel.name in SKIP_NAMES or rel.name.endswith(".tmp"):
         return False
-    return size <= MAX_FILE_BYTES
+    return size <= MAX_FILE_BYTES or replay_needs(rel)
+
+
+def attempts_summary(run: Path) -> str:
+    """Replayable attempts per stage, e.g. "discovery 1, requirements 2 (1 revision), ..."."""
+    replay = ReplayClient(run)
+    revisions = replay.revisions()
+    parts = []
+    for stage in STAGES:
+        n, revised = len(successful_attempts(run / stage)), len(revisions.get(stage, []))
+        parts.append(f"{stage} {n}" + (f" ({revised} revision{'s' if revised > 1 else ''})" if revised else ""))
+    return ", ".join(parts)
 
 
 def scrub(text: str) -> str:
@@ -72,8 +91,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"✗ {exc}")
         return 1
     size = sum((args.dest / rel).stat().st_size for rel in copied)
-    print(f"✅ recorded {args.run} → {args.dest} ({len(copied)} files, {size / 1024:.0f} KB). "
-          "Check it with `make replay`, then commit it.")
+    print(f"✅ recorded {args.run} → {args.dest} ({len(copied)} files, {size / 1024:.0f} KB)\n"
+          f"   attempts: {attempts_summary(args.dest)}\n"
+          "   Check it with `make replay` (REPLAY_SPEED=4 for a quick look), then commit it.")
     return 0
 
 

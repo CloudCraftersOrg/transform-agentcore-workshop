@@ -345,9 +345,14 @@ def render_appendix(spec: dict[str, Any], assessment: dict | None = None) -> str
         out += ["", "## Conflicts", "", "| Conflict | Resolution |", "|---|---|"]
         out += [f"| {_cell(c.get('description', ''))} | {_cell(c.get('resolution') or '-')} |" for c in conflicts]
     if questions := _entries(spec.get("open_questions"), "question"):
-        out += ["", "## Open questions", "", "| ID | Question | Assumption | Impact |", "|---|---|---|---|"]
-        out += [f"| {_cell(q.get('id', '-'))} | {_cell(q.get('question', ''))} | {_cell(q.get('assumption') or '-')} | "
-                f"{_cell(q.get('impact') or '-')} |" for q in questions]
+        out += ["", "## Open questions", "", "| ID | Question | Status | Assumption or decision | Impact |",
+                "|---|---|---|---|---|"]
+        for q in questions:
+            resolved = q.get("status") == "resolved"
+            answer = f"Decided: {q.get('resolution')}" if resolved else (q.get("assumption") or "-")
+            out.append(f"| {_cell(q.get('id', '-'))} | {_cell(q.get('question', ''))} | "
+                       f"{'Resolved by reviewer' if resolved else 'Open'} | {_cell(answer)} | "
+                       f"{_cell(q.get('impact') or '-')} |")
     return "\n".join(out) + "\n"
 
 
@@ -462,6 +467,15 @@ class RequirementsContext:
                 self.draft["conflicts"] = conflicts
             return {k: len(_list(self.draft.get(k))) for k in ("requirements", "conflicts", "open_questions", "gaps")}
 
+    def resolve_question(self, question_id: str, decision: str) -> bool:
+        """Mark an open question as answered by the reviewer; it stays in the list (one entry per open point)."""
+        with self.lock:
+            for q in _list(self.draft.get("open_questions")):
+                if isinstance(q, dict) and str(q.get("id")) == str(question_id):
+                    q.update(status="resolved", resolution=decision.strip())
+                    return True
+            return False
+
     def snapshot(self) -> dict[str, Any]:
         """A deep copy of the draft, taken under the lock."""
         with self.lock:
@@ -535,6 +549,26 @@ def make_tools(ctx: RequirementsContext, box: ResultBox) -> list:
         return (f"draft: {n['requirements']} requirements, {n['conflicts']} conflicts, "
                 f"{n['open_questions']} open questions, {n['gaps']} gaps")
 
+    @tool
+    def resolve_question(question_id: str, decision: str) -> str:
+        """Record the reviewer's answer to an open question (use it in revisions when the feedback answers one).
+
+        Args:
+            question_id: The open question id, e.g. "Q-02".
+            decision: The decision, in the reviewer's words, e.g. "Dev/test is out of scope for now".
+        """
+        if not decision.strip():
+            return "error: decision must not be empty"
+        if ctx.resolve_question(question_id, decision):
+            still_open = [f'{q.get("id")}: "{q.get("question")}"' for q in _list(ctx.snapshot().get("open_questions"))
+                          if isinstance(q, dict) and q.get("status") != "resolved"]
+            if not still_open:
+                return f"{question_id} resolved: {decision.strip()}. No open questions left."
+            return (f"{question_id} resolved: {decision.strip()}.\nStill open:\n- " + "\n- ".join(still_open) +
+                    "\nDoes the feedback also answer or decide any of these? If so, resolve them too.")
+        ids = [q.get("id") for q in _list(ctx.snapshot().get("open_questions")) if isinstance(q, dict)]
+        return f"error: no open question {question_id!r}; ids are {ids}"
+
     @tool(name="check_spec")
     def check_spec_tool() -> str:
         """Validate the spec draft. Returns OK or the exact problems to fix with set_fields / set_lists."""
@@ -570,7 +604,7 @@ def make_tools(ctx: RequirementsContext, box: ResultBox) -> list:
         tool_context.invocation_state.setdefault("request_state", {})["stop_event_loop"] = True
         return box.set(summary, spec)
 
-    return [read_requirements, get_spec_template, set_fields, set_lists, check_spec_tool, submit_result]
+    return [read_requirements, get_spec_template, set_fields, set_lists, resolve_question, check_spec_tool, submit_result]
 
 
 # ---- helpers ----

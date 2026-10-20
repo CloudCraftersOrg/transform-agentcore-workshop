@@ -230,7 +230,7 @@ def test_report_appendix_tolerates_a_malformed_last_chance_draft():
     del spec["security"], spec["workload"]["replicas_max"]
     md = render_appendix(spec, {"findings": [{"id": "LF-03", "severity": "high"}, "junk"]})
     assert "| cost vs HA | - |" in md and "| a bare string | - |" in md and "| only a resolution |" in md
-    assert "| Q-01 |  | - | - |" in md and "| - | no id | - | - |" in md and "| - | free text |" in md
+    assert "| Q-01 |  | Open | - | - |" in md and "| - | no id | Open | - | - |" in md and "| - | free text |" in md
     assert "secrets ?" in md and "replicas 2-? " in md and "| X1 | - | - |" in md and "| LF-03 | high |" in md
 
 
@@ -293,7 +293,7 @@ async def test_handle_renders_a_last_chance_submit_with_malformed_lists(monkeypa
     monkeypatch.setattr(requirements_agent, "run_agent", sloppy_run_agent)
     events = await collect(requirements_agent.handle(AgentRequest(files=dict(DOCS), inputs={"assessment": ASSESSMENT})))
     assert [e["type"] for e in events] == ["artifact", "result"]
-    assert events[-1]["data"]["validation_problems"] and "| Q-01 | growth? | - | - |" in events[-1]["artifacts"][REPORT]
+    assert events[-1]["data"]["validation_problems"] and "| Q-01 | growth? | Open | - | - |" in events[-1]["artifacts"][REPORT]
 
 
 async def test_handle_falls_back_to_the_narrative_when_the_tables_fail(monkeypatch):
@@ -409,3 +409,19 @@ def test_runtime_serves_the_contract_over_sse(monkeypatch):
     events = [json.loads(line[5:]) for line in response.text.splitlines() if line.startswith("data:")]
     assert response.status_code == 200 and [e["type"] for e in events] == ["artifact", "result"]
     assert events[-1]["data"]["workload"]["replicas_max"] == 6
+
+
+def test_resolve_question_keeps_the_entry_and_renders_the_decision():
+    from transform_agents.core import ResultBox, Workspace
+    from transform_agents.requirements.tools import RequirementsContext, make_tools, render_appendix
+
+    ws = Workspace({"requirements/req.md": "## 7. Open points\n- Dev/test environments: no budget yet.\n"})
+    ctx = RequirementsContext(ws)
+    ctx.set_lists([], None, [{"id": "Q-01", "question": "Dev/test?", "assumption": "Prod only", "impact": "Cost"}], [])
+    tools = {t.tool_name: t for t in make_tools(ctx, ResultBox())}
+    assert "resolved" in tools["resolve_question"](question_id="Q-01", decision="Dev/test is out of scope for now")
+    assert "error" in tools["resolve_question"](question_id="Q-09", decision="x")
+    (q,) = ctx.snapshot()["open_questions"]
+    assert q["status"] == "resolved" and q["resolution"] == "Dev/test is out of scope for now"
+    appendix = render_appendix(ctx.snapshot())
+    assert "Resolved by reviewer" in appendix and "Decided: Dev/test is out of scope for now" in appendix

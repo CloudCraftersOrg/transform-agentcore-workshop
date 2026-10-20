@@ -1,11 +1,11 @@
 {
   "type": "result",
   "stage": "requirements",
-  "summary": "Replatform legacy-inventory to Amazon EKS as inventory-service: 2 min/6 max Graviton replicas in us-west-2, Amazon RDS PostgreSQL multi-AZ, USD 450/month budget, 99.9% SLO. Open: traffic growth sizing, dev/test budget, data migration window.",
+  "summary": "Revised: Applied reviewer feedback to assume dev/test is out of scope and size for current load with headroom for 3x growth. Resolved open questions Q-01 and Q-02; Q-03 remains open. Spec validated and ready for review.",
   "data": {
     "service": {
       "name": "inventory-service",
-      "description": "Microservice for inventory and order management, serving warehouse scanners and internal dashboards"
+      "description": "Legacy inventory and order management microservice for supply chain operations"
     },
     "target": {
       "platform": "eks",
@@ -59,7 +59,7 @@
         "category": "goal",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "The application is deployed as an independently deployable microservice on Amazon EKS."
+        "acceptance": "Inventory service runs as a containerized microservice on Amazon EKS."
       },
       {
         "id": "G2",
@@ -67,9 +67,10 @@
         "category": "goal",
         "priority": "must",
         "traces_to": [
-          "LF-08"
+          "LF-08",
+          "LF-09"
         ],
-        "acceptance": "The microservice survives the loss of an Availability Zone."
+        "acceptance": "Application survives the loss of one node or one Availability Zone."
       },
       {
         "id": "G3",
@@ -79,7 +80,7 @@
         "traces_to": [
           "LF-17"
         ],
-        "acceptance": "Monthly production cost is <= USD 450."
+        "acceptance": "Infrastructure cost is within USD 450 per month for production."
       },
       {
         "id": "G4",
@@ -87,7 +88,7 @@
         "category": "goal",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "The microservice is in production before the end of Q1 2027."
+        "acceptance": "Service is deployed to production before the end of Q1 2027."
       },
       {
         "id": "FR1",
@@ -95,7 +96,7 @@
         "category": "functional",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "Warehouse scanners continue to work without changes using the existing JSON API contract (/api/items, /api/items/{id}, /api/orders)."
+        "acceptance": "Existing JSON API contract is preserved and functional."
       },
       {
         "id": "FR2",
@@ -103,7 +104,7 @@
         "category": "functional",
         "priority": "should",
         "traces_to": [],
-        "acceptance": "The HTML dashboard remains accessible."
+        "acceptance": "HTML dashboard remains accessible."
       },
       {
         "id": "FR3",
@@ -113,7 +114,7 @@
         "traces_to": [
           "LF-10"
         ],
-        "acceptance": "The nightly inventory report runs without depending on the local disk of a single machine."
+        "acceptance": "Nightly inventory report does not depend on the local disk of a single machine."
       },
       {
         "id": "FR4",
@@ -121,7 +122,7 @@
         "category": "functional",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "Order creation preserves current behaviour and never oversells stock."
+        "acceptance": "Order creation preserves current behavior and never oversells stock."
       },
       {
         "id": "NFR1",
@@ -129,15 +130,17 @@
         "category": "nfr",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "Monthly availability is >= 99.9%."
+        "acceptance": "API achieves 99.9% monthly availability."
       },
       {
         "id": "NFR2",
         "text": "p95 latency < 300 ms at the expected peak of 40 requests/second (warehouse shift change, 06:00\u201307:00).",
         "category": "nfr",
         "priority": "must",
-        "traces_to": [],
-        "acceptance": "p95 latency is < 300 ms at 40 requests/second."
+        "traces_to": [
+          "LF-11"
+        ],
+        "acceptance": "p95 latency is under 300 ms at 40 requests/second."
       },
       {
         "id": "NFR3",
@@ -145,17 +148,18 @@
         "category": "nfr",
         "priority": "must",
         "traces_to": [
-          "LF-08",
-          "LF-11"
+          "LF-08"
         ],
-        "acceptance": "The service scales out automatically on CPU with at least 2 replicas at all times."
+        "acceptance": "Service scales out automatically on CPU with at least 2 replicas."
       },
       {
         "id": "NFR4",
         "text": "RPO 15 minutes, RTO 1 hour.",
         "category": "nfr",
         "priority": "must",
-        "traces_to": [],
+        "traces_to": [
+          "LF-12"
+        ],
         "acceptance": "RPO is 15 minutes and RTO is 1 hour."
       },
       {
@@ -166,7 +170,7 @@
         "traces_to": [
           "LF-14"
         ],
-        "acceptance": "Structured JSON logs are sent to stdout."
+        "acceptance": "Logs are structured JSON to stdout with no log files on disk."
       },
       {
         "id": "NFR6",
@@ -176,7 +180,7 @@
         "traces_to": [
           "LF-16"
         ],
-        "acceptance": "Health and readiness endpoints exist and are configured for the orchestrator."
+        "acceptance": "Health and readiness endpoints are implemented and functional."
       },
       {
         "id": "SEC1",
@@ -204,7 +208,7 @@
         "traces_to": [
           "LF-06"
         ],
-        "acceptance": "The database is not reachable from the internet."
+        "acceptance": "Database is not reachable from the internet."
       },
       {
         "id": "SEC4",
@@ -224,7 +228,7 @@
         "traces_to": [
           "LF-01"
         ],
-        "acceptance": "The audit finding on the search endpoint (SQL injection) is fixed."
+        "acceptance": "Audit finding on the search endpoint (SQL injection) is fixed."
       },
       {
         "id": "TC1",
@@ -232,7 +236,7 @@
         "category": "constraint",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "The service runs in us-west-2."
+        "acceptance": "Service is deployed in us-west-2."
       },
       {
         "id": "TC2",
@@ -240,17 +244,15 @@
         "category": "constraint",
         "priority": "should",
         "traces_to": [],
-        "acceptance": "Graviton (arm64) instances are used for cost savings."
+        "acceptance": "Graviton (arm64) instances are used for cost efficiency."
       },
       {
         "id": "TC3",
         "text": "Target database: Amazon RDS for PostgreSQL (the team does not want to operate a database on Kubernetes).",
         "category": "constraint",
         "priority": "must",
-        "traces_to": [
-          "LF-09"
-        ],
-        "acceptance": "Amazon RDS for PostgreSQL is used as the target database."
+        "traces_to": [],
+        "acceptance": "Database is Amazon RDS for PostgreSQL."
       },
       {
         "id": "TC4",
@@ -258,7 +260,7 @@
         "category": "constraint",
         "priority": "must",
         "traces_to": [],
-        "acceptance": "Infrastructure as code is implemented with Terraform."
+        "acceptance": "Infrastructure is provisioned with Terraform."
       },
       {
         "id": "TC5",
@@ -270,51 +272,55 @@
           "LF-11",
           "LF-16"
         ],
-        "acceptance": "Kubernetes manifests pass the policy baseline (resource requests/limits, probes, non-root, no `latest` tags, PodDisruptionBudget)."
+        "acceptance": "Kubernetes manifests pass the policy baseline (resource requests/limits, probes, non-root, no latest tags, PodDisruptionBudget)."
       }
     ],
     "conflicts": [
       {
-        "description": "High availability (multi-AZ, 2 replicas) vs. cost cap of USD 450/month may be at risk if traffic grows.",
-        "resolution": "Size for today's load with 2 replicas; monitor and scale as needed. If growth occurs, request budget increase."
+        "description": "Cost cap of USD 450 vs. high availability and performance requirements",
+        "resolution": "Prioritize essential availability and performance features; optimize costs through Graviton and autoscaling"
       },
       {
-        "description": "Using Graviton instances for cost savings may require changes to the application if it has architecture-specific dependencies.",
-        "resolution": "Test the application on Graviton instances in a staging environment before production deployment."
+        "description": "Growth expectation of 3x traffic vs. current budget",
+        "resolution": "Size for current load with headroom; monitor and scale as needed within budget"
       }
     ],
     "open_questions": [
       {
         "id": "Q-01",
-        "question": "Should we size for 3x traffic growth next year now?",
-        "assumption": "Size replicas_min for today's load (2 replicas) and leave headroom up to 6 replicas for growth.",
-        "impact": "If growth happens sooner, may need to adjust replicas_max and potentially the budget."
+        "question": "Should we size for 3x traffic growth now or monitor and scale later?",
+        "assumption": "Size for current load with headroom (2 replicas today, headroom up to 6)",
+        "impact": "If traffic grows faster than expected, may need to adjust resources and budget",
+        "status": "resolved",
+        "resolution": "Size for current load with headroom; monitor and scale as needed within budget."
       },
       {
         "id": "Q-02",
         "question": "What are the requirements and budget for dev/test environments?",
-        "assumption": "Use minimal resources (e.g., t4g.micro) for dev/test; no separate budget allocated.",
-        "impact": "If formal environments are required, budget may need to be adjusted."
+        "assumption": "Use minimal resources (e.g., t4g.micro) for dev/test",
+        "impact": "If budget is approved, can allocate more resources; if not, may need to share environments or use serverless options",
+        "status": "resolved",
+        "resolution": "Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth."
       },
       {
         "id": "Q-03",
-        "question": "What is the data migration window and cutover strategy?",
-        "assumption": "Plan for a weekend cutover with minimal downtime; details to be confirmed.",
-        "impact": "If a specific cutover window is required, planning and execution will need to accommodate it."
+        "question": "When is the data migration window?",
+        "assumption": "Plan for a weekend cutover with minimal downtime",
+        "impact": "If migration window is constrained, may need to implement phased migration or feature toggles"
       }
     ],
     "gaps": [
       {
         "finding_id": "LF-01",
-        "handling": "Implement prepared statements to prevent SQL injection in the search endpoint"
+        "handling": "Implement prepared statements to prevent SQL injection"
       },
       {
         "finding_id": "LF-02",
-        "handling": "Remove hard-coded secrets and use AWS Secrets Manager for database credentials"
+        "handling": "Move hard-coded secrets to AWS Secrets Manager"
       },
       {
         "finding_id": "LF-03",
-        "handling": "Implement proper authentication and remove the shared static admin token"
+        "handling": "Add authentication and authorization to write endpoints"
       },
       {
         "finding_id": "LF-04",
@@ -322,15 +328,19 @@
       },
       {
         "finding_id": "LF-05",
-        "handling": "Update Flask to a supported version and migrate to a maintained framework if needed"
+        "handling": "Upgrade Flask to a supported version and use a modern framework if needed"
       },
       {
         "finding_id": "LF-06",
-        "handling": "Ensure the database security group only allows inbound traffic from the EKS cluster"
+        "handling": "Restrict database access to VPC only and use TLS for in-transit encryption"
       },
       {
         "finding_id": "LF-07",
-        "handling": "Enable EBS encryption and use AWS IMDSv2 for instance metadata"
+        "handling": "Enable EBS encryption and disable IMDSv1"
+      },
+      {
+        "finding_id": "LF-08",
+        "handling": "Deploy application across multiple Availability Zones"
       },
       {
         "finding_id": "LF-09",
@@ -338,15 +348,15 @@
       },
       {
         "finding_id": "LF-10",
-        "handling": "Store reports in an S3 bucket instead of the local filesystem"
+        "handling": "Store reports in an S3 bucket instead of local filesystem"
       },
       {
         "finding_id": "LF-11",
-        "handling": "Replace the Flask development server with a production-ready server (e.g., Gunicorn)"
+        "handling": "Replace Flask development server with a production-ready server like Gunicorn"
       },
       {
         "finding_id": "LF-12",
-        "handling": "Implement automated backups for the RDS database"
+        "handling": "Implement automated backups for Amazon RDS"
       },
       {
         "finding_id": "LF-13",
@@ -354,11 +364,11 @@
       },
       {
         "finding_id": "LF-14",
-        "handling": "Send logs to stdout in JSON format"
+        "handling": "Send logs to CloudWatch or a logging service instead of local files"
       },
       {
         "finding_id": "LF-15",
-        "handling": "Use Kubernetes jobs for scheduled tasks instead of host cron"
+        "handling": "Use Kubernetes jobs for scheduled tasks instead of cron"
       },
       {
         "finding_id": "LF-16",
@@ -366,19 +376,19 @@
       },
       {
         "finding_id": "LF-17",
-        "handling": "Right-size the instance to meet performance requirements without over-provisioning"
+        "handling": "Right-size instance types to reduce cost"
       }
     ]
   },
   "artifacts": {
-    "reports/migration-spec.md": "# Migration spec: inventory-service\n\n## Summary\n\n- Replatform legacy-inventory Flask app to Amazon EKS as an independently deployable microservice.\n- Target region **us-west-2** with Amazon RDS for PostgreSQL (multi-AZ) and Graviton (arm64) instances.\n- Size for **40 requests/second** peak load with **2 replicas (min)**, autoscaling up to **6 replicas**.\n- Monthly budget **USD 450**; 99.9% availability SLO, RPO 15 minutes, RTO 1 hour.\n\n## Key decisions\n\n| Decision | Value | Source |\n| --- | --- | --- |\n| Platform | Amazon EKS | G1 |\n| Region | us-west-2 | TC1 |\n| Database | Amazon RDS for PostgreSQL (multi-AZ) | TC3, G2 |\n| CPU architecture | arm64 (Graviton) | TC2 |\n| Replicas minimum | 2 | NFR3 |\n| Autoscaling metric | CPU | NFR3 |\n| Budget | USD 450/month | G3 |\n| Logging | JSON to stdout | NFR5 |\n| Secrets management | AWS Secrets Manager | SEC1 |\n\n## Risks\n\n- Cost may exceed budget if traffic grows before scaling headroom is used.\n- Graviton compatibility needs verification; may require application changes.\n- Data migration window and strategy still to be confirmed; risk of extended downtime.\n\n<!-- generated: tables rendered from the validated spec -->\n\n## Target specification\n\n| Area | Values |\n|---|---|\n| Target | eks in us-west-2, Kubernetes 1.33, arm64, IaC terraform, registry ecr |\n| Workload | port 8080, probes /healthz and /readyz, replicas 2-6 on cpu 70%, peak 40 rps, p95 300 ms |\n| Data | postgres 16 on rds, Multi-AZ yes, migrate from sqlite |\n| NFR | SLO 99.9%, RPO 15 min, RTO 60 min, logging json-stdout |\n| Security | secrets aws-secrets-manager, encryption at rest yes, private DB yes, non-root yes, read-only root FS yes |\n| FinOps | USD 450/month (prod), prefer Graviton yes, growth x3 next year |\n\n## Traceability matrix\n\n| ID | Category | Priority | Requirement | Traces to | Acceptance |\n|---|---|---|---|---|---|\n| G1 | goal | must | Move the application to our standard container platform (Amazon EKS) as an independently deployable microservice. | - | The application is deployed as an independently deployable microservice on Amazon EKS. |\n| G2 | goal | must | Remove the single point of failure: survive the loss of one node or one Availability Zone. | LF-08 | The microservice survives the loss of an Availability Zone. |\n| G3 | goal | must | Cut infrastructure cost, or at minimum not increase it. Finance has approved a maximum of USD 450 per month for production. | LF-17 | Monthly production cost is <= USD 450. |\n| G4 | goal | must | Be in production before the end of Q1 2027. | - | The microservice is in production before the end of Q1 2027. |\n| FR1 | functional | must | Keep the existing JSON API contract (/api/items, /api/items/{id}, /api/orders) so the warehouse scanners keep working without changes. | - | Warehouse scanners continue to work without changes using the existing JSON API contract (/api/items, /api/items/{id}, /api/orders). |\n| FR2 | functional | should | The HTML dashboard can stay, but it is low priority. API consumers come first. | - | The HTML dashboard remains accessible. |\n| FR3 | functional | must | The nightly inventory report must keep running, but it must not depend on the local disk of a single machine. | LF-10 | The nightly inventory report runs without depending on the local disk of a single machine. |\n| FR4 | functional | must | Order creation must never oversell stock (current behaviour must be preserved). | - | Order creation preserves current behaviour and never oversells stock. |\n| NFR1 | nfr | must | Availability SLO 99.9% monthly for the API. | - | Monthly availability is >= 99.9%. |\n| NFR2 | nfr | must | p95 latency < 300 ms at the expected peak of 40 requests/second (warehouse shift change, 06:00\u201307:00). | - | p95 latency is < 300 ms at 40 requests/second. |\n| NFR3 | nfr | must | Scale out automatically on CPU; at least 2 replicas at all times in production. | LF-08, LF-11 | The service scales out automatically on CPU with at least 2 replicas at all times. |\n| NFR4 | nfr | must | RPO 15 minutes, RTO 1 hour. | - | RPO is 15 minutes and RTO is 1 hour. |\n| NFR5 | nfr | must | Structured (JSON) logs to stdout; no log files on disk. | LF-14 | Structured JSON logs are sent to stdout. |\n| NFR6 | nfr | must | Health and readiness endpoints for the orchestrator. | LF-16 | Health and readiness endpoints exist and are configured for the orchestrator. |\n| SEC1 | security | must | No credentials in code or container images; secrets come from AWS Secrets Manager. | LF-02 | No credentials are in code or container images; secrets come from AWS Secrets Manager. |\n| SEC2 | security | must | Data encrypted at rest and in transit inside the VPC. | - | Data is encrypted at rest and in transit inside the VPC. |\n| SEC3 | security | must | The database must not be reachable from the internet. | LF-06 | The database is not reachable from the internet. |\n| SEC4 | security | must | Containers run as non-root with a read-only root filesystem where possible. | LF-04 | Containers run as non-root with a read-only root filesystem where possible. |\n| SEC5 | security | must | Fix the audit finding on the search endpoint (SQL injection). | LF-01 | The audit finding on the search endpoint (SQL injection) is fixed. |\n| TC1 | constraint | must | Region us-west-2. | - | The service runs in us-west-2. |\n| TC2 | constraint | should | Prefer Graviton (arm64) instances for cost. | - | Graviton (arm64) instances are used for cost savings. |\n| TC3 | constraint | must | Target database: Amazon RDS for PostgreSQL (the team does not want to operate a database on Kubernetes). | LF-09 | Amazon RDS for PostgreSQL is used as the target database. |\n| TC4 | constraint | must | Infrastructure as code with Terraform; container images in Amazon ECR. | - | Infrastructure as code is implemented with Terraform. |\n| TC5 | constraint | must | Kubernetes manifests must pass our policy baseline: resource requests/limits, probes, non-root, no latest tags, PodDisruptionBudget. | LF-04, LF-11, LF-16 | Kubernetes manifests pass the policy baseline (resource requests/limits, probes, non-root, no `latest` tags, PodDisruptionBudget). |\n\n## Assessment coverage (critical and high findings)\n\n| Finding | Severity | Title | Covered by |\n|---|---|---|---|\n| LF-01 | critical | SQL built by string concatenation (SQL injection) | SEC5 |\n| LF-02 | critical | Secrets hard-coded in source code | SEC1 |\n| LF-03 | critical | Write endpoints without authentication (shared static admin token) | gap: Implement proper authentication and remove the shared static admin token |\n| LF-04 | high | Service and scheduled job run as root | SEC4, TC5 |\n| LF-05 | high | End-of-life runtime and outdated web framework | gap: Update Flask to a supported version and migrate to a maintained framework if needed |\n| LF-06 | high | Internet-facing plain HTTP with an open security group | SEC3 |\n| LF-07 | high | Instance hardening gaps (EBS encryption, IMDS) | gap: Enable EBS encryption and use AWS IMDSv2 for instance metadata |\n| LF-08 | high | Single EC2 instance in one Availability Zone (single point of failure) | G2, NFR3 |\n| LF-09 | high | SQLite database on the instance's local disk | TC3 |\n| LF-11 | high | Flask development server used in production | NFR3, TC5 |\n| LF-12 | high | No backups of the application data | gap: Implement automated backups for the RDS database |\n\n## Conflicts\n\n| Conflict | Resolution |\n|---|---|\n| High availability (multi-AZ, 2 replicas) vs. cost cap of USD 450/month may be at risk if traffic grows. | Size for today's load with 2 replicas; monitor and scale as needed. If growth occurs, request budget increase. |\n| Using Graviton instances for cost savings may require changes to the application if it has architecture-specific dependencies. | Test the application on Graviton instances in a staging environment before production deployment. |\n\n## Open questions\n\n| ID | Question | Assumption | Impact |\n|---|---|---|---|\n| Q-01 | Should we size for 3x traffic growth next year now? | Size replicas_min for today's load (2 replicas) and leave headroom up to 6 replicas for growth. | If growth happens sooner, may need to adjust replicas_max and potentially the budget. |\n| Q-02 | What are the requirements and budget for dev/test environments? | Use minimal resources (e.g., t4g.micro) for dev/test; no separate budget allocated. | If formal environments are required, budget may need to be adjusted. |\n| Q-03 | What is the data migration window and cutover strategy? | Plan for a weekend cutover with minimal downtime; details to be confirmed. | If a specific cutover window is required, planning and execution will need to accommodate it. |\n"
+    "reports/migration-spec.md": "# Migration spec: inventory-service\n\n## Summary\n- Containerized microservice on Amazon EKS in us-west-2\n- Minimum 2 replicas, autoscaling on CPU to handle peak of 40 RPS with p95 latency < 300 ms\n- Amazon RDS for PostgreSQL (multi-AZ) with encrypted storage, replacing SQLite\n- Monthly budget capped at USD 450, using Graviton instances for cost efficiency\n- 99.9% availability SLO, RPO 15 min, RTO 1 hour\n\n## Key decisions\n| Decision | Value | Source |\n|----------|-------|--------|\n| Target platform | Amazon EKS | G1 |\n| Database engine | Amazon RDS for PostgreSQL | TC3 |\n| CPU architecture | Graviton (arm64) | TC2 |\n| Minimum replicas | 2 | NFR3 |\n| Autoscaling metric | CPU | NFR3 |\n| Logging | JSON to stdout | NFR5 |\n| Secrets management | AWS Secrets Manager | SEC1 |\n| Encryption at rest | true | SEC2 |\n| Private database | true | SEC3 |\n| Non-root containers | true | SEC4 |\n\n## Risks\n- Data migration from SQLite to PostgreSQL may require data transformation and validation\n- Transition from Flask development server to production-ready server (Gunicorn) needs testing\n- New JSON API contract must be verified against existing warehouse scanners\n\n<!-- generated: tables rendered from the validated spec -->\n\n## Target specification\n\n| Area | Values |\n|---|---|\n| Target | eks in us-west-2, Kubernetes 1.33, arm64, IaC terraform, registry ecr |\n| Workload | port 8080, probes /healthz and /readyz, replicas 2-6 on cpu 70%, peak 40 rps, p95 300 ms |\n| Data | postgres 16 on rds, Multi-AZ yes, migrate from sqlite |\n| NFR | SLO 99.9%, RPO 15 min, RTO 60 min, logging json-stdout |\n| Security | secrets aws-secrets-manager, encryption at rest yes, private DB yes, non-root yes, read-only root FS yes |\n| FinOps | USD 450/month (prod), prefer Graviton yes, growth x3 next year |\n\n## Traceability matrix\n\n| ID | Category | Priority | Requirement | Traces to | Acceptance |\n|---|---|---|---|---|---|\n| G1 | goal | must | Move the application to our standard container platform (Amazon EKS) as an independently deployable microservice. | - | Inventory service runs as a containerized microservice on Amazon EKS. |\n| G2 | goal | must | Remove the single point of failure: survive the loss of one node or one Availability Zone. | LF-08, LF-09 | Application survives the loss of one node or one Availability Zone. |\n| G3 | goal | must | Cut infrastructure cost, or at minimum not increase it. Finance has approved a maximum of USD 450 per month for production. | LF-17 | Infrastructure cost is within USD 450 per month for production. |\n| G4 | goal | must | Be in production before the end of Q1 2027. | - | Service is deployed to production before the end of Q1 2027. |\n| FR1 | functional | must | Keep the existing JSON API contract (/api/items, /api/items/{id}, /api/orders) so the warehouse scanners keep working without changes. | - | Existing JSON API contract is preserved and functional. |\n| FR2 | functional | should | The HTML dashboard can stay, but it is low priority. API consumers come first. | - | HTML dashboard remains accessible. |\n| FR3 | functional | must | The nightly inventory report must keep running, but it must not depend on the local disk of a single machine. | LF-10 | Nightly inventory report does not depend on the local disk of a single machine. |\n| FR4 | functional | must | Order creation must never oversell stock (current behaviour must be preserved). | - | Order creation preserves current behavior and never oversells stock. |\n| NFR1 | nfr | must | Availability SLO 99.9% monthly for the API. | - | API achieves 99.9% monthly availability. |\n| NFR2 | nfr | must | p95 latency < 300 ms at the expected peak of 40 requests/second (warehouse shift change, 06:00\u201307:00). | LF-11 | p95 latency is under 300 ms at 40 requests/second. |\n| NFR3 | nfr | must | Scale out automatically on CPU; at least 2 replicas at all times in production. | LF-08 | Service scales out automatically on CPU with at least 2 replicas. |\n| NFR4 | nfr | must | RPO 15 minutes, RTO 1 hour. | LF-12 | RPO is 15 minutes and RTO is 1 hour. |\n| NFR5 | nfr | must | Structured (JSON) logs to stdout; no log files on disk. | LF-14 | Logs are structured JSON to stdout with no log files on disk. |\n| NFR6 | nfr | must | Health and readiness endpoints for the orchestrator. | LF-16 | Health and readiness endpoints are implemented and functional. |\n| SEC1 | security | must | No credentials in code or container images; secrets come from AWS Secrets Manager. | LF-02 | No credentials are in code or container images; secrets come from AWS Secrets Manager. |\n| SEC2 | security | must | Data encrypted at rest and in transit inside the VPC. | - | Data is encrypted at rest and in transit inside the VPC. |\n| SEC3 | security | must | The database must not be reachable from the internet. | LF-06 | Database is not reachable from the internet. |\n| SEC4 | security | must | Containers run as non-root with a read-only root filesystem where possible. | LF-04 | Containers run as non-root with a read-only root filesystem where possible. |\n| SEC5 | security | must | Fix the audit finding on the search endpoint (SQL injection). | LF-01 | Audit finding on the search endpoint (SQL injection) is fixed. |\n| TC1 | constraint | must | Region us-west-2. | - | Service is deployed in us-west-2. |\n| TC2 | constraint | should | Prefer Graviton (arm64) instances for cost. | - | Graviton (arm64) instances are used for cost efficiency. |\n| TC3 | constraint | must | Target database: Amazon RDS for PostgreSQL (the team does not want to operate a database on Kubernetes). | - | Database is Amazon RDS for PostgreSQL. |\n| TC4 | constraint | must | Infrastructure as code with Terraform; container images in Amazon ECR. | - | Infrastructure is provisioned with Terraform. |\n| TC5 | constraint | must | Kubernetes manifests must pass our policy baseline: resource requests/limits, probes, non-root, no latest tags, PodDisruptionBudget. | LF-04, LF-11, LF-16 | Kubernetes manifests pass the policy baseline (resource requests/limits, probes, non-root, no latest tags, PodDisruptionBudget). |\n\n## Assessment coverage (critical and high findings)\n\n| Finding | Severity | Title | Covered by |\n|---|---|---|---|\n| LF-01 | critical | SQL built by string concatenation (SQL injection) | SEC5 |\n| LF-02 | critical | Secrets hard-coded in source code | SEC1 |\n| LF-03 | critical | Write endpoints without authentication (shared static admin token) | gap: Add authentication and authorization to write endpoints |\n| LF-04 | high | Service and scheduled job run as root | SEC4, TC5 |\n| LF-05 | high | End-of-life runtime and outdated web framework | gap: Upgrade Flask to a supported version and use a modern framework if needed |\n| LF-06 | high | Internet-facing plain HTTP with an open security group | SEC3 |\n| LF-07 | high | Instance hardening gaps (EBS encryption, IMDS) | gap: Enable EBS encryption and disable IMDSv1 |\n| LF-08 | high | Single EC2 instance in one Availability Zone (single point of failure) | G2, NFR3 |\n| LF-09 | high | SQLite database on the instance's local disk | G2 |\n| LF-11 | high | Flask development server used in production | NFR2, TC5 |\n| LF-12 | high | No backups of the application data | NFR4 |\n\n## Conflicts\n\n| Conflict | Resolution |\n|---|---|\n| Cost cap of USD 450 vs. high availability and performance requirements | Prioritize essential availability and performance features; optimize costs through Graviton and autoscaling |\n| Growth expectation of 3x traffic vs. current budget | Size for current load with headroom; monitor and scale as needed within budget |\n\n## Open questions\n\n| ID | Question | Status | Assumption or decision | Impact |\n|---|---|---|---|---|\n| Q-01 | Should we size for 3x traffic growth now or monitor and scale later? | Resolved by reviewer | Decided: Size for current load with headroom; monitor and scale as needed within budget. | If traffic grows faster than expected, may need to adjust resources and budget |\n| Q-02 | What are the requirements and budget for dev/test environments? | Resolved by reviewer | Decided: Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth. | If budget is approved, can allocate more resources; if not, may need to share environments or use serverless options |\n| Q-03 | When is the data migration window? | Open | Plan for a weekend cutover with minimal downtime | If migration window is constrained, may need to implement phased migration or feature toggles |\n"
   },
   "metrics": {
     "model": "us.amazon.nova-2-lite-v1:0",
-    "latency_s": 15.6,
-    "input_tokens": 34811,
-    "output_tokens": 2420,
-    "cycles": 6,
+    "latency_s": 11.2,
+    "input_tokens": 51599,
+    "output_tokens": 593,
+    "cycles": 7,
     "stop_reason": "tool_use",
     "submitted": true,
     "resumed": false

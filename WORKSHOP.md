@@ -166,10 +166,13 @@ In the sidebar choose **Local (in-process)**, turn on **Live AWS discovery**, **
 
 ```bash
 uv run python -m transform_agents.orchestrator --requirements samples/requirements/migration-requirements.md \
-    --mode local --auto-approve --live-aws --live-deploy --simulate-drift      # ~2 minutes
+    --mode local --auto-approve --live-aws --live-deploy --simulate-drift \
+    --revise requirements="Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth."   # ~2.5 minutes
 make record RUN=runs/<id>                 # copy that complete run into samples/recorded-run/ (the stage fallback)
-make replay                               # check the recording replays (REPLAY_FROM=recorded)
+make replay                               # replays in real time, revision included (REPLAY_SPEED=4 for a quick look)
 ```
+
+> **Re-record after deploying the legacy EC2.** The tracked recording was made before the EC2 existed, so its Discovery card shows CPU as an *estimate*. Once `scripts/legacy-up.sh` and `scripts/legacy-load.sh` have run, repeat the rehearsal command above (it includes `--live-aws`), then `make record`. The fallback then shows real instance data, matching the script.
 
 Every run is saved under `runs/<run_id>/`: `state.json`, plus per stage `result.json`, `events.jsonl` and the merged
 `workspace/` with all generated files, which you can open in the IDE during the talk. `make clean` keeps `runs/` unless you pass `CLEAN_RUNS=1`.
@@ -178,12 +181,12 @@ Reference timings from a real local run (2026-10-20):
 
 | Stage | Time | Highlights |
 |---|---|---|
-| Discovery | ~8 s | 17 findings (SQLi critical), readiness ~40/100, replatform |
-| Requirements | ~17 s | 24 requirements traced, budget $450, 3 open questions |
+| Discovery | ~10 s | 17 findings (3 critical, SQLi), readiness 35–50/100 (varies), replatform |
+| Requirements | ~15 s (+~8 s revision) | 24 requirements, budget $450, 3 open questions (2 resolved by the scripted feedback) |
 | Modernization | ~45–75 s | 32 files, generated tests pass, non-root image |
 | Terraform | ~15 s | `terraform validate` passes, Graviton t4g.medium, RDS Multi-AZ |
 | K8s Validation | ~15 s | with drift on: 4 injected violations detected and fixed, live kind deploy, smoke tests 200/200/200/201/409 |
-| FinOps | ~9 s | $72 today → $623 as designed (1.33 extended support) → $208 optimized (within $450) |
+| FinOps | ~11 s | $72 today → $623 as designed (1.33 extended support) → $208 optimized (within $450) |
 
 ---
 
@@ -235,7 +238,7 @@ Each module shows what to click, what the audience sees, and the talking points.
 - UI: **Start migration**. Watch the tool timeline: `scan_codebase` → `parse_legacy_terraform` → `describe_live_instance`
   / `get_utilization` (live) → `submit_result`.
 - Result card: findings table (LF-01 SQLi **critical**), readiness score, CPU avg/p95, strategy **replatform**.
-- Talking point: the deterministic tools find the evidence; the model only weighs severity and strategy. That's why it takes about 8 seconds.
+- Talking point: the deterministic tools find the evidence; the model only weighs severity and strategy. That's why it takes about 10 seconds.
 - **Approve & continue.** **Checkpoint:** 15:00.
 
 ### 15–21 · Module 3: Requirements agent (upload the file)
@@ -311,9 +314,9 @@ Each module shows what to click, what the audience sees, and the talking points.
 
 | Symptom | Do this |
 |---|---|
-| Wi-Fi or Bedrock down, or throttling (`ThrottlingException`) | Sidebar → **Replay (offline)**. The recorded run plays with the same UI and timings. Or from the terminal: `make replay`. |
+| Wi-Fi or Bedrock down, or throttling (`ThrottlingException`) | **…** menu (top right) → **Replay a recorded run (offline)**. The recorded run plays with the same UI, real-time pacing and the recorded revision, under a small "Recorded run" label. Replay can't be switched on while an agent is working (the menu says "available when no agent is running"): if a stage hangs, open the app in a **fresh browser tab** (the same address without `?run=…`), turn Replay on there and start again; the stuck run stays in the first tab. Or from the terminal: `make replay`. |
 | A stage fails mid-demo | The gate offers **Retry**. On a failed *revision*, use **Approve previous result** to keep the last good output. |
-| A stage is slow (more than 90 s) | Keep talking. Every agent has a hard deadline and returns a deterministic fallback result. If it's still stuck, switch to Replay. |
+| A stage is slow (more than 90 s) | Keep talking. Every agent has a hard deadline and returns a deterministic fallback result. If it's still stuck, switch to Replay in a fresh tab (see above). |
 | `ExpiredToken` / SSO errors | `aws sso login --profile personal-dev`, then **Retry**. |
 | Terraform stage stuck on `terraform init` | Stop the UI and start it again with `TERRAFORM_OFFLINE=1 make ui` (offline validation only). |
 | kind deploy fails | `docker info`, then `make kind-up`, then **Retry**. Diagnose with `kubectl --context kind-transform-workshop -n inventory describe pods`. |
@@ -343,7 +346,7 @@ make kind-down                # deletes the local cluster
 |---|---|
 | Legacy EC2 (t3.large + gp2 30 GiB) | ~$2.24/day while deployed |
 | AgentCore Runtime (7 runtimes) | $0 idle; well under $0.10 of runtime per full pipeline run |
-| Bedrock tokens | ~200k tokens per full run, a few cents |
+| Bedrock tokens | ~250k tokens per full run, a few cents |
 | kind, Streamlit, local runs | free |
 | EKS / RDS from the generated Terraform | not deployed ($210–$620/month if applied) |
 
@@ -373,3 +376,4 @@ Useful environment variables:
 | `TERRAFORM_OFFLINE=1` | Terraform agent skips `terraform init/validate` |
 | `UI_PORT` | Streamlit port (default 8501) |
 | `REPLAY_FROM` | `recorded` (default), `latest`, or `runs/<id>` |
+| `REPLAY_SPEED` | Replay pacing: 1 = recorded timings (default), 4 = rehearsal |

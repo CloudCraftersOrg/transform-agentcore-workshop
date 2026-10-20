@@ -276,8 +276,8 @@ async def test_replay_keys_on_the_pipeline_attempt_and_skips_failed_ones(tmp_pat
     resumed = Pipeline.load(p.run_id, ReplayClient(rec.dir, speed=1000), root=tmp_path / "runs")
     await drain(resumed.revise("discovery", "again"))  # attempt 3: past the recording, the last good one
     assert resumed.status("discovery") == AWAITING and "Revised" in resumed.result("discovery")["summary"]
-    assert "attempt 2/2" in json.loads((resumed.dir / "discovery" / "events.jsonl").read_text().splitlines()[0])[
-        "message"]
+    assert resumed.client.played["discovery"].endswith("attempt 2/2")
+    assert resumed.client.revisions() == {"discovery": ["add backups"]}
 
 
 # ----------------------------------------------------------------------------- 7. replay sources and recording

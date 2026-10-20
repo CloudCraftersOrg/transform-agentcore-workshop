@@ -4,6 +4,14 @@
         --requirements samples/requirements/migration-requirements.md --mode local --auto-approve
 
 Without --auto-approve it stops at every gate: [a]pprove, [r]evise with feedback, or [q]uit.
+
+A rehearsal (and so the recording `make record` copies) can include scripted revisions, the presenter's
+"Ask for changes": after the stage's first attempt it is revised with that feedback, then the gate follows.
+
+    uv run python -m transform_agents.orchestrator ... --auto-approve \\
+        --revise requirements="Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth."
+
+In replay mode the recording's own revisions are replayed unless --revise is given.
 """
 
 import argparse
@@ -15,7 +23,7 @@ from pathlib import Path
 
 from transform_agents.core import STAGES
 
-from .clients import make_client
+from .clients import make_client, parse_speed
 from .pipeline import AWAITING, FAILED, Options, Pipeline
 
 
@@ -62,8 +70,36 @@ class EventPrinter:
             self.line("·", json.dumps(event))
 
 
-async def drive(pipeline: Pipeline, auto_approve: bool, until: str | None) -> int:
+def speed_arg(text: str) -> float:
+    try:
+        return parse_speed(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
+
+
+def parse_revision(spec: str) -> tuple[str, str]:
+    """`--revise STAGE=FEEDBACK` -> (stage, feedback)."""
+    stage, _, text = spec.partition("=")
+    stage, text = stage.strip(), text.strip()
+    if stage not in STAGES or not text:
+        raise argparse.ArgumentTypeError(f"expected STAGE=FEEDBACK with STAGE one of {', '.join(STAGES)}, got {spec!r}")
+    return stage, text
+
+
+async def run_revision(pipeline: Pipeline, printer: EventPrinter, stage: str, text: str) -> bool:
+    """Revise a reviewed stage with feedback, printing its events; False when the revision failed."""
+    print(f"\n━━ revising {stage}: {text}", flush=True)
+    async for event in pipeline.revise(stage, text):
+        printer(event)
+    printer.flush_text()
+    return not pipeline.revision_failed(stage)
+
+
+async def drive(pipeline: Pipeline, auto_approve: bool, until: str | None,
+                revisions: dict[str, list[str]] | None = None) -> int:
+    """Run the remaining stages. revisions: scripted feedback per stage, applied after its attempt, before the gate."""
     printer = EventPrinter()
+    scripted = {stage: list(texts) for stage, texts in (revisions or {}).items()}
     while (stage := pipeline.next_stage()) is not None:
         if until and STAGES.index(stage) > STAGES.index(until):
             break
@@ -78,6 +114,9 @@ async def drive(pipeline: Pipeline, auto_approve: bool, until: str | None) -> in
             return 1
         if pipeline.revision_failed(stage):
             print(f"  ⚠️ {pipeline.state.stages[stage].error}; the previous result is kept for review")
+        for text in scripted.pop(stage, []):
+            if not await run_revision(pipeline, printer, stage, text):
+                print(f"  ⚠️ {pipeline.state.stages[stage].error}; the previous result is kept for review")
         if auto_approve:
             pipeline.approve(stage)
             print(f"  ✅ approved {stage}")
@@ -87,11 +126,7 @@ async def drive(pipeline: Pipeline, auto_approve: bool, until: str | None) -> in
             return 0
         if answer.startswith("r"):
             text = answer[1:].strip() or (await asyncio.to_thread(input, "  feedback > ")).strip()
-            print(f"\n━━ revising {stage}: {text}", flush=True)
-            async for event in pipeline.revise(stage, text):
-                printer(event)
-            printer.flush_text()
-            if pipeline.revision_failed(stage):
+            if not await run_revision(pipeline, printer, stage, text):
                 print(f"  ⚠️ {pipeline.state.stages[stage].error}: [a]pprove keeps the previous result")
             continue
         pipeline.approve(stage)
@@ -108,6 +143,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--replay-from", default="recorded",
                         help="replay mode: 'recorded' (samples/recorded-run, the default), 'latest' (newest complete "
                              "run in runs/), 'fixtures' or a run directory")
+    parser.add_argument("--replay-speed", type=speed_arg, metavar="X",
+                        help="replay mode: 1 = the recorded timings (default: $REPLAY_SPEED or 1), 4 = four times faster")
+    parser.add_argument("--revise", action="append", type=parse_revision, default=[], metavar="STAGE=FEEDBACK",
+                        help="after STAGE's first attempt, revise it with FEEDBACK before its gate (repeatable). "
+                             "Replay mode replays the recording's revisions when no --revise is given")
     parser.add_argument("--until", choices=STAGES, help="stop after this stage")
     # Flags default to None so --resume only overrides the options given explicitly (--no-<flag> turns one off).
     flag = argparse.BooleanOptionalAction
@@ -118,7 +158,12 @@ def main(argv: list[str] | None = None) -> int:
                         help="k8s_validation: inject typical hand-edit violations so the agent shows detect & fix")
     args = parser.parse_args(argv)
 
-    client = make_client(args.mode, replay_from=args.replay_from)
+    client = make_client(args.mode, replay_from=args.replay_from, replay_speed=args.replay_speed)
+    revisions: dict[str, list[str]] = {}
+    for stage, text in args.revise:
+        revisions.setdefault(stage, []).append(text)
+    if args.mode == "replay" and not args.revise:
+        revisions = client.revisions()
     given = {f.name: getattr(args, f.name) for f in fields(Options) if getattr(args, f.name, None) is not None}
     if args.resume:
         pipeline = Pipeline.load(args.resume, client)
@@ -133,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     source = f" · replaying {getattr(client, 'source', None) or 'tests/fixtures'}" if args.mode == "replay" else ""
     print(f"run {pipeline.run_id} · mode {args.mode}{source} · {pipeline.dir}", flush=True)
     try:
-        code = asyncio.run(drive(pipeline, args.auto_approve, args.until))
+        code = asyncio.run(drive(pipeline, args.auto_approve, args.until, revisions))
     except ValueError as exc:  # e.g. the requirements stage without --requirements
         print(f"✗ {exc}")
         code = 2

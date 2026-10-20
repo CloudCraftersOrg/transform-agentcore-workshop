@@ -145,7 +145,7 @@ Let's migrate a server.
 
 > **Before you start:** UI open at http://localhost:8501, mode **Local**, toggles **Live AWS discovery ON**,
 > **Live deploy to kind ON**, **Simulate manual drift ON**. Then click **New run**. Terminal ready, with a large font.
-> **▶ Plan B for the whole demo:** sidebar → **Replay (offline)**. It's the same UI, and the audience won't notice.
+> **▶ Plan B for the whole demo:** **…** menu → **Replay a recorded run (offline)** (between stages; mid-stage, use a fresh tab). It's the same UI, and the audience won't notice.
 
 ### 15:00 · The patient (2 min)
 
@@ -170,9 +170,9 @@ It works. It makes money. And nobody wants to touch it. Let's hand it to the age
 Watch the timeline on the left. Notice what the agent does *first*: it doesn't "think", it **uses tools**.
 It scans the code, parses the old Terraform, and reads the real instance and its CloudWatch metrics.
 
-**[Wait for the result card: about 8 seconds]**
+**[Wait for the result card: about 10 seconds]**
 
-Eight seconds. Seventeen findings. The SQL injection is flagged as **critical**, with the exact function where it lives.
+About ten seconds. Seventeen findings. The SQL injection is flagged as **critical**, with the exact function where it lives.
 The secrets, the local state and the single point of failure are all there. Readiness score, and a recommended strategy: **replatform**.
 
 Here's the mechanism: **deterministic tools find the evidence; the model weighs it and explains it.**
@@ -195,13 +195,18 @@ And, like every real document, a few vague points: "maybe 3x more traffic next y
 
 **[Wait: about 15 seconds]**
 
-Twenty-four requirements, each one with a priority and acceptance criteria, and each one **traced** back to what discovery found.
+Twenty-four requirements, each one with a priority and acceptance criteria, and every one that addresses a problem is **traced** back to what discovery found.
 The security finding becomes requirement SEC5. Nothing gets lost between the business and the engineers.
 
 And look at this: **open questions**. The agent didn't invent an answer for "3x traffic". It wrote down an assumption and the impact, and asked us.
 
 **[CLICK: ✏️ Request changes]**, then type:
 *"Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth."*
+
+**[Wait: about 8 seconds, then point at the open questions]**
+
+Look at the open questions. Two of them are now **resolved**: growth and dev/test, with my decision in my words.
+The third, the cutover date, is still open, because I didn't answer it.
 
 That's the human in the loop. I don't edit JSON. I talk to the agent, and it changes only what I asked.
 
@@ -288,7 +293,7 @@ That's our 2017 server, now a microservice on Kubernetes.
 
 And finally, the question every CFO asks. What does it cost?
 
-**[Result: about 8 seconds, with the chart]**
+**[Result: about 10 seconds, with the chart]**
 
 **[PAUSE, let the chart land]**
 
@@ -420,7 +425,7 @@ Thank you.
 | "Was that AWS Transform?" | No, and that's the point. It's a transparent re-creation of the kind of loop its agents run, built on AgentCore so you can see inside. AWS Transform is the managed, curated, at-scale version. |
 | "Which models did you use? Why not GPT or Claude?" | Amazon Nova 2 Lite for five agents and DeepSeek V3.2 for code, all on Bedrock. We benchmarked several and picked per job. AgentCore is model-agnostic, so you can swap models with one environment variable. The design (grounding plus validation) matters more than the model. |
 | "Does it work for big, messy apps?" | Our demo is one small service, deliberately. At portfolio scale you need curated knowledge for many stacks, plus dependency mapping and wave planning. That's exactly what AWS Transform brings. |
-| "What did the run cost?" | About 200,000 tokens for the whole pipeline: cents. The AgentCore runtimes cost nothing when idle. |
+| "What did the run cost?" | About 250,000 tokens for the whole pipeline: cents. The AgentCore runtimes cost nothing when idle. |
 | "Is my code or data safe?" | In our build, everything runs in our own AWS account: Bedrock, AgentCore, and nothing leaves it. Model-written tests run without access to cloud credentials. For AWS Transform, refer to its documentation on data handling and security. |
 | "Why did the target cost more than the old server?" | It buys high availability, a managed Multi-AZ database, autoscaling and the security fixes. The agent shows that honestly. Sometimes the right answer is rehost, or retire. |
 | "Can the agents deploy to production?" | They could, but they shouldn't without a human. In the demo the human approves every step, and the EKS Terraform is validated, not applied. |
@@ -432,13 +437,13 @@ Thank you.
 
 | Stage | Time | Number to quote |
 |---|---|---|
-| Discovery | ~8 s | 17 findings, SQL injection critical, readiness ~35–40, replatform |
-| Requirements | ~16 s | 24 requirements traced, budget $450, 3 open questions |
+| Discovery | ~10 s | 17 findings (3 critical, SQL injection), readiness 35–50 (varies per run), replatform |
+| Requirements | ~15 s, revision ~8 s | 24 requirements (13 traced to findings), budget $450, 3 open questions; your feedback resolves 2 |
 | Modernization | ~60 s | 23 generated tests pass; API contract preserved |
 | Terraform | ~15 s | `terraform validate` passes; Graviton, Multi-AZ RDS, Kubernetes 1.33 |
 | K8s Validation | ~15 s | 4 simulated violations detected and fixed; live deploy; 200/200/200/201/409 |
-| FinOps | ~8 s | $72 today → $623 as designed → $208 optimized; 1.33 extended support +$365/month |
-| Whole pipeline | ~2 min | About 200k tokens, a few cents |
+| FinOps | ~11 s | $72 today → $623 as designed → $208 optimized; 1.33 extended support +$365/month |
+| Whole pipeline | ~2 min | About 250k tokens, a few cents |
 
 ## Suggested slide list
 

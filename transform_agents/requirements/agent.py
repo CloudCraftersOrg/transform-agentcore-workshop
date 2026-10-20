@@ -89,10 +89,17 @@ def build_prompt(request: AgentRequest, ctx: RequirementsContext) -> str:
     if request.feedback:
         lines += [
             f"REVISION. Reviewer feedback to apply: {request.feedback}",
-            ("The reviewer's feedback overrides the document where they differ. The draft already holds your "
-             "previous spec (see get_spec_template): change only what the feedback asks for with set_fields / "
-             f"set_lists, call check_spec until OK, read {REPORT} and rewrite it with write_file, then call "
-             "submit_result."),
+            "The reviewer's feedback overrides the document where they differ. The draft already holds your previous "
+            "spec (see get_spec_template). Apply the feedback in this order:",
+            "a) Open questions: compare the feedback with every open question in the draft. For each question the "
+            "feedback answers or decides, call resolve_question(question_id, decision) with the decision in the "
+            "reviewer's words. Reviewers often answer several questions in one sentence.",
+            "b) Values: if the feedback changes scope or sizing, update those fields or entries with set_fields / "
+            "set_lists. Change nothing the feedback does not mention.",
+            f"c) Call check_spec until OK, read {REPORT} and rewrite it with write_file so the Summary and Key "
+            "decisions reflect the feedback.",
+            "d) Call submit_result with a summary that starts with 'Revised:' and says what changed "
+            "(for example which questions were resolved).",
         ]
     return "\n".join(lines)
 

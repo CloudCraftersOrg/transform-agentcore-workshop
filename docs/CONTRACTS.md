@@ -58,9 +58,11 @@ General rules:
   "requirements": [{"id": "FR1", "text": "...", "category": "functional|nfr|security|constraint|goal", "priority": "must|should|could",
                      "traces_to": ["LF-01"], "acceptance": "..."}],
   "conflicts": [{"description": "...", "resolution": "..."}],
-  "open_questions": [{"id": "Q-01", "question": "...", "assumption": "...", "impact": "..."}]
+  "open_questions": [{"id": "Q-01", "question": "...", "assumption": "...", "impact": "...",
+                      "status": "open|resolved", "resolution": "the reviewer's decision (when resolved)"}]
 }
 ```
+On a revision, the agent resolves every open question the reviewer's feedback answers (`resolve_question` tool). The entry stays in the list with `status: "resolved"`. The revised summary starts with `Revised:`.
 **Artifacts**: `reports/migration-spec.md` (human-readable spec plus a traceability matrix)
 
 ## 3. modernization — Code modernization

@@ -342,8 +342,10 @@ async def test_replay_client_replays_recorded_attempts(pipeline):
     await drain(pipeline.revise("discovery", "tweak"))
     replay = ReplayClient(pipeline.dir, speed=1000)
     first = await drain(replay.stream("discovery", AgentRequest()))
+    assert replay.played["discovery"] == f"{pipeline.dir.name}/discovery attempt 1/2"
     second = await drain(replay.stream("discovery", AgentRequest(feedback="tweak")))
-    assert first[0]["replay"] is True
+    assert replay.played["discovery"] == f"{pipeline.dir.name}/discovery attempt 2/2"
+    assert not any("replay" in str(e.get("message", "")) or "replay" in e for e in first + second)  # looks live
     assert "Revised" not in first[-1]["summary"] and "Revised" in second[-1]["summary"]
 
 

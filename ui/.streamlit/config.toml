@@ -1,24 +1,85 @@
 # Picked up as the script-level config when running `streamlit run ui/app.py` from the repo root (Streamlit >= 1.4x).
+# Light, airy theme with an indigo accent. Design tokens and the CSS live in ui/style.py (TOKENS, CSS).
 
 [theme]
-base = "dark"
-primaryColor = "#FF9900"            # AWS orange
-backgroundColor = "#0B1624"         # deep navy
-secondaryBackgroundColor = "#152238"
-textColor = "#E6EDF3"
-linkColor = "#FFB547"
-borderColor = "#24344D"
-codeBackgroundColor = "#0F1D30"
-font = "sans-serif"
-baseRadius = "medium"
+base = "light"
+primaryColor = "#5B5FC7"            # indigo (pressed #4F52B2, tint #EBEBF8)
+backgroundColor = "#F6F4FB"         # canvas; ui/style.py adds the soft blobs and the two glass layers
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#242424"
+linkColor = "#5B5FC7"
+linkUnderline = false
+borderColor = "#E0E0E0"
+showWidgetBorder = true
+showSidebarBorder = false
+codeBackgroundColor = "#F5F5F7"
+codeTextColor = "#242424"
+# Inter is self-hosted from ui/static (see [[theme.fontFaces]]), so an offline Plan B keeps the same type.
+font = "Segoe UI Variable Text, Segoe UI, Inter, system-ui, sans-serif"
+headingFont = "Segoe UI Variable Text, Segoe UI, Inter, system-ui, sans-serif"
+codeFont = "SF Mono, Menlo, Consolas, monospace"
+baseFontSize = 18
+baseRadius = "8px"
+buttonRadius = "8px"
+headingFontSizes = ["2.2222rem", "1.5556rem", "1.3333rem", "1.1111rem", "1rem", "0.8889rem"]  # 40 28 24 20 18 16 px
+headingFontWeights = [700, 600, 600, 600, 600, 600]
+metricValueFontSize = "2rem"        # 36 px
+metricValueFontWeight = 600
+dataframeBorderColor = "#E0E0E0"
+dataframeHeaderBackgroundColor = "#F5F5F7"
+dataframeHeaderTextColor = "#424242"
+# Status colours (Fluent 2). No AWS orange anywhere: "orange" and "yellow" map to the warning token.
+greenColor = "#0E700E"
+greenBackgroundColor = "#F1FAF1"
+greenTextColor = "#0E700E"
+redColor = "#C50F1F"
+redBackgroundColor = "#FDF3F4"
+redTextColor = "#C50F1F"
+blueColor = "#0F6CBD"
+blueBackgroundColor = "#EBF3FC"
+blueTextColor = "#0F6CBD"
+orangeColor = "#8A3707"
+orangeBackgroundColor = "#FFF9F5"
+orangeTextColor = "#8A3707"
+yellowColor = "#8A3707"
+yellowBackgroundColor = "#FFF9F5"
+yellowTextColor = "#8A3707"
+violetColor = "#5B5FC7"
+violetBackgroundColor = "#EBEBF8"
+violetTextColor = "#4F52B2"
+grayColor = "#616161"
+grayBackgroundColor = "#F5F5F5"
+grayTextColor = "#616161"
+chartCategoricalColors = ["#5B5FC7", "#0F6CBD", "#0E700E", "#8A8886", "#C50F1F", "#8A3707", "#A4A6E8", "#616161"]
+chartSequentialColors = ["#F4F4FC", "#E1E2F6", "#C9CAF0", "#B0B2E9", "#9799E1", "#7E81D8", "#6A6DCF", "#5B5FC7",
+                         "#4F52B2", "#3F428F"]
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-Regular.woff2"
+weight = 400
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-SemiBold.woff2"
+weight = 600
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-Bold.woff2"
+weight = 700
+style = "normal"
 
 [theme.sidebar]
-backgroundColor = "#101D30"
-secondaryBackgroundColor = "#18294A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F5F7"
 
 [server]
 maxUploadSize = 5
 runOnSave = false
+enableStaticServing = true          # serves ui/static/ at app/static/ (the Inter font files)
 
 [browser]
 gatherUsageStats = false

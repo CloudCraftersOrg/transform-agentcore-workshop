@@ -17,9 +17,12 @@ REQ ?= samples/requirements/migration-requirements.md
 # MODE: local | agentcore | replay | fake.
 # REPLAY_FROM: recorded (samples/recorded-run) | latest (newest complete run in runs/) | fixtures | runs/<id>.
 # AGENTS: a subset for deploy-agents / destroy-agents, e.g. AGENTS="hello discovery".
+# REPLAY_SPEED: replay pacing for `make replay` and the UI's Replay mode: 1 = the recorded timings, 4 = rehearsal.
 # RUN: the run directory for `make record`.  CLEAN_RUNS=1 lets `make clean` delete runs/.
 MODE ?= local
 REPLAY_FROM ?= recorded
+REPLAY_SPEED ?= 1
+export REPLAY_SPEED
 AGENTS ?=
 RUN ?=
 CLEAN_RUNS ?=
@@ -54,9 +57,9 @@ ui: ## Streamlit chatbot on http://localhost:8501 (override with UI_PORT=...)
 run-cli: ## Headless pipeline with auto-approve (MODE=local|agentcore|replay|fake, REQ=file)
 	$(UV) run python -m transform_agents.orchestrator --requirements $(REQ) --mode $(MODE) --auto-approve
 
-replay: ## Replay a recorded run headless (REPLAY_FROM=recorded|latest|fixtures|runs/<id>)
+replay: ## Replay a recorded run headless (REPLAY_FROM=recorded|latest|fixtures|runs/<id>, REPLAY_SPEED=1|4)
 	$(UV) run python -m transform_agents.orchestrator --requirements $(REQ) --mode replay \
-		--replay-from $(REPLAY_FROM) --auto-approve
+		--replay-from $(REPLAY_FROM) --replay-speed $(REPLAY_SPEED) --auto-approve
 
 record: ## Copy a complete run into samples/recorded-run for replay (RUN=runs/<id>)
 	@if [ -z "$(RUN)" ]; then echo "usage: make record RUN=runs/<id>"; exit 2; fi
