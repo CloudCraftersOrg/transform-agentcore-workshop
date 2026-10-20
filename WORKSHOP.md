@@ -209,6 +209,9 @@ Reference timings from a real local run (2026-10-20):
 
 ## 7. Run of show: 60 minutes
 
+> For the word-for-word keynote version (why we built this, the live demo in the middle, why AWS Transform matters),
+> see [docs/KEYNOTE-SCRIPT.md](docs/KEYNOTE-SCRIPT.md). This section is the technical click-path.
+
 Each module shows what to click, what the audience sees, and the talking points. The checkpoint tells you whether you're on track.
 
 ### 00–05 · Intro: AWS Transform under the hood

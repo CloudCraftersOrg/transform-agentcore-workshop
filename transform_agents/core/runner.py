@@ -48,6 +48,32 @@ def json_submit_tool(box: ResultBox, description: str):
     return submit_result
 
 
+LEAKED_MARKER = "<｜DSML｜function_calls"
+LEAKED_MARKER_RE = re.compile(r"</?｜DSML｜(?:function_calls|invoke|parameter)?>?")
+
+
+class TextScrubber:
+    """Drops tool-call markers some models (DeepSeek) leak into streamed text, even when split across deltas."""
+
+    def __init__(self):
+        self.pending = ""
+
+    def feed(self, delta: str) -> str:
+        text = self.pending + delta
+        cut = text.rfind("<")
+        tail = text[cut:].replace("</", "<", 1) if cut != -1 else ""
+        # Hold back a tail that could still grow into a marker; release it with the next delta.
+        if tail and len(tail) < len(LEAKED_MARKER) and LEAKED_MARKER.startswith(tail):
+            text, self.pending = text[:cut], text[cut:]
+        else:
+            self.pending = ""
+        return LEAKED_MARKER_RE.sub("", text)
+
+    def flush(self) -> str:
+        text, self.pending = LEAKED_MARKER_RE.sub("", self.pending), ""
+        return text
+
+
 def extract_json(text: str) -> dict[str, Any] | None:
     """Fallback when a model answers in prose instead of calling submit_result."""
     candidates = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.S) or re.findall(r"(\{.*\})", text, re.S)
@@ -85,10 +111,12 @@ async def run_agent(
     )
     tool_names: dict[str, str] = {}
     final_text, usage, cycles, stop_reason = "", {}, 0, None
+    scrubber = TextScrubber()
     try:
         async for ev in agent.stream_async(prompt):
             if "data" in ev and isinstance(ev["data"], str):
-                yield {"type": "text", "delta": ev["data"]}
+                if clean := scrubber.feed(ev["data"]):
+                    yield {"type": "text", "delta": clean}
             elif "message" in ev:
                 msg = ev["message"]
                 for block in msg.get("content", []):
@@ -103,7 +131,7 @@ async def run_agent(
                         yield {"type": "tool_end", "id": res["toolUseId"], "name": tool_names.get(res["toolUseId"], "?"),
                                "status": res.get("status", "success"), "output": preview(text)}
                     elif "text" in block and msg.get("role") == "assistant":
-                        final_text = block["text"]
+                        final_text = LEAKED_MARKER_RE.sub("", block["text"])
             elif "result" in ev:
                 result = ev["result"]
                 usage = dict(result.metrics.accumulated_usage or {})
@@ -112,6 +140,8 @@ async def run_agent(
     except Exception as exc:  # surfaced to the UI instead of killing the stream
         yield error(stage, f"{type(exc).__name__}: {exc}")
         return
+    if tail := scrubber.flush():
+        yield {"type": "text", "delta": tail}
 
     data = box.data if box.data is not None else (extract_json(final_text) or {})
     summary = box.summary or final_text.strip() or "(no summary)"

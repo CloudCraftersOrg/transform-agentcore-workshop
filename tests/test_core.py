@@ -42,3 +42,25 @@ def test_request_accepts_agentcore_cli_prompt():
 def test_extract_json_prefers_last_fenced_block():
     text = 'x ```json\n{"a": 1}\n``` y ```json\n{"b": 2}\n```'
     assert extract_json(text) == {"b": 2}
+
+
+def test_scrubber_drops_leaked_markers_split_across_deltas():
+    from transform_agents.core.runner import TextScrubber
+
+    deltas = ["Adapt it.\n\n<｜DSML｜", "function_calls", "Now I'll write <b>files</b>", " and <｜DSML｜func", "tion_calls"]
+    s = TextScrubber()
+    out = "".join(s.feed(d) for d in deltas) + s.flush()
+    assert out == "Adapt it.\n\nNow I'll write <b>files</b> and "
+
+
+def test_scrubber_cleans_the_recorded_modernization_run():
+    import json
+    from pathlib import Path
+
+    from transform_agents.core.runner import TextScrubber
+
+    events = Path(__file__).parents[1] / "samples/recorded-run/modernization/events.jsonl"
+    deltas = [e["delta"] for e in map(json.loads, events.read_text().splitlines()) if e.get("type") == "text"]
+    s = TextScrubber()
+    out = "".join(s.feed(d) for d in deltas) + s.flush()
+    assert "DSML" not in out and "function_calls" not in out and len(out) > 200

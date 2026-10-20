@@ -6,26 +6,72 @@ from html import escape
 
 @dataclass(frozen=True)
 class StageMeta:
-    icon: str
+    icon: str  # legacy emoji, being replaced by `symbol`
     title: str
     does: str
     analogue: str
+    symbol: str = ""  # Material Symbols name: ":material/<symbol>:" in markdown, icon=":material/<symbol>:" on widgets
+    short: str = ""  # nav label
+    doing: str = ""  # live status phrase while the agent runs
+    bridge: str = ""  # "In AWS Transform" line (docs/KEYNOTE-SCRIPT.md)
+    benefit: str = ""  # benefit line (docs/KEYNOTE-SCRIPT.md)
 
 
 STAGE_META = {
-    "discovery": StageMeta("🔎", "Discovery & Assessment", "Inventory the EC2 box and the Flask code, find risks, pick a 6R strategy",
-                           "Discovery / assessment"),
-    "requirements": StageMeta("📋", "Requirements", "Turn the uploaded request into a traceable migration spec",
-                              "Job objective intake + HITL clarifications"),
-    "modernization": StageMeta("🧩", "Code Modernization", "Refactor the monolith into a microservice, Dockerfile and manifests",
-                               "Code transformation + containerization"),
-    "terraform": StageMeta("🏗️", "Terraform IaC", "Adapt a validated EKS blueprint: VPC, EKS, ECR, RDS",
-                           "Network / infrastructure conversion"),
-    "k8s_validation": StageMeta("☸️", "K8s Validation", "Schema and policy checks, auto-fixes, optional live deploy to kind",
-                                "Test & validation"),
-    "finops": StageMeta("💰", "FinOps Right-sizing", "Current vs target monthly cost, right-sizing and savings",
-                        "Assessment TCO / business case"),
+    "discovery": StageMeta(
+        "🔎", "Discovery & Assessment", "Inventory the EC2 box and the Flask code, find risks, pick a 6R strategy",
+        "Discovery / assessment", symbol="travel_explore", short="Discovery",
+        doing="Reading the code and the infrastructure",
+        bridge="Discovery and assessment at portfolio scale: hundreds of servers, dependency mapping, application "
+               "grouping and the business case.",
+        benefit="Weeks of archaeology become an evidence-backed starting point."),
+    "requirements": StageMeta(
+        "📋", "Requirements", "Turn the uploaded request into a traceable migration spec",
+        "Job objective intake + HITL clarifications", symbol="checklist", short="Requirements",
+        doing="Turning the request into a migration spec",
+        bridge="Every job follows the same pattern: agents propose, people review and approve each step.",
+        benefit="Speed without giving up control."),
+    "modernization": StageMeta(
+        "🧩", "Code Modernization", "Refactor the monolith into a microservice, Dockerfile and manifests",
+        "Code transformation + containerization", symbol="deployed_code", short="Modernization",
+        doing="Porting the business logic",
+        bridge="Code transformation and containerization: .NET porting, Java and Python upgrades, mainframe "
+               "reimagining, and AWS Transform custom for your own patterns.",
+        benefit="The repetitive 80% is done consistently; experts spend their time on the 20% that matters."),
+    "terraform": StageMeta(
+        "🏗️", "Terraform IaC", "Adapt a validated EKS blueprint: VPC, EKS, ECR, RDS",
+        "Network / infrastructure conversion", symbol="stacks", short="Infrastructure",
+        doing="Adapting the validated blueprint",
+        bridge="Network and infrastructure conversion to infrastructure as code: CloudFormation, CDK or Terraform.",
+        benefit="A landing zone in days instead of a quarter of hand-written templates."),
+    "k8s_validation": StageMeta(
+        "☸️", "K8s Validation", "Schema and policy checks, auto-fixes, optional live deploy to kind",
+        "Test & validation", symbol="verified", short="Validation",
+        doing="Checking policies and deploying",
+        bridge="Validation is part of every job: tests, test environments and cutover checks.",
+        benefit="You don't find out in production."),
+    "finops": StageMeta(
+        "💰", "FinOps Right-sizing", "Current vs target monthly cost, right-sizing and savings",
+        "Assessment TCO / business case", symbol="savings", short="FinOps",
+        doing="Pricing the current and the target estate",
+        bridge="Assessment and business case: know the cost before you migrate.",
+        benefit="No surprises on the first invoice."),
 }
+
+# Design tokens (Fluent-style light theme; spec in the UX review). Use these for charts and inline HTML so CSS,
+# charts and markup stay consistent.
+TOKENS = {
+    "canvas": "#F6F4FB", "glass": "rgba(255,255,255,.72)", "card": "rgba(255,255,255,.96)", "border": "#E0E0E0",
+    "text": "#242424", "text2": "#616161", "disabled": "#707070",
+    "indigo": "#5B5FC7", "indigo_pressed": "#4F52B2", "indigo_tint": "#EBEBF8",
+    "success": "#0E700E", "success_bg": "#F1FAF1", "warning": "#8A3707", "warning_bg": "#FFF9F5",
+    "danger": "#C50F1F", "danger_bg": "#FDF3F4", "info": "#0F6CBD", "info_bg": "#EBF3FC",
+    "chart_today": "#8A8886", "chart_over": "#C50F1F", "chart_optimized": "#5B5FC7", "chart_budget": "#616161",
+}
+
+# Container keys shared by app.py (shell) and views.py (cards); CSS in this module targets `.st-key-<key>`.
+#   views.py creates: live-<stage>, card-<stage>, kpis-<stage>, bridge-<stage>, finale
+#   app.py creates:   topbar, gate, welcome-input, suggestions, recorded-chip
 
 STATUS_LABEL = {"pending": "pending", "running": "running", "awaiting_approval": "review", "approved": "approved",
                 "failed": "failed"}
