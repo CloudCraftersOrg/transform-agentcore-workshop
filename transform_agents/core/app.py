@@ -23,7 +23,13 @@ def make_app(stage: str, handle: Handler) -> BedrockAgentCoreApp:
         except ValueError as exc:
             yield error(stage, f"bad request: {exc}")
             return
-        async for event in handle(request):
-            yield event
+        finished = False
+        try:
+            async for event in handle(request):
+                finished = finished or event.get("type") in ("result", "error")
+                yield event
+        except Exception as exc:  # a crash must still end the SSE stream with one terminal event
+            if not finished:
+                yield error(stage, f"{type(exc).__name__}: {exc}")
 
     return app

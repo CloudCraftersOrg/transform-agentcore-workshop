@@ -480,3 +480,18 @@ def test_design_override_via_replace_keeps_dataclass_frozen():
     with pytest.raises(AttributeError):
         d.node_count = 3  # type: ignore[misc]
     assert replace(d, node_count=3).node_count == 3
+
+
+def test_eks_support_status_follows_the_date_not_the_snapshot():
+    from datetime import date
+
+    from transform_agents.finops.cost_model import eks_support
+    from transform_agents.finops.pricing import load_snapshot
+
+    prices = load_snapshot()
+    later = eks_support("1.34", prices, date(2026, 12, 10))  # snapshot says STANDARD_SUPPORT; ended 2026-12-02
+    assert later["status"] == "EXTENDED_SUPPORT" and later["extended"] is True
+    gone = eks_support("1.31", prices, date(2026, 12, 1))  # extended support ended 2026-11-26
+    assert gone["status"] == "END_OF_SUPPORT"
+    today = eks_support("1.33", prices, date(2026, 10, 19))
+    assert today["status"] == "EXTENDED_SUPPORT" and today["extended"] is True

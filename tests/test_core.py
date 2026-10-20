@@ -64,3 +64,21 @@ def test_scrubber_cleans_the_recorded_modernization_run():
     s = TextScrubber()
     out = "".join(s.feed(d) for d in deltas) + s.flush()
     assert "DSML" not in out and "function_calls" not in out and len(out) > 200
+
+
+async def test_make_app_turns_a_crash_into_one_error_event():
+    from transform_agents.core.app import make_app
+
+    async def boom(request):
+        yield {"type": "status", "stage": "x", "message": "started"}
+        raise RuntimeError("kaboom")
+
+    async def late_boom(request):
+        yield {"type": "result", "stage": "x", "summary": "ok", "data": {}, "artifacts": {}, "metrics": {}}
+        raise RuntimeError("after the result")
+
+    for handler, expected in ((boom, ["status", "error"]), (late_boom, ["result"])):
+        app = make_app("x", handler)
+        entry = app.handlers["main"]
+        events = [e async for e in entry({"prompt": "hi"})]
+        assert [e["type"] for e in events] == expected

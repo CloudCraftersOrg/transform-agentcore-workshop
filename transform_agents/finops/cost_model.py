@@ -303,8 +303,10 @@ def eks_support(version: str, prices: dict, as_of: date) -> dict[str, Any]:
         too_old = key(str(version)) < key(oldest) if str(version).replace(".", "").isdigit() else False
         return {"version": version, "status": "UNSUPPORTED" if too_old else "UNKNOWN", "extended": too_old}
     extended = date.fromisoformat(info["end_of_standard_support"]) <= as_of
-    return {"version": version, "status": "EXTENDED_SUPPORT" if extended else "STANDARD_SUPPORT",
-            "extended": extended, **info}
+    ended = "end_of_extended_support" in info and date.fromisoformat(info["end_of_extended_support"]) <= as_of
+    # The status is computed for `as_of`; the snapshot's own "status" field is only its value on the fetch date.
+    status = "END_OF_SUPPORT" if ended else ("EXTENDED_SUPPORT" if extended else "STANDARD_SUPPORT")
+    return {"version": version, **info, "status": status, "extended": extended}
 
 
 def estimate_current(c: CurrentEstate, prices: dict) -> list[dict]:
