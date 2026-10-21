@@ -28,14 +28,14 @@ cada charla.
 |---|---|---|
 | 1 | Portada | 0:30 |
 | 2 | ¿Quién soy? | 1:00 |
-| 3 | El servidor que nadie quiere tocar | 2:00 |
-| 4 | El problema no es la tecnología | 2:00 |
-| 5 | ¿Qué es AWS Transform? | 3:00 |
-| 6 | Cómo trabaja: el loop con humano | 2:00 |
+| 3 | El número que nadie presupuesta | 2:00 |
+| 4 | Todo lo que pasa por la cabeza | 2:30 |
+| 5 | AWS Transform: acelerar la modernización | 2:30 |
+| 6 | ¿Qué incluye AWS Transform? | 2:30 |
 | 7 | ¿Por qué un mini-demo? | 1:30 |
 | 8 | Una transformación, tres stacks | 2:00 |
 | 9–14 | Los seis agentes (1:30 c/u) | 9:00 |
-| 15 | Cinco lecciones | 3:00 |
+| 15 | Cinco lecciones | 2:30 |
 | 16 | ¿Por qué AWS Transform importa? | 2:30 |
 | 17 | Demo en vivo (transición) | 0:30 |
 | — | **Demo** (la app del repositorio) | 15:00 |
@@ -180,409 +180,495 @@ Por defecto, fundido con un leve desplazamiento (300ms, `suave`). Las excepcione
 
 ---
 
-### Diapositiva 3. El servidor que nadie quiere tocar
+### Diapositiva 3. El número que nadie presupuesta
 
-**Objetivo:** enganchar con un dolor que todos reconocen.
+**Objetivo:** abrir con un dato contundente, con su fuente, y con números que se mueven.
 
 **En pantalla**
-- Arriba, gigante: **"Nadie quiere tocar ese servidor."**
-- En el centro, el icono de un servidor con una etiqueta: `desplegado en 2017 · a mano · "temporal"`
-- Contador: **años sin tocarlo:** 9
-- Tres etiquetas alrededor que aparecen por clic:
-  - "La contraseña está en el código"
-  - "No hay staging"
-  - "Un cron llena el disco cada noche"
+- Antetítulo pequeño: **Antes de empezar, un número.**
+- Cifra protagonista: **US$ 100 mil millones**
+- Línea bajo la cifra: **desperdiciados en sobrecostos de migración a la nube en solo tres años**, y **+14 % de gasto
+  sobre lo planeado, cada año**.
+- Tres tarjetas de datos (por clic):
+  1. **38 %** de las empresas ha visto su migración retrasada más de un trimestre. *(McKinsey, 2021)*
+  2. **61 %** de los líderes reporta una "fatiga de migración" que retrasa proyectos seis meses o más. *(CloudBees,
+     2025)*
+  3. **84 %** dice que gestionar el gasto en la nube es su mayor reto. *(Flexera, 2025)*
+- Remate: **El problema no es llegar a la nube. Es el camino.**
+- Pie de fuentes, pequeño pero legible:
+  - McKinsey, *Cloud-migration opportunity: Business value grows, but missteps abound* (2021)
+  - CloudBees, *DevOps Migration Index* (nov. 2025)
+  - Flexera, *2025 State of the Cloud Report* (mar. 2025)
 
 **Animaciones**
 
 | Elemento | Disparador | Tipo | Parámetros |
 |---|---|---|---|
-| Frase principal | `entrar` | `typewriter` | 28ms por carácter |
-| Servidor | `entrar` | `scale-in` | +600ms |
-| Polvo sobre el servidor (partículas lentas) | `loop` | `drift` | partículas, 12s |
-| Contador "años sin tocarlo" | `entrar` | `count-up` | +900ms, de 0 a 9 |
-| Etiqueta 1 | `clic 1` | `fade-up` + `shake-soft` del servidor | — |
-| Etiqueta 2 | `clic 2` | `fade-up` + `shake-soft` | — |
-| Etiqueta 3 | `clic 3` | `fade-up` + `shake-soft` | — |
+| Antetítulo | `entrar` | `fade-up` | 400ms |
+| "US$ 100" | `entrar` | `count-up` | +300ms, 0→100 en 1800ms, dígitos tabulares, con un leve desenfoque de movimiento mientras corre |
+| "mil millones" | `entrar` | `blur-in` | Al terminar el conteo |
+| Línea bajo la cifra | `entrar` | `split-words` | +2300ms; "+14 %" hace su propio `count-up` (0→14) |
+| Fuente McKinsey bajo la cifra | `entrar` | `fade-up` | +2900ms |
+| Tarjeta 38 % | `clic 1` | `flip-in` + `count-up` 0→38 | La barra de progreso interna crece hasta el 38 % (`grow-bar` horizontal) |
+| Tarjeta 61 % | `clic 2` | `flip-in` + `count-up` 0→61 | Igual |
+| Tarjeta 84 % | `clic 3` | `flip-in` + `count-up` 0→84 | Igual; la barra termina con un `pulse` |
+| Remate | `clic 4` | `split-words` | "el camino" con `highlight-sweep` |
+| Pie de fuentes | `clic 4` | `fade-up` | — |
 
-**Sin animación:** el servidor y la frase visibles, con el contador en 9. Las etiquetas aparecen por clic, sin vibración.
+**Sin animación:** la cifra y su línea visibles en su valor final; las tarjetas y el remate aparecen por clic, sin
+movimiento.
 
 **Notas del orador:**
-> Levanten la mano si en su empresa hay un servidor que nadie quiere tocar. *(pausa)*
-> Déjenla arriba si además es "temporal". *(clic)* La contraseña está en el código. *(clic)* No hay staging.
-> *(clic)* Y un cron escribe un reporte cada noche en un disco que se va llenando.
-> Todos conocemos ese servidor. Hoy lo vamos a migrar.
+> Antes de empezar, un número. *(deja correr el contador)* Cien mil millones de dólares. Según McKinsey, eso es lo que
+> se desperdició en sobrecostos de migración a la nube en solo tres años. En promedio, un 14 % más de gasto del
+> planeado, cada año. *(clic)* Más de un tercio de las empresas vio su migración retrasada más de un trimestre.
+> *(clic)* Y no es cosa del pasado: en 2025, seis de cada diez líderes hablan de "fatiga de migración", proyectos
+> frenados seis meses o más. *(clic)* Y el 84 % dice que su mayor reto es controlar lo que gasta en la nube.
+> *(clic)* El problema no es llegar a la nube. Es el camino.
 
-**Transición:** el servidor hace un `morph` hacia la izquierda y se encoge para la diapositiva 4.
+**Transición:** la cifra se encoge y se desvanece hacia el centro, donde aparece la persona de la diapositiva 4
+(`morph`, 600ms).
+
+**Verificación de los datos (antes de cada charla):**
+
+| Dato | Fuente | Nota |
+|---|---|---|
+| ~US$100 mil millones en 3 años; +14 %/año; 38 % retrasadas más de un trimestre | [McKinsey (2021)](https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights/cloud-migration-opportunity-business-value-grows-but-missteps-abound) | Encuesta a ~450 CIOs y responsables de TI (2020–21). Es una proyección; decir el año en voz alta. |
+| 61 % fatiga de migración (retrasos de 6+ meses); 18 % de sobrecosto promedio | [CloudBees (10 nov. 2025)](https://www.cloudbees.com/newsroom/cloudbees-first-devops-migration-index) | 300+ líderes de TI; migraciones de plataformas DevOps, no solo de nube. |
+| 84 %: gestionar el gasto en la nube es el mayor reto | [Flexera (19 mar. 2025)](https://www.flexera.com/about-us/press-center/new-flexera-report-finds-84-percent-of-organizations-struggle-to-manage-cloud-spend) | 750+ encuestados. |
+
+No usar cifras que circulan sin fuente primaria (por ejemplo, "83 % de las migraciones fracasan").
 
 ---
 
-### Diapositiva 4. El problema no es la tecnología
+### Diapositiva 4. Todo lo que pasa por la cabeza
 
-**Objetivo:** reencuadrar: las migraciones fallan por conocimiento, no por código.
+**Objetivo:** que el público sienta la carga mental de una migración. Cada clic suma un problema a la cabeza de una
+persona, hasta que todo se resume en una palabra: **conocimiento**.
 
 **En pantalla**
-- Título: **Las migraciones no fallan por el código. Fallan por el conocimiento.**
-- Lista de preguntas (por clic):
-  - ¿Qué hace realmente esta aplicación?
-  - ¿De qué depende?
-  - ¿Dónde están los secretos?
-  - ¿Qué se rompe si la muevo?
-  - ¿Cuánto va a costar el mundo nuevo?
-- Gráfica pequeña a la derecha: **deuda de migración** (una línea que sube) frente a **capacidad del equipo** (una línea
-  plana)
+- En el centro, una persona dibujada con trazo lineal: de medio cuerpo, con la mano en el mentón, pensando.
+- Burbujas de pensamiento que se acumulan alrededor y encima de la cabeza (por clic):
+  - **Al entrar:** "Ese servidor que nadie quiere tocar" (retoma el gancho clásico)
+  - **Clic 1 (el código):** "¿Qué hace realmente esta app?" · "Quien la escribió se fue en 2019" · "Cero documentación"
+  - **Clic 2 (datos y dependencias):** "¿De qué depende?" · "SQLite en el disco local" · "¿Dónde están los secretos?"
+  - **Clic 3 (el riesgo):** "No hay staging" · "¿Qué se rompe si la muevo?" · "¿Cuándo es la ventana de cutover?"
+  - **Clic 4 (el negocio):** "Presupuesto: US$450/mes" · "SLO 99,9 %" · "El equipo ya está saturado" · "Fecha límite:
+    Q1"
+- A un lado, un medidor vertical: **carga mental**, que sube con cada clic.
+- **Clic 5:** las burbujas se comprimen dentro de la cabeza y salen convertidas en una sola palabra: **Conocimiento**.
+  Debajo aparece la tesis: **Las migraciones no fallan por el código. Fallan por el conocimiento.**
 
 **Animaciones**
 
 | Elemento | Disparador | Tipo | Parámetros |
 |---|---|---|---|
-| Título | `entrar` | `split-words` | La palabra "conocimiento" con `highlight-sweep` al final |
-| Preguntas | `clic 1..5` | `fade-up`, una por clic | — |
-| Línea de capacidad | `clic 5` | `draw-line` | 600ms |
-| Línea de deuda | `clic 5` | `draw-line` | 1200ms, con un `pulse` al llegar arriba |
+| Persona (trazo) | `entrar` | `draw-line` | 1400ms, trazo de 3px |
+| Respiración leve de la persona | `loop` | `pulse` (escala 1→1.01) | 4s |
+| Burbuja inicial | `entrar` | `scale-in` desde la cabeza | +1200ms, con 3 puntitos que suben antes (los "pensamientos") |
+| Burbujas del clic N | `clic 1..4` | `stagger` de `scale-in` desde la cabeza hasta su posición (`morph`) | 120ms entre burbujas. Las burbujas anteriores se empujan suavemente para hacer espacio (500ms, `firme`) |
+| Color de las burbujas | `clic 1..4` | Transición de color | De neutro (clic 1) a ámbar (clic 3) y a rojo suave (clic 4) |
+| Cabeza | `clic 1..4` | Inclinación | 2° más hacia abajo por clic (el peso de los problemas); en el clic 4, además, una gota de sudor con `fade-up` |
+| Medidor de carga mental | `clic 1..4` | `grow-bar` vertical | 25 % por clic; en el clic 4 llega al tope y hace `shake-soft` |
+| Compresión de burbujas | `clic 5` | `morph` de todas las burbujas hacia la cabeza | 700ms, `firme` |
+| Palabra "Conocimiento" | `clic 5` | `scale-in` desde la cabeza + `highlight-sweep` | +700ms |
+| Tesis | `clic 5` | `split-words` | +1100ms |
+| Cabeza y medidor | `clic 5` | Vuelven a su sitio (alivio) | 600ms, `suave` |
 
-**Sin animación:** título y gráfica visibles; las preguntas aparecen por clic.
+**Sin animación:** la persona dibujada, con las burbujas de cada clic en su lugar y su color, y el medidor en su nivel.
+En el clic 5 se ven solo la palabra y la tesis.
+
+**Reglas de legibilidad:**
+- Como máximo 14 burbujas en total.
+- Texto de las burbujas de 24px o más; en un proyector, mejor menos burbujas que texto pequeño.
+- Las burbujas no deben tapar la cara.
 
 **Notas del orador:**
-> El destino no es el problema: tenemos contenedores, Kubernetes y Terraform. El problema es el viaje.
-> Antes de escribir una sola línea de infraestructura alguien tiene que responder estas preguntas…
-> *(clics)* …por cada aplicación del portafolio. Eso es arqueología, análisis y traducción. Por eso la deuda de
-> migración crece más rápido que los equipos.
+> Ahora pónganse en los zapatos de quien recibe esta migración. *(entra la burbuja)* Empieza con ese servidor que nadie
+> quiere tocar. *(clic)* ¿Qué hace realmente? Quien la escribió se fue en 2019, y no hay documentación. *(clic)* ¿De qué
+> depende? Los datos viven en un SQLite en el disco, y los secretos… en el código. *(clic)* No hay staging. ¿Qué se rompe
+> si la muevo? ¿Cuándo hacemos el cutover? *(clic)* Y el negocio: 450 dólares al mes, 99,9 % de disponibilidad, un
+> equipo que ya está saturado y una fecha límite. *(pausa)*
+> *(clic)* Todo esto se resume en una palabra: conocimiento. Las migraciones no fallan por el código. Fallan por el
+> conocimiento. Y eso es justo lo que AWS Transform viene a resolver.
 
-**Transición:** fundido.
+**Transición:** la palabra "Conocimiento" hace un `morph` hacia el núcleo "AWS Transform" de la diapositiva 5.
 
 ---
 
-### Diapositiva 5. ¿Qué es AWS Transform?
+### Diapositiva 5. AWS Transform: acelerar la modernización
 
-**Objetivo:** explicar el servicio real y su alcance, sin cifras que no podamos respaldar.
+**Objetivo:** presentar AWS Transform con fuerza: el logo en el centro y un solo diagrama que cuenta el viaje
+completo. Los sistemas legados entran, recorren cuatro etapas alrededor del servicio y salen convertidos en una
+arquitectura cloud-native, con un humano al mando.
 
-**En pantalla**
-- Centro: **AWS Transform** · *agentes de IA para migración y modernización*
-- Cinco tarjetas en órbita (aparecen por clic):
-  1. **Assessment:** del inventario al caso de negocio y el TCO.
-  2. **Migración (VMware y on-premises):** descubrimiento, agrupación por dependencias, oleadas, red como IaC (incluye
-     Terraform), rehost y contenedores hacia ECS o EKS.
-  3. **Windows y .NET:** de .NET Framework a .NET moderno; de SQL Server a Aurora PostgreSQL.
-  4. **Mainframe:** entender COBOL, extraer reglas de negocio y reimaginarlas como cloud-native.
-  5. **AWS Transform custom:** actualizaciones de lenguaje y framework (Java, Python, Node, SDKs, Graviton) y tus
-     propias transformaciones.
-- Anillo exterior: **las personas aprueban cada paso**
+**Referencia visual:** el diagrama "Accelerating Modernization with AWS Transform" (un anillo de cuatro etapas
+alrededor de un núcleo, y una flecha de Legacy a Cloud-Native en la base). Se replica el layout, con dos cambios:
+- **Las etapas siguen el orden lógico**, en sentido horario desde la entrada de Legacy: Descubrimiento → Planificación
+  → Refactorización → Supervisión humana → salida hacia Cloud-Native.
+- **El icono "GDPR" de la referencia se reemplaza** por una mano con un check: supervisión humana, sin aludir a una
+  normativa concreta.
+
+**Logo de AWS Transform:**
+- **Fuente:** el icono oficial del paquete *AWS Architecture Icons*
+  ([aws.amazon.com/architecture/icons](https://aws.amazon.com/architecture/icons/)), en SVG. Buscar "AWS Transform"
+  dentro del ZIP.
+- **Uso:** sin recolorear ni deformar, con su margen de respeto, y siguiendo los términos de uso de AWS. No recrearlo a
+  mano.
+
+**Layout** (lienzo de 1920×1080; ajustar a la plantilla manteniendo las proporciones)
+
+| Zona | Contenido | Posición aproximada |
+|---|---|---|
+| Título | **Acelerando la modernización con AWS Transform** | Centrado arriba, y≈90 |
+| Núcleo | El logo oficial de AWS Transform (≈120px), el nombre **AWS Transform** y el subtítulo *Agentes de IA para migrar y modernizar* | Círculo interior, centro (960, 500), radio ≈150 |
+| Anillo | Cuatro arcos (cuadrantes) de trazo grueso (6px), separados por cortes radiales, abierto en la base. La entrada viene de la caja Legacy (abajo a la izquierda); la salida baja hacia la flecha (abajo a la derecha) | Radio exterior ≈300, alrededor del núcleo |
+| Etapa 1 (izquierda) | Icono de globo con lupa · **Descubrimiento automatizado** · *Identifica aplicaciones y dependencias* | Cuadrante izquierdo-inferior; la etiqueta afuera, a la izquierda |
+| Etapa 2 (arriba a la izquierda) | Icono de brújula o ruta · **Planificación de la migración** · *Genera oleadas y mapeos de migración* | Cuadrante superior izquierdo; la etiqueta afuera, arriba a la izquierda |
+| Etapa 3 (arriba a la derecha) | Icono de laptop con engranaje · **Refactorización con IA** · *Convierte código legado en moderno* | Cuadrante superior derecho; la etiqueta afuera, arriba a la derecha |
+| Etapa 4 (derecha) | Icono de mano con check · **Supervisión humana** · *Revisa y valida los cambios críticos* | Cuadrante derecho-inferior; la etiqueta afuera, a la derecha |
+| Base, izquierda | Caja con borde rojo e icono de alerta · **Sistemas legados** · *Modernización lenta, riesgosa y costosa* | Caja de x≈420 a x≈900, y≈850; el texto debajo |
+| Base, derecha | Cuerpo de flecha que sale de la caja hacia la derecha, con punta grande. Icono de nube con servidor sobre la punta · **Arquitectura cloud-native** · *Negocio rápido, ágil e innovador* | De x≈900 a x≈1500, y≈850; el texto debajo de la punta |
+
+**Colores** (sugeridos y seguros en proyector; la plantilla puede usar su paleta manteniendo cuatro tonos distintos):
+- **Descubrimiento:** dorado oscuro `#C99A06`
+- **Planificación:** verde azulado `#0E9F84`
+- **Refactorización:** naranja `#E07020`
+- **Supervisión humana:** azul `#2F7FC1`
+- **Legacy:** borde rojo `#C4314B`
+- **Cloud-native:** flecha en degradado de azul a índigo (`#2F7FC1` → `#5B5FC7`)
+- **Textos:** título de cada etapa en el color de su arco; la descripción en gris oscuro.
+
+**Iconos:** de línea, con trazo uniforme de 2–3px y sin relleno. El logo de AWS Transform es la única pieza a todo
+color.
 
 **Animaciones**
 
 | Elemento | Disparador | Tipo | Parámetros |
 |---|---|---|---|
-| Núcleo "AWS Transform" | `entrar` | `scale-in` | El halo con `pulse` en `loop` |
-| Tarjetas 1–5 | `clic 1..5` | `scale-in` desde el núcleo hasta su posición en la órbita (`morph`) | 600ms cada una |
-| Órbita (círculo punteado) | `clic 1` | `draw-line` | 1000ms |
-| Anillo "las personas aprueban" | `clic 6` | `draw-line` alrededor de todo | Termina con un `stamp` del icono de persona |
+| Fondo | `loop` | `drift` | Muy suave |
+| Título | `entrar` | `split-words` | — |
+| Logo de AWS Transform | `entrar` | `scale-in` | +300ms, 700ms, `rebote` (la única vez en la diapositiva); luego un halo con `pulse` en `loop` |
+| Nombre y subtítulo del núcleo | `entrar` | `fade-up` | +800ms |
+| Círculo interior | `entrar` | `draw-line` | +300ms, 1000ms |
+| Caja Legacy | `entrar` | `draw-line` del borde rojo + `fade-up` del texto | +1300ms; al final, un `shake-soft` (el dolor) |
+| Etapa 1: Descubrimiento | `clic 1` | `draw-line` del arco desde la caja Legacy hacia arriba (sentido horario) + `stamp` del icono + `fade-up` de la etiqueta | 700ms; arranca una partícula `flow` desde Legacy por el arco ya dibujado |
+| Etapa 2: Planificación | `clic 2` | Igual, siguiente arco | La partícula sigue el recorrido |
+| Etapa 3: Refactorización | `clic 3` | Igual | — |
+| Etapa 4: Supervisión humana | `clic 4` | Igual; además, junto al icono, aparece la frase **"El agente propone. Tú decides."** con `fade-up` | La partícula se detiene 0.6s en este arco (la compuerta humana) antes de seguir |
+| Salida hacia la flecha | `clic 5` | `draw-line` del tramo final del anillo, que baja hacia la base, y del cuerpo de la flecha hasta la punta | 900ms, `firme` |
+| Cloud-native | `clic 5` | `scale-in` del icono y la etiqueta + un brillo suave (`pulse`) | +900ms |
+| Caja Legacy al final | `clic 5` | Se desatura (pasa a gris) | 600ms |
+| Flujo continuo | `loop` (tras el clic 5) | `flow` | Partículas recorren Legacy → las 4 etapas → la flecha → Cloud-native; 4s por recorrido |
 
-**Sin animación:** el núcleo y la órbita visibles; las tarjetas aparecen por clic en su posición final.
+**Sin animación:**
+- Al entrar se ven el núcleo con el logo, el título y la caja Legacy.
+- Cada clic muestra su arco, su icono y su etiqueta completos, sin trazo progresivo.
+- En el clic 5 aparecen la flecha y Cloud-native, y la caja Legacy queda en gris.
+- Sin partículas.
+
+**Reglas de legibilidad:**
+- Etiquetas de etapa de 28px o más; descripciones de 22px o más.
+- Los arcos con 6px de trazo, para que se vean en el proyector.
+- El anillo y la flecha nunca tapan el logo.
 
 **Notas del orador:**
-> AWS Transform es la respuesta de AWS a esa deuda: agentes especializados en migración y modernización.
-> *(clics)* Assessment, migración de VMware, Windows y .NET, mainframe, y Transform custom para actualizaciones y
-> transformaciones propias. *(clic)* Y algo clave: las personas aprueban cada paso. Los agentes hacen el trabajo; las
-> decisiones son humanas.
->
-> *Antes de cada charla, verificar esta lista en las páginas oficiales de AWS Transform.*
+> *(entra el logo)* Esta es la respuesta de AWS a todo eso que teníamos en la cabeza: AWS Transform, agentes de IA para
+> migrar y modernizar. *(Legacy aparece y tiembla)* Partimos de aquí: sistemas legados, lentos, riesgosos y costosos de
+> modernizar. *(clic)* Primero, el descubrimiento: identifica las aplicaciones y sus dependencias. *(clic)* Luego
+> planifica la migración en oleadas. *(clic)* La IA refactoriza el código legado a código moderno. *(clic)* Y en cada
+> paso crítico hay un humano que revisa y valida: el agente propone, tú decides. *(clic)* Así se llega a una
+> arquitectura cloud-native: un negocio más rápido, más ágil e innovador. Ese es el viaje, y en un momento lo vamos a
+> recorrer con nuestros propios agentes.
 
-**Transición:** fundido.
+**Transición:** el anillo, la flecha y las etiquetas se desvanecen; el núcleo con el logo se queda en su sitio y es el
+centro de la diapositiva 6.
 
 ---
 
-### Diapositiva 6. Cómo trabaja: el loop con humano
+### Diapositiva 6. ¿Qué incluye AWS Transform?
 
-**Objetivo:** mostrar el mecanismo en un solo dibujo.
+**Objetivo:** mostrar el alcance real del servicio y cerrar con las cifras oficiales de su primer año. Todo atribuido a
+AWS; sin cifras propias.
 
 **En pantalla**
-- Un ciclo con cinco nodos: **Descubrir → Evaluar → Planear → Transformar → Validar**
-- Entre cada par de nodos, una compuerta: **✓ Aprobación humana**
-- Frase inferior: **"El agente propone. Tú decides."**
+- **Centro:** el mismo núcleo de la diapositiva 5 (logo oficial de AWS Transform), para dar continuidad.
+- **Seis tarjetas en órbita** (en tres clics, de a dos), cada una con un icono de línea, un título y una línea:
+  1. **Migración de infraestructura:** VMware, bare metal e híbrido; del descubrimiento y las oleadas a la red y el
+     cutover.
+  2. **Windows full-stack:** aplicaciones .NET, bases de datos SQL Server y procesos de despliegue.
+  3. **Mainframe:** assessment, extracción de reglas de negocio y generación de código, trazables hasta el origen.
+  4. **Transformaciones custom:** Java, Node.js y Python, más los cambios propios de tu organización.
+  5. **Modernización continua** *(Preview)*: analiza la deuda técnica en muchos repositorios y la corrige (dependencias
+     al final de su vida, vulnerabilidades).
+  6. **Migración de cargas de IA:** evalúa dependencias de otros proveedores de IA y planifica la migración a Amazon
+     Bedrock.
+- **Fila de chips** bajo la órbita: **También:** Assessment · Migración de almacenamiento (FSx for NetApp ONTAP) ·
+  Kiro · MCP · CLI
+- **Franja de cifras** abajo, con el título pequeño **Su primer año, según AWS:**
+  - **4.500 millones+** líneas de código procesadas
+  - **Cientos de miles** de servidores migrados
+  - **1,6 millones+** horas ahorradas a clientes
+  - Fuente, pequeña: *AWS Migration & Modernization Blog, "One year. 4.5 billion lines of code. 1.6 million hours
+    saved", 15 may. 2026*
 
 **Animaciones**
 
 | Elemento | Disparador | Tipo | Parámetros |
 |---|---|---|---|
-| Ciclo | `entrar` | `draw-line` | 1200ms |
-| Nodos | `entrar` | `stagger` de `scale-in` | 120ms entre nodos |
-| Partícula "trabajo" | `loop` | `flow` por el ciclo | 4s por vuelta; se detiene 0.6s en cada compuerta, que hace un `pulse` |
-| Compuertas | `clic 1` | `stagger` de `stamp` | 100ms entre compuertas |
-| Frase inferior | `clic 2` | `split-words` | — |
+| Núcleo (viene de la diapositiva 5) | `entrar` | Ya en su sitio | El halo con `pulse` en `loop` |
+| Órbita (círculo punteado) | `entrar` | `draw-line` | 1000ms |
+| Tarjetas 1 y 2 | `clic 1` | `scale-in` desde el núcleo hasta su posición en la órbita (`morph`) | 600ms, 120ms entre ambas |
+| Tarjetas 3 y 4 | `clic 2` | Igual | — |
+| Tarjetas 5 y 6 | `clic 3` | Igual; la etiqueta "Preview" de la tarjeta 5 con `fade-up` | — |
+| Fila de chips | `clic 4` | `stagger` de `fade-up` | 70ms entre chips |
+| La órbita se atenúa (al 50 %) | `clic 5` | Opacidad | 500ms: el foco pasa a las cifras |
+| Cifra "4.500 millones+" | `clic 5` | `count-up` 0→4.500 | 1600ms, dígitos tabulares |
+| "Cientos de miles" | `clic 5` | `blur-in` | +400ms |
+| Cifra "1,6 millones+" | `clic 5` | `count-up` 0→1,6 | +800ms |
+| Fuente | `clic 5` | `fade-up` | +1600ms |
 
-**Sin animación:** el ciclo completo con las compuertas; la frase aparece por clic.
+**Sin animación:** el núcleo y la órbita visibles; cada clic muestra sus tarjetas en su posición final; el clic 5
+muestra las cifras con su valor final.
+
+**Reglas de legibilidad:**
+- Títulos de tarjeta de 24px o más y descripciones de 18px o más.
+- Cifras de 64px o más.
+- En el proyector, recortar las descripciones antes que bajar el tamaño de la letra.
 
 **Notas del orador:**
-> Por dentro, una migración es un ciclo: descubrir, evaluar, planear, transformar y validar. *(clic)* Entre cada paso hay
-> una compuerta, donde un humano aprueba o pide cambios. *(clic)* El agente propone; tú decides.
+> ¿Y qué incluye? *(clic)* Migración de infraestructura (VMware, bare metal e híbrido) y la modernización full-stack de
+> Windows: .NET y SQL Server. *(clic)* Mainframe, con reglas de negocio trazables hasta el código, y transformaciones
+> custom para Java, Node y Python. *(clic)* Y dos novedades: la modernización continua, en preview, y la migración de
+> cargas de IA hacia Bedrock. *(clic)* Además: assessment, migración de almacenamiento, y lo usas desde Kiro, por MCP o
+> por línea de comandos.
+> *(clic)* ¿Funciona? Según AWS, en su primer año procesó más de 4.500 millones de líneas de código, migró cientos de
+> miles de servidores y ahorró más de 1,6 millones de horas a sus clientes. Distintos legados, el mismo principio:
+> agentes especializados, con humanos al mando.
 
-**Transición:** zoom hacia el centro del ciclo para la diapositiva 7.
+**Transición:** zoom hacia el núcleo, que se queda como L01 en el centro del diagrama de la diapositiva 7.
+
+**Verificación (antes de cada charla):** el producto evoluciona rápido, así que revisar estas fuentes.
+
+| Dato | Fuente | Nota |
+|---|---|---|
+| Las 8 áreas (las 6 tarjetas y los chips) | [Página de AWS Transform](https://aws.amazon.com/transform/) | Lista vigente al 20 oct. 2026. "Modernización continua" figura como Preview. |
+| 4.500 millones+ líneas procesadas; cientos de miles de servidores; 1,6 millones+ horas | [AWS blog, 15 may. 2026 (Dr. Asa Kalavade)](https://aws.amazon.com/blogs/migration-and-modernization/aws-transform-one-year-milestone/) | Cifras reportadas por AWS. El blog dice "processed", sin precisar si son líneas analizadas o transformadas. Decir "según AWS". |
+| Alternativa más reciente | [Página de AWS Transform](https://aws.amazon.com/transform/) | La página menciona el equivalente a 1.305 años-desarrollador ahorrados. Usar una sola fuente por diapositiva, para no mezclar períodos. |
 
 ---
 
 ### Diapositiva 7. ¿Por qué un mini-demo?
 
-**Objetivo:** justificar la réplica y ser honestos.
+**Objetivo:** mostrar con un diagrama de arquitectura todo lo que AWS Transform integra en una migración real, y
+de ahí justificar el mini-demo. La densidad del diagrama es intencional: comunica que un demo completo toma horas.
 
-**En pantalla**
-- Izquierda: una arquitectura grande y densa, con muchos servicios conectados
-- Texto: **Un demo completo de AWS Transform se integra con muchos servicios y toma horas.**
-- Derecha, tras el clic: una caja pequeña y nítida: **Mini-demo · lo construimos con Amazon Bedrock AgentCore**
-- Nota honesta abajo: *No es AWS Transform. Es una réplica transparente del loop que corren sus agentes.*
+**Cómo se arma:**
+- **Cajas de logo vacías:** cada caja tiene un número (L01…L23), una etiqueta y un espacio cuadrado para el logo, que
+  pone el presentador.
+- **Logos de AWS:** usar los iconos oficiales del paquete *AWS Architecture Icons*
+  ([aws.amazon.com/architecture/icons](https://aws.amazon.com/architecture/icons/)).
+- **Logos que no son de AWS** (VMware, GitHub/GitLab/Bitbucket/Azure Repos, Terraform): los de cada marca, solo como
+  referencia.
 
-**Animaciones**
+**Caja de logo (componente):**
+- Cuadrado de 96×96px con borde punteado de 2px, esquinas de 16px, fondo blanco y el texto gris claro "[logo]".
+- Debajo, la etiqueta de la caja (18–20px).
+- Las cajas se agrupan en contenedores redondeados con un título de grupo (16px, gris).
 
-| Elemento | Disparador | Tipo | Parámetros |
-|---|---|---|---|
-| Arquitectura grande | `entrar` | `stagger` de `fade-up` (los nodos) y `draw-line` (las conexiones) | Rápido: 40ms entre nodos |
-| Texto | `entrar` | `fade-up` | +800ms |
-| La arquitectura se desenfoca y retrocede | `clic 1` | `blur-in` invertido (0→8px) + escala 1→0.9 | 700ms |
-| Caja "Mini-demo" | `clic 1` | `morph` desde el centro de la arquitectura hasta la derecha | 800ms |
-| Nota honesta | `clic 2` | `fade-up` | — |
+**Layout** (lienzo de 1920×1080)
 
-**Sin animación:** la arquitectura desenfocada a la izquierda y la caja a la derecha. La nota aparece por clic.
-
-**Notas del orador:**
-> AWS Transform es un servicio grande, integrado con otros servicios de AWS; un demo completo nos tomaría la tarde.
-> *(clic)* Así que construimos un mini-demo que replica sus características con Amazon Bedrock AgentCore.
-> *(clic)* Y quiero ser muy claro: esto no es AWS Transform. Es una réplica transparente, para que veamos qué pasa por
-> dentro. Cuando entiendes el mecanismo, entiendes el producto.
-
-**Transición:** fundido.
-
----
-
-### Diapositiva 8. Una transformación, tres stacks
-
-**Objetivo:** presentar el título de la charla como un mapa.
-
-**En pantalla.** Tres columnas, cada una armada como una pila de capas:
-
-| Legacy | Agentes | Target |
+| Zona | Grupo | Cajas |
 |---|---|---|
-| EC2 t3.large | Amazon Bedrock AgentCore Runtime | Kubernetes |
-| Flask (monolito) | Strands Agents | Terraform (VPC, EKS, ECR, RDS) |
-| SQLite en disco local | Amazon Nova 2 Lite · DeepSeek V3.2 | Kustomize (manifiestos) |
-| cron + nginx | 6 agentes + compuertas humanas | Contenedor no-root + pruebas |
+| Arriba, centrado | Título | **Una migración real toca todo esto** |
+| Centro (≈960, 540) | **AWS Transform** (núcleo, más grande: 180×180) | L01 AWS Transform |
+| Arriba del núcleo | **Acceso y seguridad** | L02 AWS IAM Identity Center · L03 AWS IAM · L04 AWS KMS |
+| Debajo del núcleo | **Herramientas de desarrollo** | L05 Kiro (MCP) · L06 AWS Transform CLI |
+| Columna izquierda | **Origen** (no son de AWS) | L07 VMware vCenter · L08 Repositorios de código (GitHub, GitLab, Bitbucket, Azure Repos) · L09 Mainframe (COBOL) |
+| Segunda columna | **Conectores y entrada** | L10 AWS Application Discovery Service · L11 AWS CodeConnections · L12 Amazon S3 |
+| Columnas derechas, arriba | **Landing zone y red** | L13 AWS Organizations · L14 Landing Zone Accelerator on AWS · L15 Amazon VPC (subredes, Transit Gateway, NAT) |
+| Columnas derechas, al medio | **Infraestructura como código** | L16 AWS CloudFormation · L17 AWS CDK · L18 Terraform |
+| Columnas derechas, abajo | **Migración y cómputo** | L19 AWS Transform MGN (antes AWS Application Migration Service) · L20 Amazon EC2 · L21 Amazon ECS · L22 Amazon EKS |
+| Junto a cómputo | **Datos** | L23 Amazon Aurora PostgreSQL |
 
-Arriba: **Una transformación** · abajo: **tres stacks**.
+**Conexiones** (flechas de 2–3px; las de seguridad punteadas):
+- Origen → Conectores: L07 → L10 (descubrimiento) · L08 → L11 (código) · L09 → L12 (artefactos)
+- Conectores → núcleo: L10, L11, L12 → L01
+- Acceso y seguridad → núcleo: L02, L03, L04 → L01 (punteadas)
+- Herramientas → núcleo: L05, L06 ↔ L01 (doble sentido)
+- Núcleo → salidas: L01 → Landing zone y red · L01 → Infraestructura como código · L01 → L19 → L20 (rehost) · L01 → L21
+  y L22 (contenedores) · L01 → L23 (base de datos)
+
+**Insignia de conteo**, abajo a la derecha: **se integra con 17 servicios y herramientas de AWS**. Cuenta L02–L05,
+L10–L17 y L19–L23; no cuenta el propio AWS Transform (L01), su CLI (L06), los orígenes (L07–L09) ni Terraform (L18).
 
 **Animaciones**
 
 | Elemento | Disparador | Tipo | Parámetros |
 |---|---|---|---|
-| Columna Legacy | `clic 1` | `stack-build` | Al final, una capa con `shake-soft` (la deuda) |
-| Columna Agentes | `clic 2` | `stack-build` | Al final, `pulse` en "6 agentes" |
-| Columna Target | `clic 3` | `stack-build` | Al final, `stamp` "✓" |
-| Flechas Legacy→Agentes→Target | `clic 3` | `draw-line` + `flow` en `loop` | — |
-| Textos "Una transformación" y "tres stacks" | `entrar` | `fade-up` | — |
+| Título | `entrar` | `split-words` | — |
+| Núcleo L01 | `entrar` | `scale-in` + halo con `pulse` en `loop` | Continúa desde el núcleo de la diapositiva 6 |
+| Grupos Origen y Conectores | `clic 1` | `stagger` de `scale-in` (cajas) + `draw-line` (flechas hacia el núcleo) | 60ms entre cajas |
+| Acceso y seguridad + Herramientas | `clic 2` | `stagger` de `fade-up` + `draw-line` punteada | 60ms entre cajas |
+| Todas las salidas (derecha) | `clic 3` | `stagger` rápido de `scale-in` + `draw-line` de las flechas | 40ms entre cajas: debe sentirse como una "explosión" de servicios |
+| Flujo por las flechas | `loop` (desde el clic 3) | `flow` | Partículas de izquierda a derecha, pasando por el núcleo |
+| Insignia "se integra con 17 servicios y herramientas de AWS" | `clic 3` | `count-up` 0→17 + `stamp` | +800ms |
+| El diagrama completo retrocede | `clic 4` | Desenfoque 0→8px + escala 1→0.9 + opacidad al 40 % | 700ms, `firme` |
+| Texto "Un demo completo integra todo esto… y toma horas." | `clic 4` | `fade-up` | +300ms, centrado sobre el diagrama desenfocado |
+| Caja "Mini-demo" | `clic 5` | `morph` desde el núcleo hasta el centro-derecha, nítida | 800ms |
+| Contenido de la caja Mini-demo | `clic 5` | `stagger` de `fade-up` | "Lo construimos con Amazon Bedrock AgentCore" · "6 agentes · Strands · Amazon Nova y DeepSeek" |
+| Nota honesta | `clic 6` | `fade-up` | *No es AWS Transform. Es una réplica transparente del loop que corren sus agentes.* |
 
-**Sin animación:** las columnas completas aparecen por clic, sin movimiento; las flechas quedan estáticas.
+**Sin animación:** cada clic muestra su grupo completo con sus flechas, sin partículas. El clic 4 deja el diagrama
+desenfocado y atenuado; los clics 5 y 6 muestran la caja y la nota.
+
+**Reglas de legibilidad:**
+- El diagrama es denso a propósito, pero las etiquetas deben leerse antes del desenfoque: 18px como mínimo.
+- Dejar 24px entre cajas.
+- Nada de texto dentro de las flechas.
 
 **Notas del orador:**
-> Este es el mapa de la charla. *(clic)* Venimos de aquí: un monolito Flask con SQLite en una EC2 que se hizo a mano.
-> *(clic)* En el medio, el stack que hace el trabajo: seis agentes en AgentCore, con Strands y modelos de Bedrock.
-> *(clic)* Y llegamos aquí: un microservicio en Kubernetes, con Terraform para la infraestructura y Kustomize para los
-> manifiestos. Una transformación, tres stacks. Veamos a los agentes uno por uno.
+> En una migración real, AWS Transform no trabaja solo. *(clic)* Descubre tu VMware con Application Discovery Service,
+> se conecta a tu código con CodeConnections y trabaja con artefactos en S3. *(clic)* Se gobierna con IAM Identity
+> Center, IAM y KMS, y lo puedes usar desde Kiro o la línea de comandos. *(clic)* Y produce y orquesta todo esto:
+> landing zone, red, infraestructura como código en CloudFormation, CDK o Terraform, rehost con Transform MGN,
+> contenedores en ECS y EKS, y bases de datos en Aurora PostgreSQL. Se integra con diecisiete servicios y herramientas de AWS.
+> *(clic)* Un demo completo de todo esto nos tomaría la tarde. *(clic)* Así que construimos un mini-demo que replica
+> sus características con Amazon Bedrock AgentCore. *(clic)* Y quiero ser muy claro: esto no es AWS Transform. Es una
+> réplica transparente, para que veamos qué pasa por dentro.
 
-**Transición:** la columna "Agentes" hace un `morph` y se convierte en la fila de 6 agentes de la diapositiva 9.
+**Transición:** la caja Mini-demo hace un `morph` hacia la columna "Agentes" de la diapositiva 8.
 
----
+**Verificación de las integraciones (antes de cada charla):**
 
-### Diapositivas 9–14. Los seis agentes
+| Integración | Fuente |
+|---|---|
+| IAM Identity Center (aplicación web), IAM, KMS | [FAQ de AWS Transform](https://aws.amazon.com/transform/faq/) · [Identity and access management](https://docs.aws.amazon.com/transform/latest/userguide/security-iam.html) · [Getting started](https://docs.aws.amazon.com/transform/latest/userguide/getting-started.html) |
+| Application Discovery Service, Transform MGN (rehost) | [Simplify server migration with AWS Transform for VMware](https://aws.amazon.com/blogs/migration-and-modernization/simplify-server-migration-to-aws-with-aws-transform-for-vmware/) · [AWS Transform MGN User Guide](https://docs.aws.amazon.com/pdfs/mgn/latest/ug/user-guide.pdf) |
+| CloudFormation, CDK, Terraform, LZA, OUs y cuentas destino; artefactos en S3 | [Generated network artifacts](https://docs.aws.amazon.com/transform/latest/userguide/transform-migrations-generated-artifacts.html) · [Terraform para VMware (sept. 2025)](https://aws.amazon.com/about-aws/whats-new/2025/09/aws-transform-terraform-vmware-network-automation/) · [AWS Transform for VMware](https://aws.amazon.com/transform/vmware/) |
+| Contenedores en ECS (Terraform) y EKS (Helm) | [AWS Transform for migrations](https://aws.amazon.com/transform/migrations/) · [Release notes](https://docs.aws.amazon.com/transform/latest/userguide/transform-vmware-release-notes.html) |
+| CodeConnections (GitHub, GitLab, Bitbucket, Azure Repos); SQL Server → Aurora PostgreSQL | [Modernize SQL Server to Aurora PostgreSQL](https://aws.amazon.com/blogs/dotnet/modernize-microsoft-sql-server-databases-to-aurora-postgresql-using-aws-transform/) · [.NET modernization](https://aws.amazon.com/transform/windows/net/) |
+| Kiro y el servidor MCP, CLI | [Developer tools](https://docs.aws.amazon.com/transform/latest/userguide/developer-tools.html) · [AWS Transform for mainframe](https://aws.amazon.com/transform/mainframe/) · [AWS Transform custom](https://docs.aws.amazon.com/transform/latest/userguide/custom-get-started.html) |
 
-**Plantilla común para las seis.** Mantener la misma estructura, para que el público aprenda a leerla:
-
-- **Arriba:** una fila con los 6 agentes y el actual resaltado (progreso). Se anima con un `morph` del resaltado del
-  agente anterior al actual (400ms).
-- **Izquierda:** la ilustración animada única de cada agente (el corazón visual).
-- **Derecha:** cuatro bloques cortos:
-  - **Qué hace**
-  - **Herramientas (deterministas)**
-  - **El modelo decide**
-  - **En AWS Transform**
-- **Abajo:** la cifra clave del demo, con `count-up`.
-
-**Animación común de los bloques de la derecha:** `stagger` de `fade-up` en `clic 1`. La cifra clave usa `count-up` en
-`clic 2`.
+No se incluye CloudTrail: no encontramos documentación de esa integración. Agregarlo solo si se verifica.
 
 ---
 
-### Diapositiva 9. Agente 1: Descubrimiento y evaluación
+### Diapositiva 8. Una transformación. Tres stacks.
+
+**Objetivo:** el mapa de la charla, legible en 3 segundos. Tres tarjetas grandes con logos (no cajas de texto), y la
+del centro, los Agentes, como protagonista.
 
 **En pantalla**
-- **Qué hace:** lee el código y la infraestructura, y encuentra los problemas.
-- **Herramientas:** escaneo de código (rutas, secretos, SQL concatenado, estado local), lectura del Terraform legacy,
-  EC2 y CloudWatch en vivo.
-- **El modelo decide:** la severidad, la estrategia (6R) y el puntaje de preparación.
-- **En AWS Transform:** descubrimiento y evaluación a escala de portafolio.
-- **Cifra:** **17 hallazgos · 3 críticos** · preparación **50/100** · estrategia **replatform**
+- Título en una sola línea: **Una transformación. Tres stacks.** ("Tres stacks" con el degradado de la plantilla)
+- Tres tarjetas de igual alto. La del centro es un 8 % más grande, está elevada y tiene un brillo morado:
 
-**Ilustración animada:** un radar sobre una cuadrícula de archivos de código (`app.py`, `schema.sql`,
-`legacy-inventory.service`, `main.tf`).
+| | Legacy | Agentes (protagonista) | Target |
+|---|---|---|---|
+| Logos (casillas para el presentador) | EC2 · Flask · SQLite | Amazon Bedrock AgentCore · Strands Agents · Amazon Nova / DeepSeek | Kubernetes · Terraform · Kustomize |
+| Título | **Legacy** (naranja-marrón) | **Agentes** (morado) | **Target** (azul) |
+| Una línea | Lo que heredamos | Quién hace el trabajo | A dónde llegamos |
+| Chip | monolito · disco local · a mano | 6 agentes · humano en cada paso | no-root · probado |
+| Insignia | — | — | ✓ verde, en la esquina superior derecha de la tarjeta |
+
+- Flechas gruesas (6px) en degradado, de Legacy a Agentes y de Agentes a Target, con partículas.
+- Se elimina el check suelto en la esquina de la diapositiva, y la frase "Tres Stacks" ya no va abajo.
+
+**Animaciones**
 
 | Elemento | Disparador | Tipo | Parámetros |
 |---|---|---|---|
-| Cuadrícula de archivos | `entrar` | `stagger` de `fade-up` | 60ms entre archivos |
-| Barrido de radar | `loop` | `radar` | 2.4s |
-| Pines de hallazgo sobre los archivos | `entrar` | `stagger` de `stamp` | +800ms, 90ms entre pines; 3 pines rojos con `pulse` |
-| "17" y "3 críticos" | `clic 2` | `count-up` | El "3" en rojo con `pulse` |
+| Título | `entrar` | `split-words`; "Tres stacks." con `highlight-sweep` del degradado | — |
+| Tarjeta Legacy | `clic 1` | `stack-build` (sube) + `stagger` de los logos + `shake-soft` | — |
+| Flecha 1 + tarjeta Agentes | `clic 2` | `draw-line` + `scale-in` hasta 1.08 con un brillo `pulse` | — |
+| Flecha 2 + tarjeta Target | `clic 3` | `draw-line` + `scale-in` + `stamp` del ✓ | — |
+| Partículas en las flechas | `loop` | `flow` | 3s |
 
-**Notas del orador:**
-> El primer agente hace arqueología, pero sin adivinar. *(clic)* Las herramientas deterministas encuentran la
-> evidencia: rutas, secretos en el código, una búsqueda con SQL concatenado, reportes en el disco local. El modelo solo
-> pondera y decide la estrategia. *(clic)* Diecisiete hallazgos, tres críticos, en unos diez segundos. Por eso es rápido,
-> y por eso cada hallazgo se puede auditar.
+**Sin animación:** cada clic muestra su tarjeta completa; sin partículas.
 
----
+**Notas del orador:** las mismas de antes (Legacy → Agentes → Target).
 
-### Diapositiva 10. Agente 2: Requisitos
-
-**En pantalla**
-- **Qué hace:** convierte el documento del negocio en una especificación validada y trazable.
-- **Herramientas:** lectura del documento, plantilla de especificación, validador de la especificación.
-- **El modelo decide:** prioridades, criterios de aceptación y supuestos para las preguntas abiertas.
-- **En AWS Transform:** definición del objetivo con aclaraciones humanas en el loop.
-- **Cifra:** **24 requisitos** · presupuesto **$450/mes** · **3 preguntas abiertas → 2 resueltas por ti**
-
-**Ilustración animada:** una hoja del documento (`migration-requirements.md`). Un resaltador barre líneas que "vuelan"
-hacia tarjetas ordenadas de la especificación.
-
-| Elemento | Disparador | Tipo | Parámetros |
-|---|---|---|---|
-| Documento | `entrar` | `fade-up` | — |
-| Líneas resaltadas | `entrar` | `stagger` de `highlight-sweep` | 150ms entre líneas |
-| Líneas → tarjetas de la especificación | `entrar` | `morph` de cada línea a su tarjeta | +900ms, 100ms entre tarjetas |
-| Tres burbujas "?" (preguntas abiertas) | `clic 2` | `stagger` de `scale-in` | — |
-| Dos burbujas se convierten en "✓ Resuelta" | `clic 3` | `morph` + `stamp` | El "?" restante queda con `pulse` |
-
-**Notas del orador:**
-> El segundo agente lee lo que pidió el negocio: un presupuesto de 450 dólares al mes, un SLO de 99.9 y Graviton.
-> *(clic)* Cada requisito queda con prioridad y criterio de aceptación. *(clic)* Y lo importante: no inventa respuestas.
-> Deja tres preguntas abiertas con sus supuestos. *(clic)* En el demo le respondo en lenguaje natural, y resuelve dos.
-> La tercera, la fecha del cutover, sigue abierta, porque no la respondí. Eso es el humano en el loop.
+**Transición:** la tarjeta Agentes hace un `morph` y se convierte en la barra de pestañas de la diapositiva 9.
 
 ---
 
-### Diapositiva 11. Agente 3: Modernización del código
+### Diapositivas 9–14. Los seis agentes: sistema de diseño
 
-**En pantalla**
-- **Qué hace:** convierte el monolito en un microservicio contenerizado.
-- **Herramientas:** un **patrón probado** (config por variables de entorno, health y readiness, logs JSON, Dockerfile
-  no-root de solo lectura, manifiestos Kustomize), las pruebas del servicio y la validación de manifiestos.
-- **El modelo decide:** porta la lógica de negocio de las rutas y escribe las pruebas.
-- **En AWS Transform:** transformación de código y contenerización (.NET, Java, mainframe, custom).
-- **Cifra:** **23/23 pruebas** · **32 archivos** · inyección SQL **corregida**
+**Principio:** cada diapositiva se entiende en 3 segundos con **una frase y un número**. La explicación va en las notas
+del orador, no en la pantalla. Máximo 30 palabras por diapositiva (sin contar las pestañas ni el pie).
 
-**Ilustración animada:** el bloque del monolito se fractura y sus piezas se reordenan en un contenedor.
+**Anatomía, igual en las seis:**
+1. **Pestañas** arriba (como ya están), con la del agente actual resaltada.
+2. **Antetítulo** pequeño en mayúsculas moradas: `AGENTE N · NOMBRE`.
+3. **Titular** grande (≥ 60px, negrita, negro), una frase de 6 palabras como máximo.
+4. **La máquina**, en el centro y a todo lo ancho: **Entrada** (izquierda, icono + 2–4 palabras) → **visual del agente**
+   (centro, el protagonista) → **Salida** (derecha, icono + 2–4 palabras). Flechas gruesas entre las zonas.
+5. **Dos pastillas** bajo el visual, siempre con el mismo color:
+   - **Herramientas** en azul (`#2B35E6`): lo que hace el código, de forma determinista.
+   - **Modelo** en morado (`#6A1FD0`): lo que decide la IA.
+   Cada una con 4 palabras como máximo.
+6. **Cifra protagonista** abajo (≥ 56px), con `count-up`.
+7. **Etiqueta discreta** a la derecha, sobre la onda del pie: `En AWS Transform → …` (16–18px).
 
-| Elemento | Disparador | Tipo | Parámetros |
-|---|---|---|---|
-| Bloque "monolito" (con grietas) | `entrar` | `scale-in` | — |
-| Fractura y reconstrucción en un cubo "contenedor" | `entrar` | `crack-rebuild` | +500ms, 1400ms |
-| Capa inferior del cubo: "patrón probado (herramienta)" | `entrar` | `stack-build` | +1900ms |
-| Capa superior: "lógica de negocio (modelo)" | `entrar` | `stack-build` | +2100ms, con un `pulse` del color del modelo |
-| "23/23" | `clic 2` | `count-up` | Al terminar, `stamp` "✓" |
+**Código de color, igual en todas:**
+- azul = herramientas
+- morado = modelo
+- verde = humano / aprobado
+- rojo y naranja = problemas
 
-**Notas del orador:**
-> Aquí aplica la idea más importante de la charla. El agente no escribe un microservicio desde cero. *(clic)* Las
-> herramientas montan un patrón probado, y el modelo solo porta lo que requiere criterio: la lógica de negocio. Después
-> corre las pruebas y, si fallan, las arregla. *(clic)* Veintitrés de veintitrés. Mismo contrato de API, sin inyección
-> SQL y con la sobreventa protegida.
+Nada de bloques sin etiqueta: cada forma del visual dice qué es.
 
----
+**Animación común (3 clics):**
+- `entrar`: el resaltado de la pestaña hace un `morph` desde la anterior; antetítulo y titular con `split-words`; la
+  Entrada con `fade-up`.
+- `clic 1`: el visual del agente trabaja (su animación propia, abajo).
+- `clic 2`: la Salida con `scale-in` y las dos pastillas con `stagger` de `fade-up`.
+- `clic 3`: la cifra protagonista con `count-up` + `stamp`, y la etiqueta de AWS Transform con `fade-up`.
 
-### Diapositiva 12. Agente 4: Infraestructura como código (Terraform)
+**Contenido por agente:**
 
-**En pantalla**
-- **Qué hace:** escribe la infraestructura target: VPC, EKS, ECR y RDS PostgreSQL.
-- **Herramientas:** un **blueprint validado**, `terraform validate` y verificaciones contra la especificación.
-- **El modelo decide:** cómo mapear la especificación a las variables del blueprint.
-- **En AWS Transform:** conversión de red e infraestructura a IaC (CloudFormation, CDK o Terraform).
-- **Cifra:** **terraform validate ✓** · **17/17** verificaciones · Kubernetes **1.33** *(recuérdalo)*
+| # | Titular | Entrada | Visual del agente (clic 1) | Salida | Herramientas | Modelo | Cifra | En AWS Transform |
+|---|---|---|---|---|---|---|---|---|
+| 9 · Descubrimiento | **Encuentra lo que nadie documentó.** | Código · Terraform · EC2 | El radar sobre las 4 tarjetas de archivo (`app.py`, `schema.sql`, `legacy-inventory.service`, `main.tf`) y los pines que caen: rojo = crítico, naranja = alto. Se mantiene el visual actual | Evaluación (chip "Replatform") | escaneo · Terraform · CloudWatch | severidad · estrategia 6R | **17 hallazgos · 3 críticos** | Discovery & Assessment |
+| 10 · Requisitos | **Convierte un documento en un contrato.** | `migration-requirements.md` | 4 líneas resaltadas del documento vuelan a 4 filas concretas de la especificación: **SLO 99,9 %**, **US$450/mes**, **Graviton (arm64)**, **PostgreSQL en RDS**. Debajo, 3 burbujas "?"; un avatar humano toca 2 y pasan a "✓ resuelta"; la tercera queda "? cutover" | Especificación validada | plantilla · validador | prioridades · supuestos | **24 requisitos · 2 de 3 dudas resueltas por ti** | Objetivo del job + humano en el loop |
+| 11 · Modernización | **No reescribe: adapta un patrón probado.** | Monolito Flask (`app.py · 2017`) | El bloque del monolito se fractura y se rearma como un contenedor de **dos capas con nombre**. Abajo, la capa ancha azul **Patrón probado**, con 4 mini chips: Dockerfile no-root · /healthz · logs JSON · Kustomize. Arriba, la capa delgada morada **Lógica de negocio · rutas /api**. Se eliminan los bloques grises sin etiqueta | Microservicio + manifiestos | patrón · pruebas · validación | porta rutas · escribe pruebas | **23/23 pruebas · inyección SQL corregida** | Transformación de código y contenedores |
+| 12 · Terraform | **Infraestructura válida al primer intento.** | Especificación | Dos paneles. **Desde cero**: líneas de HCL y un sello rojo "✗ inválido". **Con blueprint**: una cuadrícula azul que se llena con 4 chips (us-west-2 · Graviton t4g · Multi-AZ · **Kubernetes 1.33**) y un sello verde "✓ terraform validate". El chip "1.33" late suave (es la semilla del "aha") | VPC · EKS · ECR · RDS | blueprint · terraform validate | mapea la especificación | **17/17 verificaciones ✓** | Red e infraestructura como código |
+| 13 · Validación K8s | **No lo valida en papel: lo despliega.** | Manifiestos | 4 líneas de YAML en rojo (`:latest` · sin límites · FS escribible · sin PDB) pasan a verde. Luego aparece un anillo de clúster con 3 pods y la fila de pruebas de humo **200 · 200 · 200 · 201 · 409**, con el 409 etiquetado "sobreventa bloqueada ✓" | Pods en Kubernetes | kubeconform · 16 políticas · kind | corrige violaciones | **4 violaciones → 0** | Pruebas y validación |
+| 14 · FinOps | **Encontró US$365/mes que nadie vio.** | Terraform + manifiestos | Tres barras y una línea punteada en $450. **Hoy $72** (gris). **Diseñado $623**, con el segmento rojo "+$365 · Kubernetes 1.33 en soporte extendido". **Optimizado $208** (índigo) con un ✓ | Plan de costos | motor de costos · precios AWS | elige optimizaciones | **US$72 → 623 → 208** | Assessment y caso de negocio |
 
-**Ilustración animada:** a la izquierda, "desde cero": código que se escribe y se tacha. A la derecha, "con blueprint":
-una cuadrícula azul que se dibuja y se llena.
+**Notas del orador** (la explicación detallada se dice en voz alta; ya no se lee en pantalla):
 
-| Elemento | Disparador | Tipo | Parámetros |
-|---|---|---|---|
-| Panel "Desde cero" | `entrar` | `typewriter` de unas líneas HCL | — |
-| Sello "✗ inválido" en "Desde cero" | `entrar` | `stamp` + `shake-soft` | +1200ms |
-| Panel "Con blueprint" (cuadrícula) | `clic 1` | `draw-line` | 900ms |
-| Las variables entran a su casilla | `clic 1` | `stagger` de `morph` | 80ms entre variables |
-| Sello "✓ terraform validate" | `clic 2` | `stamp` | — |
-| "1.33" | `clic 2` | `highlight-sweep` | Queda con un `pulse` muy suave (es la semilla del "aha") |
-
-**Notas del orador:**
-> Primero dejamos que los modelos escribieran esta infraestructura desde cero. Todos fallaron: usaron argumentos
-> antiguos del módulo de EKS, con mucha seguridad y desactualizados. *(clic)* Con un blueprint validado pasaron al primer
-> intento. *(clic)* Grounding le gana a la generación. Y fíjense en un detalle: Kubernetes 1.33. Guárdenlo, que va a
-> volver.
-
----
-
-### Diapositiva 13. Agente 5: Validación de Kubernetes
-
-**En pantalla**
-- **Qué hace:** valida los manifiestos contra el esquema y las políticas, los corrige y los despliega de verdad.
-- **Herramientas:** kubeconform, 16 políticas (límites, probes, no-root, sin `:latest`, PDB…) y un despliegue en un
-  clúster kind con pruebas de humo.
-- **El modelo decide:** cómo corregir cada violación.
-- **En AWS Transform:** validación y pruebas antes del cutover.
-- **Cifra:** **4 violaciones → 4 corregidas → 0** · pruebas de humo **200 · 200 · 200 · 201 · 409**
-
-**Ilustración animada:** un fragmento de YAML con cuatro líneas en rojo que se corrigen en verde. Después, unos pods
-(puntos) arrancan en un anillo de clúster.
-
-| Elemento | Disparador | Tipo | Parámetros |
-|---|---|---|---|
-| YAML | `entrar` | `fade-up` | — |
-| Cuatro líneas en rojo (`:latest`, sin límites, filesystem escribible, sin PDB) | `entrar` | `stagger` de `highlight-sweep` rojo + `shake-soft` | 120ms entre líneas |
-| Las líneas pasan a verde | `clic 1` | `stagger` de `highlight-sweep` verde | 120ms entre líneas |
-| Anillo del clúster y pods | `clic 2` | `draw-line` del anillo + `stagger` de `scale-in` de los pods | Los pods con `pulse` lento |
-| Pruebas de humo 200·200·200·201·409 | `clic 2` | `stagger` de `stamp` | El 409 con la etiqueta "sobreventa bloqueada ✓" |
-
-**Notas del orador:**
-> Ahora, la hora de la verdad: ¿corre? Simulamos algo que pasa en todo proyecto: alguien edita los manifiestos a mano.
-> *(clic)* El agente detecta las cuatro violaciones y las corrige. *(clic)* Luego construye la imagen, la despliega en un
-> Kubernetes real y corre pruebas de humo. Doscientos, doscientos, doscientos, la orden se crea con un 201, y el intento
-> de sobreventa devuelve 409: la regla de negocio sobrevivió a la migración.
-
----
-
-### Diapositiva 14. Agente 6: FinOps
-
-**En pantalla**
-- **Qué hace:** calcula el costo actual, el del diseño y el optimizado, y verifica el presupuesto.
-- **Herramientas:** el motor de costos en Python, los precios de AWS (snapshot fechado), el ajuste de pods y nodos.
-- **El modelo decide:** qué optimizaciones aplicar y cómo explicar los trade-offs.
-- **En AWS Transform:** assessment y caso de negocio.
-- **Cifra:** **$72 hoy → $623 diseñado → $208 optimizado** · presupuesto **$450**
-
-**Ilustración animada:** gráfica de tres barras con una línea de presupuesto. Este es el "aha" de la charla.
-
-| Elemento | Disparador | Tipo | Parámetros |
-|---|---|---|---|
-| Línea de presupuesto $450 (punteada) | `entrar` | `draw-line` | — |
-| Barra "Hoy $72" | `entrar` | `grow-bar` + `count-up` | — |
-| Barra "Diseñado" (base) | `clic 1` | `grow-bar` | Sube hasta $258 |
-| Segmento rojo "+$365 soporte extendido" | `clic 2` | Cae desde arriba y se apila (`stack-build`) + `shake-soft` de la barra | Al terminar, el total `count-up` hasta $623, por encima del presupuesto |
-| Callout "Kubernetes 1.33 está en soporte extendido de EKS" | `clic 2` | `typewriter` | Une visualmente con el "1.33" de la diapositiva 12 |
-| Barra "Optimizado $208" | `clic 3` | `grow-bar` + `count-up` | Al terminar, `stamp` "✓ dentro del presupuesto" |
-
-**Sin animación:** las barras en su altura final, con los clics revelando cada estado.
-
-**Notas del orador:**
-> Y la pregunta de todo CFO: ¿cuánto cuesta? Hoy, unos 72 dólares al mes. *(clic)* El diseño… *(clic)* 623, por encima del
-> presupuesto. ¿Por qué? ¿Recuerdan el 1.33? Está en soporte extendido de EKS: 365 dólares al mes que ni la
-> especificación ni el agente de IaC vieron. Lo atrapó el agente de FinOps. *(clic)* Optimizado: 208, dentro del
-> presupuesto. Y seamos honestos: sigue costando unas tres veces más que un servidor. Lo que se paga es alta
-> disponibilidad, una base de datos Multi-AZ, autoescalado y los hallazgos de seguridad corregidos. Cada número sale de
-> código probado, no del modelo.
-
-**Transición:** las seis tarjetas de agentes se agrupan (`morph`) y forman la cuadrícula de lecciones de la
-diapositiva 15.
+- **9 · Descubrimiento:**
+  > El primer agente encuentra lo que nadie documentó. *(clic)* Las herramientas escanean el código, el Terraform y la
+  > EC2: rutas, secretos en el código, SQL concatenado, reportes en disco. *(clic)* El modelo solo pondera la severidad
+  > y elige la estrategia. *(clic)* Diecisiete hallazgos, tres críticos, en unos diez segundos, y cada uno se puede
+  > auditar.
+- **10 · Requisitos:**
+  > Este agente convierte un documento en un contrato. *(clic)* Cada línea del negocio se vuelve un valor concreto:
+  > 99,9 % de disponibilidad, 450 dólares al mes, Graviton, PostgreSQL. No inventa respuestas: deja tres dudas
+  > abiertas. En el demo le respondo en lenguaje natural, y resuelve dos. *(clic)* La herramienta valida; el modelo
+  > prioriza y propone supuestos. *(clic)* Veinticuatro requisitos, y dos de tres dudas resueltas por un humano.
+- **11 · Modernización:**
+  > No reescribe desde cero: adapta un patrón probado. *(clic)* El monolito se convierte en un contenedor. Abajo, un
+  > patrón probado: Dockerfile no-root, health checks, logs JSON, Kustomize. Arriba, lo único que requiere criterio: la
+  > lógica de negocio de las rutas. *(clic)* Las herramientas montan el patrón y corren las pruebas; el modelo porta
+  > las rutas y escribe las pruebas. *(clic)* Veintitrés de veintitrés, y sin inyección SQL.
+- **12 · Terraform:**
+  > Primero dejamos que los modelos escribieran esto desde cero, y todos fallaron. *(clic)* Con un blueprint validado,
+  > pasan al primer intento. Fíjense en un detalle: Kubernetes 1.33. Guárdenlo. *(clic)* El blueprint y terraform
+  > validate son herramientas; el modelo solo mapea la especificación. *(clic)* Diecisiete de diecisiete
+  > verificaciones.
+- **13 · Validación K8s:**
+  > Este agente no valida en papel: despliega. *(clic)* Alguien editó los manifiestos a mano; detecta las cuatro
+  > violaciones y las corrige. Luego despliega en un Kubernetes real y corre pruebas de humo, y el 409 es la sobreventa
+  > bloqueada. *(clic)* kubeconform, dieciséis políticas y kind son herramientas; el modelo decide cómo corregir.
+  > *(clic)* De cuatro violaciones a cero.
+- **14 · FinOps:**
+  > Y la pregunta de todo CFO. *(clic)* Hoy, 72 dólares al mes. El diseño, 623, por encima del presupuesto. ¿Por qué?
+  > ¿Recuerdan el 1.33? Está en soporte extendido de EKS: 365 dólares al mes que nadie vio. Optimizado: 208, dentro del
+  > presupuesto. *(clic)* Cada número sale del motor de costos; el modelo solo elige qué optimizar y lo explica.
+  > *(clic)* Y seamos honestos: sigue costando unas tres veces más que un servidor. Lo que se paga es alta
+  > disponibilidad, Multi-AZ, autoescalado y seguridad.
 
 ---
 
