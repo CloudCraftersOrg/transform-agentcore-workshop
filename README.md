@@ -28,6 +28,7 @@ make ui                      # http://localhost:8501
 |---|---|
 | [WORKSHOP.md](WORKSHOP.md) | The runbook: setup, deploy, rehearsal, run of show, plan B, teardown |
 | [docs/KEYNOTE-SCRIPT.md](docs/KEYNOTE-SCRIPT.md) | The word-for-word keynote, with Q&A and the cheat sheet of numbers |
+| [docs/PITCH-SLIDES.md](docs/PITCH-SLIDES.md) | "AWS Transform: una transformación, tres stacks": slide-by-slide deck in Spanish, with animation specs and speaker notes |
 | [docs/CONTRACTS.md](docs/CONTRACTS.md) | Stage contracts: inputs, outputs, artifacts and the `options.*` reference |
 | [docs/design/](docs/design/) | The approved UI mockups (light and dark) and [GUIDELINES.md](docs/design/GUIDELINES.md) |
 | [docs/specs/](docs/specs/) and [MAINTAINING.md](MAINTAINING.md) | The current, maintained specs |
