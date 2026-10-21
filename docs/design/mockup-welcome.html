@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migration Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+:root {
+  --ink: #18181d; --ink-2: #5d5d69; --ink-3: #8b8b97; --hair: rgba(20, 20, 40, .08); --hair-2: rgba(20, 20, 40, .05);
+  --indigo: #5b5fc7; --indigo-ink: #4b4fb4; --indigo-wash: rgba(91, 95, 199, .07);
+  --ok: #1f7a3a; --warn: #a15c07; --bad: #c4314b;
+  --glass: rgba(255, 255, 255, .58); --pane: rgba(255, 255, 255, .86);
+  --r-window: 28px; --r-pane: 22px; --r-card: 18px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.55; color: var(--ink);
+  font-feature-settings: "cv11", "ss01", "ss03"; -webkit-font-smoothing: antialiased; letter-spacing: -.005em;
+  background:
+    radial-gradient(40% 55% at 8% 12%, rgba(167, 139, 250, .38), transparent 70%),
+    radial-gradient(35% 50% at 92% 8%, rgba(244, 114, 182, .30), transparent 70%),
+    radial-gradient(45% 60% at 85% 95%, rgba(56, 189, 248, .26), transparent 70%),
+    radial-gradient(40% 50% at 15% 95%, rgba(196, 181, 253, .30), transparent 70%),
+    #f4f2fa;
+}
+.ms { font-family: "Material Symbols Rounded"; font-weight: 300; font-size: 20px; line-height: 1; vertical-align: middle;
+      font-variation-settings: "opsz" 20, "wght" 300, "FILL" 0; }
+
+/* One app window: nav + content pane, like a native app */
+.window { position: fixed; inset: 24px; display: grid; grid-template-columns: 248px 1fr; border-radius: var(--r-window);
+  background: var(--glass); backdrop-filter: blur(40px) saturate(150%); border: 1px solid rgba(255, 255, 255, .75);
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 30px 80px rgba(40, 32, 90, .12); overflow: hidden; }
+
+/* Left nav */
+nav { padding: 22px 14px; display: flex; flex-direction: column; gap: 2px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; font-weight: 600; font-size: 14px; letter-spacing: -.01em; }
+.brand-mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, #7c7ff0, #5b5fc7);
+  display: grid; place-items: center; color: #fff; }
+.brand-mark .ms { font-size: 16px; font-variation-settings: "wght" 400; }
+.nav-label { font-size: 12px; color: var(--ink-3); padding: 0 10px 8px; }
+.nav-item { position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start;
+  padding: 9px 10px; border-radius: 12px; color: var(--ink); }
+.nav-item .ms { color: var(--ink-2); margin-top: 1px; }
+.nav-item b { font-weight: 500; font-size: 14px; display: block; letter-spacing: -.01em; }
+.nav-item small { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #c7c7d1; display: inline-block; }
+.dot.ok { background: #34a853; } .dot.review { background: #e0a106; } .dot.run { background: var(--indigo); }
+.nav-item.active { background: rgba(255, 255, 255, .9); box-shadow: 0 1px 2px rgba(20, 20, 40, .06); }
+.nav-item.active::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--indigo); }
+.nav-item.active .ms { color: var(--indigo); }
+.nav-foot { margin-top: auto; padding: 12px 10px 2px; font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+
+/* Content pane */
+.pane { margin: 8px 8px 8px 0; border-radius: var(--r-pane); background: var(--pane); display: flex; flex-direction: column;
+  box-shadow: 0 1px 2px rgba(20, 20, 40, .04); overflow: hidden; }
+.topbar { height: 60px; flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 22px;
+  border-bottom: 1px solid var(--hair-2); }
+.crumb { font-size: 13.5px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; }
+.crumb b { color: var(--ink); font-weight: 500; }
+.chip-rec { font-size: 11.5px; color: var(--ink-2); background: var(--hair-2); padding: 2px 8px; border-radius: 999px; }
+.seg { display: flex; background: rgba(20, 20, 40, .05); border-radius: 999px; padding: 3px; }
+.seg span { display: flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.seg span.on { background: #fff; color: var(--indigo-ink); box-shadow: 0 1px 2px rgba(20, 20, 40, .1); }
+.seg .ms { font-size: 17px; }
+.actions { justify-self: end; display: flex; gap: 6px; }
+.icon-btn { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--ink-2); }
+.icon-btn.primary { background: var(--indigo); color: #fff; box-shadow: 0 1px 2px rgba(75, 79, 180, .35); }
+
+.scroll { flex: 1; overflow: auto; padding: 28px 0 150px; }
+.col { max-width: 1120px; margin: 0 auto; padding: 0 40px; }
+
+/* Conversation */
+.you { display: flex; justify-content: flex-end; margin-bottom: 22px; }
+.you span { background: var(--indigo-wash); color: var(--ink); font-size: 14px; padding: 8px 14px; border-radius: 14px 14px 4px 14px; }
+.you code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--indigo-ink); }
+
+/* Result card */
+.card { background: #fff; border-radius: var(--r-card); border: 1px solid var(--hair-2);
+  box-shadow: 0 1px 2px rgba(20, 20, 40, .03), 0 12px 40px rgba(40, 32, 90, .05); padding: 26px 30px 24px; }
+.card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.tile { width: 32px; height: 32px; border-radius: 10px; background: var(--indigo-wash); color: var(--indigo); display: grid; place-items: center; }
+.step { font-size: 13px; color: var(--ink-3); }
+.title { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.done { margin-left: auto; font-size: 12.5px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+.done .ms { font-size: 16px; color: var(--ok); font-variation-settings: "wght" 400; }
+h2 { font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; margin: 0 0 6px; }
+.lede { color: var(--ink-2); font-size: 14.5px; margin: 0 0 22px; max-width: 78ch; }
+
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px 0 20px; border-bottom: 1px solid var(--hair-2); }
+.kpi { padding: 0 24px; border-left: 1px solid var(--hair); }
+.kpi:first-child { padding-left: 0; border-left: 0; }
+.kpi label { font-size: 12.5px; color: var(--ink-3); font-weight: 500; }
+.kpi .v { font-size: 34px; font-weight: 300; letter-spacing: -.02em; line-height: 1.15; margin: 4px 0 2px; font-variant-numeric: tabular-nums lining-nums; }
+.kpi .v small { font-size: 16px; color: var(--ink-3); font-weight: 400; letter-spacing: 0; }
+.kpi .s { font-size: 12.5px; color: var(--ink-2); }
+.kpi .s.bad { color: var(--bad); }
+
+.evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 18px 0 6px; }
+.ev { display: flex; gap: 12px; align-items: baseline; }
+.ev + .ev { padding-left: 24px; border-left: 1px solid var(--hair); }
+.ev label { font-size: 12px; color: var(--ink-3); white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+.ev label .ms { font-size: 15px; }
+.ev.model label { color: var(--indigo-ink); }
+.ev span { font-size: 14px; font-weight: 500; }
+.telemetry { font-size: 12px; color: var(--ink-3); margin: 14px 0 0; }
+
+.tabs { display: flex; gap: 22px; margin: 22px 0 0; border-bottom: 1px solid var(--hair-2); }
+.tabs span { font-size: 13.5px; padding: 10px 0; color: var(--ink-2); font-weight: 500; }
+.tabs span.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--indigo); }
+
+table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13.5px; }
+th { text-align: left; font-weight: 500; font-size: 12px; color: var(--ink-3); padding: 12px 12px 8px 0; border-bottom: 1px solid var(--hair); }
+td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--hair-2); vertical-align: top; }
+td.id { color: var(--ink-3); font-variant-numeric: tabular-nums; width: 64px; }
+td.ev-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--ink-2); }
+.sev { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.sev i { width: 7px; height: 7px; border-radius: 50%; }
+.sev.c i { background: var(--bad); } .sev.h i { background: #e0a106; } .sev.m i { background: #b9b9c4; }
+
+.bridge { margin-top: 22px; padding: 14px 16px; border-radius: 14px; background: var(--indigo-wash); display: grid;
+  grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 13px; color: var(--ink-2); }
+.bridge b { color: var(--indigo-ink); font-weight: 600; font-size: 12px; }
+
+/* Floating gate + composer */
+.dock { position: absolute; left: 256px; right: 8px; bottom: 32px; display: grid; justify-items: center; gap: 10px; pointer-events: none; }
+.gate, .composer { pointer-events: auto; width: min(1040px, calc(100% - 80px)); }
+.gate { display: flex; align-items: center; gap: 14px; padding: 10px 10px 10px 20px; border-radius: 16px;
+  background: rgba(255, 255, 255, .92); backdrop-filter: blur(20px); border: 1px solid var(--hair-2);
+  box-shadow: 0 10px 30px rgba(40, 32, 90, .10); }
+.gate p { margin: 0; font-size: 14px; color: var(--ink-2); flex: 1; }
+.gate p b { color: var(--ink); font-weight: 500; }
+.btn { height: 36px; padding: 0 16px; border-radius: 10px; font: 500 13.5px Inter, sans-serif; display: inline-flex; align-items: center; gap: 7px; border: 0; }
+.btn .ms { font-size: 18px; }
+.btn.primary { background: var(--indigo); color: #fff; box-shadow: 0 1px 2px rgba(75, 79, 180, .35); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--hair); }
+.composer { display: flex; align-items: center; height: 48px; padding: 0 8px 0 18px; border-radius: 14px; background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--hair-2); box-shadow: 0 2px 10px rgba(40, 32, 90, .05); color: var(--ink-3); font-size: 14px; }
+.composer .send { margin-left: auto; width: 32px; height: 32px; border-radius: 9px; background: var(--hair-2); display: grid; place-items: center; }
+.fade { position: absolute; left: 256px; right: 8px; bottom: 8px; height: 170px; border-radius: 0 0 var(--r-pane) var(--r-pane);
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.96) 45%); pointer-events: none; }
+
+.hero { max-width: 880px; margin: 0 auto; padding: 9vh 40px 0; text-align: center; }
+.hero h1 { font-size: 44px; line-height: 1.1; font-weight: 600; letter-spacing: -.035em; margin: 0 0 12px; }
+.hero p.sub { font-size: 16px; color: var(--ink-2); margin: 0 0 36px; }
+.ask { display: flex; align-items: center; gap: 14px; text-align: left; background: #fff; border-radius: 22px; padding: 14px 14px 14px 20px;
+  border: 1px solid var(--hair-2); box-shadow: 0 1px 2px rgba(20,20,40,.04), 0 16px 48px rgba(40,32,90,.07); }
+.ask .plus { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hair); display: grid; place-items: center; color: var(--ink-2); flex: none; }
+.ask .ph { flex: 1; color: var(--ink-3); font-size: 15.5px; }
+.sugg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; text-align: left; }
+.s-card { background: rgba(255,255,255,.9); border: 1px solid var(--hair-2); border-radius: 18px; padding: 18px 20px 20px;
+  box-shadow: 0 1px 2px rgba(20,20,40,.03); min-height: 132px; }
+.s-card .ms { color: var(--indigo); font-size: 22px; }
+.s-card p { margin: 14px 0 6px; font-size: 14.5px; font-weight: 500; letter-spacing: -.01em; line-height: 1.4; }
+.s-card p em { font-style: normal; color: var(--indigo-ink); }
+.s-card small { font-size: 12.5px; color: var(--ink-3); }
+.foot-note { margin-top: 34px; font-size: 12.5px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="window">
+  <nav>
+    <div class="brand"><div class="brand-mark"><span class="ms">conversion_path</span></div>Migration Workshop</div>
+    <div class="nav-label">Agents</div>
+    <div class="nav-item"><span class="ms">travel_explore</span><div><b>Discovery</b><small><i class="dot"></i>Not Started</small></div></div>
+    <div class="nav-item"><span class="ms">checklist</span><div><b>Requirements</b><small><i class="dot"></i>Not Started</small></div></div>
+    <div class="nav-item"><span class="ms">deployed_code</span><div><b>Modernization</b><small><i class="dot"></i>Not Started</small></div></div>
+    <div class="nav-item"><span class="ms">stacks</span><div><b>Infrastructure</b><small><i class="dot"></i>Not Started</small></div></div>
+    <div class="nav-item"><span class="ms">verified</span><div><b>Validation</b><small><i class="dot"></i>Not Started</small></div></div>
+    <div class="nav-item"><span class="ms">savings</span><div><b>FinOps</b><small><i class="dot"></i>Not Started</small></div></div>
+    <div class="nav-foot">Nova 2 Lite · DeepSeek V3.2<br>on Amazon Bedrock AgentCore</div>
+  </nav>
+
+  <main class="pane">
+    <div class="topbar">
+      <div class="crumb"><b>Inventory &amp; Orders</b><span>/</span>New Run</div>
+      <div class="seg"><span class="on"><span class="ms">laptop_mac</span>Local</span><span><span class="ms">cloud</span>AgentCore</span></div>
+      <div class="actions"><div class="icon-btn" title="Dark Theme"><span class="ms">dark_mode</span></div><div class="icon-btn"><span class="ms">more_horiz</span></div><div class="icon-btn primary"><span class="ms">add</span></div></div>
+    </div>
+    <div class="scroll"><div class="hero">
+      <h1>Hi, let's migrate your legacy app.</h1>
+      <p class="sub">Six agents, one legacy server. You approve every step.</p>
+      <div class="ask"><div class="plus"><span class="ms">add</span></div><div class="ph">Drop the business requirements here, or pick a suggestion below</div>
+        <button class="btn primary">Start Migration<span class="ms">arrow_forward</span></button></div>
+      <div class="sugg">
+        <div class="s-card"><span class="ms">description</span><p>Start with the <em>sample requirements</em></p><small>Inventory &amp; Orders · $450/month budget</small></div>
+        <div class="s-card"><span class="ms">dns</span><p>See the <em>legacy estate</em></p><small>What the agents will migrate</small></div>
+        <div class="s-card"><span class="ms">groups</span><p>What will <em>the six agents</em> do?</p><small>One-minute overview</small></div>
+      </div>
+      <div class="foot-note">A transparent re-creation of the loop AWS Transform's agents run, built with Strands Agents on Amazon Bedrock AgentCore.</div>
+    </div></div>
+  </main>
+</div>
+</body>
+</html>

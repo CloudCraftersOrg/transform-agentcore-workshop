@@ -1,0 +1,66 @@
+{
+  "application": {
+    "name": "legacy-inventory",
+    "language": "python",
+    "language_version": "3.9",
+    "framework": "flask 2.0.3",
+    "entrypoint": "app.py",
+    "listen_port": 5000,
+    "loc": 113
+  },
+  "findings": [
+    {
+      "id": "LF-01",
+      "severity": "critical",
+      "category": "security",
+      "title": "SQL injection in search",
+      "evidence": "app.py: list_items()",
+      "recommendation": "Use bound parameters."
+    },
+    {
+      "id": "LF-02",
+      "severity": "critical",
+      "category": "security",
+      "title": "Secrets hard-coded in source code",
+      "evidence": "app.py: SECRET_KEY, ADMIN_TOKEN",
+      "recommendation": "Load secrets at runtime."
+    },
+    {
+      "id": "LF-04",
+      "severity": "high",
+      "category": "security",
+      "title": "Service and scheduled job run as root",
+      "evidence": "ops/legacy-inventory.service: User=root",
+      "recommendation": "Run as non-root."
+    },
+    {
+      "id": "LF-08",
+      "severity": "high",
+      "category": "reliability",
+      "title": "Single EC2 instance (single point of failure)",
+      "evidence": "one instance",
+      "recommendation": "2+ replicas across AZs."
+    },
+    {
+      "id": "LF-10",
+      "severity": "medium",
+      "category": "reliability",
+      "title": "Reports written to the local filesystem",
+      "evidence": "app.py: daily_report()",
+      "recommendation": "Write to S3."
+    },
+    {
+      "id": "LF-11",
+      "severity": "high",
+      "category": "reliability",
+      "title": "Flask development server used in production",
+      "evidence": "app.py: app.run()",
+      "recommendation": "Use gunicorn."
+    }
+  ],
+  "strategy": {
+    "recommended": "replatform",
+    "rationale": "containerize and move state to RDS",
+    "target": "containerized microservice on EKS + RDS PostgreSQL"
+  }
+}

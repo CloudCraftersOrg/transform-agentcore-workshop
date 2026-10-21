@@ -1,0 +1,260 @@
+{
+  "application": {
+    "name": "legacy-inventory",
+    "language": "python",
+    "language_version": "3.9",
+    "framework": "flask 2.0.3",
+    "entrypoint": "app.py",
+    "listen_port": 5000,
+    "loc": 113,
+    "files": 8
+  },
+  "components": [
+    {
+      "name": "inventory-api",
+      "kind": "http-api",
+      "routes": [
+        "/api/items",
+        "/api/items/{item_id}",
+        "/api/orders",
+        "/status"
+      ],
+      "endpoints": [
+        "GET /api/items -> list_items()",
+        "POST /api/items -> create_item()",
+        "GET/PUT/DELETE /api/items/{item_id} -> item()",
+        "POST /api/orders -> create_order()",
+        "GET /status -> status()"
+      ],
+      "notes": "JSON API plus a health check"
+    },
+    {
+      "name": "inventory-web-ui",
+      "kind": "web-ui",
+      "routes": [
+        "/",
+        "/items/new"
+      ],
+      "endpoints": [
+        "GET / -> index()",
+        "POST /items/new -> new_item_form()"
+      ],
+      "notes": "server-rendered HTML (Jinja2 templates) with form posts"
+    },
+    {
+      "name": "inventory-report-job",
+      "kind": "batch",
+      "routes": [
+        "/reports/daily"
+      ],
+      "endpoints": [
+        "GET /reports/daily -> daily_report()"
+      ],
+      "notes": "HTTP-triggered job that writes files to local disk; triggered by nightly job via cron (0 2 * * *): http://127.0.0.1:5000/reports/daily"
+    }
+  ],
+  "dependencies": {
+    "python_packages": [
+      "Flask==2.0.3",
+      "Werkzeug==2.0.3",
+      "Jinja2==3.0.3",
+      "itsdangerous==2.0.1",
+      "click==8.0.4",
+      "MarkupSafe==2.0.1"
+    ],
+    "database": {
+      "engine": "sqlite",
+      "location": "/opt/legacy-inventory/data/inventory.db",
+      "tables": [
+        "items",
+        "orders"
+      ]
+    },
+    "local_state": [
+      "/opt/legacy-inventory/reports",
+      "/var/log/legacy-inventory/app.log"
+    ],
+    "external_services": []
+  },
+  "infrastructure": {
+    "provider": "aws",
+    "region": "us-west-2",
+    "instance_type": "t3.large",
+    "vcpu": 2,
+    "memory_gib": 8,
+    "os": "Amazon Linux 2023",
+    "volume": {
+      "type": "gp2",
+      "size_gib": 30
+    },
+    "process_manager": "systemd",
+    "reverse_proxy": "nginx",
+    "scheduled_jobs": [
+      "nightly job via cron (0 2 * * *): http://127.0.0.1:5000/reports/daily"
+    ],
+    "source": "terraform",
+    "architecture": "x86_64",
+    "ami_source": "ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+    "ingress": [
+      "tcp/80 from 0.0.0.0/0"
+    ],
+    "high_availability": {
+      "instances": 1,
+      "load_balancer": false,
+      "autoscaling_group": false
+    },
+    "backups": false
+  },
+  "utilization": {
+    "cpu_avg_pct": 4.0,
+    "cpu_p95_pct": 12.0,
+    "mem_avg_pct": 18.0,
+    "period_days": 14,
+    "source": "estimate",
+    "notes": "estimate, not measured: live AWS lookup disabled or unavailable; typical figures for a low-traffic internal Flask app on a 2 vCPU host (options.live_aws is false)"
+  },
+  "findings": [
+    {
+      "id": "LF-01",
+      "severity": "critical",
+      "category": "security",
+      "title": "SQL built by string concatenation (SQL injection)",
+      "evidence": "app.py:77 list_items(): \"SELECT * FROM items WHERE name LIKE '%\" + search + \"%'\"",
+      "recommendation": "Use bound parameters for every query and add a regression test with a malicious search string."
+    },
+    {
+      "id": "LF-02",
+      "severity": "critical",
+      "category": "security",
+      "title": "Secrets hard-coded in source code",
+      "evidence": "app.py:16 SECRET_KEY=s3c***; app.py:17 ADMIN_TOKEN=adm***",
+      "recommendation": "Rotate the exposed values and load secrets at runtime from AWS Secrets Manager (External Secrets or the Secrets Store CSI driver)."
+    },
+    {
+      "id": "LF-03",
+      "severity": "critical",
+      "category": "security",
+      "title": "Write endpoints without authentication (shared static admin token)",
+      "evidence": "no auth on POST /items/new (new_item_form), POST /api/items (create_item), POST /api/orders (create_order); item() compares a header to the hard-coded ADMIN_TOKEN",
+      "recommendation": "Authenticate API clients (OIDC/JWT at the ingress or in the app) and replace the shared admin token with per-client credentials."
+    },
+    {
+      "id": "LF-04",
+      "severity": "high",
+      "category": "security",
+      "title": "Service and scheduled job run as root",
+      "evidence": "ops/legacy-inventory.cron: cron job runs as root; ops/legacy-inventory.service: User=root",
+      "recommendation": "Run the container as a non-root user with a read-only root filesystem and all capabilities dropped."
+    },
+    {
+      "id": "LF-05",
+      "severity": "high",
+      "category": "security",
+      "title": "End-of-life runtime and outdated web framework",
+      "evidence": "requirements.txt: Flask==2.0.3 (current 3.1), Werkzeug==2.0.3 (current 3.1); system python3 3.9 on Amazon Linux 2023 (end of life 2025-10) runs app.py",
+      "recommendation": "Build the image on Python 3.12+ with Flask/Werkzeug 3.x, pin versions and scan the image in CI."
+    },
+    {
+      "id": "LF-06",
+      "severity": "high",
+      "category": "security",
+      "title": "Internet-facing plain HTTP with an open security group",
+      "evidence": "ops/nginx.conf: listen 80 without TLS; aws_vpc_security_group_ingress_rule.http: tcp/80 from 0.0.0.0/0",
+      "recommendation": "Terminate TLS on an AWS load balancer (ACM certificate) in front of EKS and allow traffic only from the load balancer."
+    },
+    {
+      "id": "LF-07",
+      "severity": "high",
+      "category": "security",
+      "title": "Instance hardening gaps (EBS encryption, IMDS)",
+      "evidence": "aws_instance.legacy: root volume `encrypted` not set (relies on the account default)",
+      "recommendation": "Encrypt data at rest with KMS (RDS storage encryption, EBS default encryption) and enforce IMDSv2 on worker nodes."
+    },
+    {
+      "id": "LF-08",
+      "severity": "high",
+      "category": "reliability",
+      "title": "Single EC2 instance in one Availability Zone (single point of failure)",
+      "evidence": "aws_instance.legacy: one instance, no load balancer or Auto Scaling group, single Availability Zone",
+      "recommendation": "Run at least 2 replicas spread across Availability Zones behind a load balancer, with a PodDisruptionBudget."
+    },
+    {
+      "id": "LF-09",
+      "severity": "high",
+      "category": "reliability",
+      "title": "SQLite database on the instance's local disk",
+      "evidence": "app.py:29 get_db() sqlite3.connect(DB_PATH=/opt/legacy-inventory/data/inventory.db)",
+      "recommendation": "Migrate the data to Amazon RDS for PostgreSQL (Multi-AZ) so the service becomes stateless and can scale out."
+    },
+    {
+      "id": "LF-10",
+      "severity": "medium",
+      "category": "reliability",
+      "title": "Reports written to the local filesystem",
+      "evidence": "app.py:133 daily_report() writes to REPORT_DIR=/opt/legacy-inventory/reports",
+      "recommendation": "Write report files to Amazon S3 (or another shared store) instead of the container filesystem."
+    },
+    {
+      "id": "LF-11",
+      "severity": "medium",
+      "category": "reliability",
+      "title": "Flask development server used in production",
+      "evidence": "app.py:149 app.run(host=\"0.0.0.0\", port=5000, debug=False, threaded=True); systemd ExecStart=/usr/bin/python3 /opt/legacy-inventory/app/app.py",
+      "recommendation": "Serve the app with a production WSGI server (gunicorn) inside the container."
+    },
+    {
+      "id": "LF-12",
+      "severity": "high",
+      "category": "reliability",
+      "title": "No backups of the application data",
+      "evidence": "terraform/main.tf, terraform/outputs.tf, terraform/variables.tf, terraform/versions.tf: no aws_backup_plan, DLM snapshot policy or managed database; data lives only on the instance's EBS root volume",
+      "recommendation": "Use RDS automated backups with point-in-time recovery sized to the RPO."
+    },
+    {
+      "id": "LF-13",
+      "severity": "medium",
+      "category": "operability",
+      "title": "Configuration hard-coded in source (absolute paths, no environment variables)",
+      "evidence": "app.py:13 DB_PATH=/opt/legacy-inventory/data/inventory.db, app.py:14 REPORT_DIR=/opt/legacy-inventory/reports, app.py:15 LOG_FILE=/var/log/legacy-inventory/app.log; reads no environment variables",
+      "recommendation": "Read configuration from environment variables supplied by a ConfigMap and Secrets (12-factor)."
+    },
+    {
+      "id": "LF-14",
+      "severity": "medium",
+      "category": "operability",
+      "title": "Logs written to a local file",
+      "evidence": "app.py:23 logging.basicConfig(filename=LOG_FILE=/var/log/legacy-inventory/app.log)",
+      "recommendation": "Log structured JSON to stdout and ship it with the cluster log agent (Fluent Bit to CloudWatch Logs)."
+    },
+    {
+      "id": "LF-15",
+      "severity": "medium",
+      "category": "operability",
+      "title": "Scheduled job runs from host cron",
+      "evidence": "ops/legacy-inventory.cron: 0 2 * * * root curl -s http://127.0.0.1:5000/reports/daily >> /var/log/legacy-inventory/cron.log 2>&1",
+      "recommendation": "Replace the host cron entry with a Kubernetes CronJob."
+    },
+    {
+      "id": "LF-16",
+      "severity": "medium",
+      "category": "operability",
+      "title": "No health or readiness endpoints for an orchestrator",
+      "evidence": "app.py:141 GET /status (returns a static string, no DB check); no readiness endpoint",
+      "recommendation": "Add /healthz (liveness) and /readyz (checks the database) and wire them to Kubernetes probes."
+    },
+    {
+      "id": "LF-17",
+      "severity": "low",
+      "category": "cost",
+      "title": "Instance over-provisioned for its load",
+      "evidence": "t3.large (2 vCPU, 8 GiB): CPU avg 4.0%, p95 12.0%, memory 18.0% over 14 days (source: estimate); gp2 root volume (gp3 costs ~20% less)",
+      "recommendation": "Size pods from measured usage on small Graviton nodes, and use gp3 instead of gp2 storage."
+    }
+  ],
+  "strategy": {
+    "recommended": "refactor",
+    "rationale": "The app cannot be rehosted because it relies on SQLite and local files; targeted fixes would not be sufficient to address critical security issues (SQL injection, hard-coded secrets) and architectural limitations (SQLite, no authentication). A refactor to PostgreSQL, proper authentication, updated dependencies and container best practices is required.",
+    "target": "containerized microservice on Amazon EKS + Amazon RDS for PostgreSQL"
+  },
+  "readiness_score": 40
+}

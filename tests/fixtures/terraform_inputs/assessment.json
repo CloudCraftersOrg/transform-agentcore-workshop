@@ -1,0 +1,12 @@
+{
+  "application": {"name": "legacy-inventory", "language": "python", "language_version": "3.9", "framework": "flask 2.0.3",
+                  "entrypoint": "app.py", "listen_port": 5000, "loc": 180},
+  "infrastructure": {"provider": "aws", "region": "us-west-2", "instance_type": "t3.large", "vcpu": 2, "memory_gib": 8,
+                     "os": "Amazon Linux 2023", "volume": {"type": "gp2", "size_gib": 30}, "process_manager": "systemd",
+                     "reverse_proxy": "nginx", "scheduled_jobs": ["nightly report via cron"], "source": "terraform"},
+  "utilization": {"cpu_avg_pct": 4.0, "cpu_p95_pct": 12.0, "mem_avg_pct": 18.0, "period_days": 14, "source": "estimate"},
+  "findings": [{"id": "LF-01", "severity": "critical", "category": "security", "title": "SQL injection in search", "evidence": "app.py: list_items()", "recommendation": "Parameterize queries"},
+               {"id": "LF-02", "severity": "high", "category": "security", "title": "Hard-coded credentials", "evidence": "app.py", "recommendation": "Use Secrets Manager"}],
+  "strategy": {"recommended": "replatform", "rationale": "Small codebase, stateless API", "target": "containerized microservice on EKS + RDS PostgreSQL"},
+  "readiness_score": 62
+}

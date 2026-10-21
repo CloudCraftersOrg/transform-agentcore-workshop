@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (git-ignored: .gitignore excludes *.tfvars) and adjust.
+# Every value below is the default, except allowed_cidr.
+
+region        = "us-west-2"
+instance_type = "t3.large" # deliberately oversized (FinOps story)
+
+# Lock port 80 down to your own IP (curl -s https://checkip.amazonaws.com). Default: 0.0.0.0/0.
+allowed_cidr = "203.0.113.10/32"
+
+enable_cloudwatch_agent = true

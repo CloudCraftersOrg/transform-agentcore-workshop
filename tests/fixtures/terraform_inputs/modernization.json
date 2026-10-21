@@ -1,0 +1,11 @@
+{
+  "service_name": "inventory-service",
+  "image": {"repository": "inventory-api", "tag": "1.0.0", "context": "microservice", "dockerfile": "microservice/Dockerfile", "port": 8080},
+  "endpoints": {"health": "/healthz", "readiness": "/readyz", "api": ["/api/items", "/api/items/{id}", "/api/orders"]},
+  "env": [{"name": "DATABASE_URL", "source": "secret", "required": true, "description": "PostgreSQL connection string"},
+          {"name": "REPORTS_BUCKET", "source": "configmap", "required": false, "description": "S3 bucket for the nightly report"}],
+  "resources": {"requests": {"cpu": "100m", "memory": "128Mi"}, "limits": {"cpu": "500m", "memory": "256Mi"}},
+  "manifests": ["k8s/base/deployment.yaml", "k8s/base/service.yaml", "k8s/base/hpa.yaml", "k8s/base/pdb.yaml"],
+  "changes": [{"file": "microservice/app/main.py", "change": "parameterized search query", "addresses": ["LF-01", "SEC5"]}],
+  "tests": {"command": "pytest -q", "passed": true, "output": "12 passed"}
+}

@@ -1,0 +1,95 @@
+# Picked up as the script-level config when running `streamlit run ui/app.py` from the repo root (Streamlit >= 1.4x).
+# The approved look is docs/design/mockup-*.html (rules: docs/design/GUIDELINES.md). Design tokens and the CSS live in
+# ui/style.py (TOKENS, CSS); these theme values only make Streamlit's own widgets start from the same palette.
+
+[theme]
+base = "light"
+primaryColor = "#5B5FC7"            # indigo (hover #4B4FB4, wash rgba(91,95,199,.07))
+backgroundColor = "#F4F2FA"         # canvas; ui/style.py paints the mesh, the glass window and the pane
+secondaryBackgroundColor = "#F7F7FA"
+textColor = "#18181D"               # ink; ink-2 #5D5D69 and ink-3 #737380 (AA on white) come from the CSS
+linkColor = "#4B4FB4"
+linkUnderline = false
+borderColor = "#ECECEF"             # rgba(20,20,40,.08) on white: the hairline
+showWidgetBorder = true
+showSidebarBorder = false
+codeBackgroundColor = "#F8F8FB"
+codeTextColor = "#18181D"
+# Inter is self-hosted from ui/static (see [[theme.fontFaces]]): 300 for hero numbers, 400, 500 and 600. No 700.
+font = "Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+headingFont = "Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+codeFont = "SF Mono, ui-monospace, Menlo, Consolas, monospace"
+baseFontSize = 15
+baseRadius = "10px"
+buttonRadius = "10px"
+headingFontSizes = ["2.9333rem", "1.4667rem", "1.1333rem", "1rem", "0.9333rem", "0.8667rem"]  # 44 22 17 15 14 13 px
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+metricValueFontSize = "2.2667rem"   # 34 px (the KPIs are HTML now; this only covers a stray st.metric)
+metricValueFontWeight = 300
+dataframeBorderColor = "#ECECEF"
+dataframeHeaderBackgroundColor = "#FFFFFF"
+dataframeHeaderTextColor = "#737380"
+# Status colours. No orange anywhere: "orange" and "yellow" map to the warning token.
+greenColor = "#1F7A3A"
+greenBackgroundColor = "#F0F8F2"
+greenTextColor = "#1F7A3A"
+redColor = "#C4314B"
+redBackgroundColor = "#FCF1F3"
+redTextColor = "#A8273F"
+blueColor = "#4B4FB4"
+blueBackgroundColor = "#F3F3FC"
+blueTextColor = "#4B4FB4"
+orangeColor = "#A15C07"
+orangeBackgroundColor = "#FDF7EC"
+orangeTextColor = "#8A4E05"
+yellowColor = "#A15C07"
+yellowBackgroundColor = "#FDF7EC"
+yellowTextColor = "#8A4E05"
+violetColor = "#5B5FC7"
+violetBackgroundColor = "#F3F3FC"
+violetTextColor = "#4B4FB4"
+grayColor = "#5D5D69"
+grayBackgroundColor = "#F4F4F7"
+grayTextColor = "#5D5D69"
+chartCategoricalColors = ["#5B5FC7", "#9A9CE0", "#1F7A3A", "#C9C9D3", "#C4314B", "#A15C07", "#C7C8F1", "#5D5D69"]
+chartSequentialColors = ["#F4F4FC", "#E1E2F6", "#C9CAF0", "#B0B2E9", "#9799E1", "#7E81D8", "#6A6DCF", "#5B5FC7",
+                         "#4F52B2", "#3F428F"]
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-Light.woff2"
+weight = 300
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-Regular.woff2"
+weight = 400
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-Medium.woff2"
+weight = 500
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter-SemiBold.woff2"
+weight = 600
+style = "normal"
+
+[theme.sidebar]
+backgroundColor = "#F4F2FA"
+secondaryBackgroundColor = "#F7F7FA"
+
+[server]
+maxUploadSize = 5
+runOnSave = false
+enableStaticServing = true          # serves ui/static/ at app/static/ (the Inter and Material Symbols font files)
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"

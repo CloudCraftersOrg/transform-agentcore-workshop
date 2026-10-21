@@ -42,3 +42,31 @@ terraform.rc
 # Optional: ignore plan files saved before destroying Terraform configuration
 # Uncomment the line below if you want to ignore planout files.
 # planout
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Workshop runtime output
+runs/
+*.kubeconfig
+
+# Repo-local CLI tools (kind, kubeconform)
+.tools/
+
+# Secrets and local environment (never committed)
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+ui/.streamlit/secrets.toml
+
+# Node dependencies (deploy/.cli, deploy/agentcore/cdk)
+node_modules/
+
+# Terraform plan files (terraform plan -out=...)
+*.tfplan
+tfplan

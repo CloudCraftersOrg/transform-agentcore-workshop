@@ -1,0 +1,5 @@
+MaterialSymbolsRounded.woff2 is a subset of Material Symbols Rounded (optical size 20, weight axis 100-700, unfilled),
+the icons the workshop UI uses, generated with the Google Fonts CSS API (icon_names=...).
+
+Material Symbols, Copyright Google LLC. Licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0

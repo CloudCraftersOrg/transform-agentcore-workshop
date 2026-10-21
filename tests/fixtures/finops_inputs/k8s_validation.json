@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "score": 94,
+  "checks": [
+    {
+      "id": "schema",
+      "tool": "kubeconform",
+      "status": "pass",
+      "resource": "Deployment/inventory-service",
+      "details": "valid"
+    },
+    {
+      "id": "resources",
+      "tool": "builtin",
+      "status": "pass",
+      "resource": "Deployment/inventory-service",
+      "details": "requests and limits set"
+    }
+  ],
+  "fixes_applied": [],
+  "live_deploy": {
+    "status": "skipped",
+    "cluster": "kind-transform-workshop",
+    "image": "inventory-service:dev",
+    "rollout": "",
+    "smoke_tests": []
+  }
+}

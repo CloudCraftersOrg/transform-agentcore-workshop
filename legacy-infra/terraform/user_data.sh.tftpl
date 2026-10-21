@@ -1,0 +1,107 @@
+#!/bin/bash
+# Legacy Inventory bootstrap: EC2 user_data rendered by Terraform (main.tf).
+# Idempotent. Re-run on the instance with: sudo bash /var/lib/cloud/instance/scripts/part-001
+set -Eeuo pipefail
+exec > >(tee -a /var/log/legacy-bootstrap.log) 2>&1
+
+BASE=/opt/legacy-inventory
+APP=$BASE/app
+
+log() { echo "[$(date -u +%FT%TZ)] $*"; }
+trap 'log "FAILED (exit $?) at line $LINENO"' ERR
+
+retry() {  # retry <command...>: boot-time networking can be flaky
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    "$@" && return 0
+    log "attempt $attempt/5 failed: $*"
+    sleep $((attempt * 10))
+  done
+  return 1
+}
+
+unpack() {  # unpack <path> <gzip+base64 content>
+  mkdir -p "$(dirname "$APP/$1")"
+  echo "$2" | base64 -d | gunzip > "$APP/$1"
+}
+
+log "1/6 installing packages"
+retry dnf install -y nginx cronie python3-pip gzip
+
+log "2/6 writing the app to $APP"
+mkdir -p "$APP" "$BASE/data" "$BASE/reports" /var/log/legacy-inventory
+%{ for path, blob in app_files ~}
+unpack '${path}' '${blob}'
+%{ endfor ~}
+
+log "3/6 installing Python packages into the system python3 ($(python3 --version))"
+retry pip3 install --disable-pip-version-check -r "$APP/requirements.txt"
+
+log "4/6 installing the systemd unit, nginx site and cron job"
+install -m 0644 "$APP/ops/legacy-inventory.service" /etc/systemd/system/legacy-inventory.service
+install -m 0644 "$APP/ops/nginx.conf" /etc/nginx/conf.d/legacy-inventory.conf
+install -m 0644 "$APP/ops/legacy-inventory.cron" /etc/cron.d/legacy-inventory
+# The stock nginx.conf has its own server on :80; drop it so the app's site is the only one.
+[ -f /etc/nginx/nginx.conf.orig ] || cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.orig
+sed -i '/^    server {/,/^    }/d' /etc/nginx/nginx.conf
+if ! nginx -t; then
+  log "nginx -t failed, restoring the stock nginx.conf"
+  cp /etc/nginx/nginx.conf.orig /etc/nginx/nginx.conf
+  nginx -t
+fi
+# SELinux is permissive on AL2023; this keeps nginx -> :5000 working if it is ever enforcing.
+if command -v selinuxenabled >/dev/null && selinuxenabled; then
+  setsebool -P httpd_can_network_connect 1 || true
+fi
+
+log "5/6 starting crond, the app and nginx"
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload
+  systemctl enable crond nginx legacy-inventory
+  systemctl restart crond legacy-inventory nginx
+else
+  # No systemd (the docker test): start the same processes by hand.
+  pkill -f "python3 $APP/app.py" || true
+  (cd "$APP" && exec /usr/bin/python3 "$APP/app.py" >> /var/log/legacy-inventory/console.log 2>&1 < /dev/null) &
+  pgrep -x crond >/dev/null || crond
+  if pgrep -x nginx >/dev/null; then nginx -s reload; else nginx; fi
+fi
+
+log "6/6 waiting for the app on http://127.0.0.1/"
+for _ in $(seq 1 30); do
+  curl -sf -o /dev/null http://127.0.0.1/status && break
+  sleep 2
+done
+if curl -sf -o /dev/null http://127.0.0.1/api/items; then
+  log "app is up"
+else
+  log "WARNING: app is not answering yet, see /var/log/legacy-inventory/app.log"
+fi
+%{ if cloudwatch_agent ~}
+
+# Optional: memory and disk metrics (CWAgent namespace). Best effort, never fails the bootstrap.
+setup_cloudwatch_agent() {
+  local cfg=/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  retry dnf install -y amazon-cloudwatch-agent || return 1
+  cat > "$cfg" <<'EOF'
+{
+  "agent": {"metrics_collection_interval": 60},
+  "metrics": {
+    "append_dimensions": {"InstanceId": "$${aws:InstanceId}"},
+    "metrics_collected": {
+      "mem": {"measurement": ["mem_used_percent"]},
+      "disk": {"measurement": ["used_percent"], "resources": ["/"]}
+    }
+  }
+}
+EOF
+  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "file:$cfg"
+}
+if [ -d /run/systemd/system ]; then
+  log "extra: CloudWatch agent for memory and disk metrics"
+  setup_cloudwatch_agent || log "WARNING: CloudWatch agent setup failed; memory metrics will be missing"
+fi
+%{ endif ~}
+
+date -u +%FT%TZ > "$BASE/.bootstrapped"
+log "bootstrap complete"

@@ -1,0 +1,44 @@
+# Local kind overlay: 1 replica on SQLite in the pod's /tmp emptyDir, demo data seeded on start.
+# Why SQLite and not an in-cluster PostgreSQL: no extra image to pull on conference Wi-Fi, ready in seconds,
+# and the same code path is tested against PostgreSQL in CI (TEST_DATABASE_URL). Data is lost on restart.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: {{namespace}}
+resources:
+  - ../../base
+images:
+  - name: {{image}}
+    newTag: {{local_tag}}
+secretGenerator:
+  - name: {{service_name}}-secrets
+    literals:
+      - DATABASE_URL=sqlite:////tmp/app.db
+      - ADMIN_TOKEN=local-dev-only-token
+patches:
+  - target:
+      kind: Deployment
+      name: {{service_name}}
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: {{service_name}}
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 1
+  - target:
+      kind: ConfigMap
+      name: {{service_name}}-config
+    patch: |-
+      - op: replace
+        path: /data/SEED_DEMO_DATA
+        value: "true"
+      - op: replace
+        path: /data/WEB_CONCURRENCY
+        value: "1"

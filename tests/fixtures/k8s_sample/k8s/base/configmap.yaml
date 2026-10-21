@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-service-config
+data:
+  LOG_LEVEL: INFO
+  DB_PATH: /tmp/inventory.db

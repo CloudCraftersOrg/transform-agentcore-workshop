@@ -1,0 +1,8 @@
+{
+  "name": "transform-workshop-agentcore-cli",
+  "private": true,
+  "description": "Repo-local, version-pinned AgentCore CLI used by deploy/*.sh",
+  "dependencies": {
+    "@aws/agentcore": "0.31.1"
+  }
+}

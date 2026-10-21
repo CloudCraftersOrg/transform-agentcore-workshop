@@ -1,0 +1,145 @@
+{
+  "run_id": "20261020-141613-1592",
+  "created_at": "2026-10-20T19:16:13+00:00",
+  "client": "local",
+  "requirements_file": "requirements/migration-requirements.md",
+  "options": {
+    "live_aws": false,
+    "live_deploy": true,
+    "live_pricing": false,
+    "kind_cluster": "transform-workshop",
+    "simulate_drift": true
+  },
+  "stages": {
+    "discovery": {
+      "status": "approved",
+      "attempts": 1,
+      "summary": "Replatform is the right strategy: fix critical security flaws (SQL injection, hard\u2011coded secrets, unauthenticated writes) and high reliability risks (SQLite on local disk, single AZ, no backups) while keeping the Flask codebase. Readiness is 50 % \u2013 targeted changes to configuration, logging, health checks and the data layer are required before moving to EKS+RDS.",
+      "metrics": {
+        "model": "us.amazon.nova-2-lite-v1:0",
+        "latency_s": 9.8,
+        "input_tokens": 13238,
+        "output_tokens": 1168,
+        "cycles": 3,
+        "stop_reason": "tool_use",
+        "submitted": true
+      },
+      "error": "",
+      "feedback": [],
+      "updated_at": "2026-10-20T19:16:23+00:00",
+      "client": "local"
+    },
+    "requirements": {
+      "status": "approved",
+      "attempts": 2,
+      "summary": "Revised: Applied reviewer feedback to assume dev/test is out of scope and size for current load with headroom for 3x growth. Resolved open questions Q-01 and Q-02; Q-03 remains open. Spec validated and ready for review.",
+      "metrics": {
+        "model": "us.amazon.nova-2-lite-v1:0",
+        "latency_s": 11.2,
+        "input_tokens": 51599,
+        "output_tokens": 593,
+        "cycles": 7,
+        "stop_reason": "tool_use",
+        "submitted": true,
+        "resumed": false
+      },
+      "error": "",
+      "feedback": [
+        {
+          "attempt": 2,
+          "text": "Assume dev/test is out of scope for now; size for today's traffic but keep headroom for 3x growth.",
+          "at": "2026-10-20T19:16:41+00:00"
+        }
+      ],
+      "updated_at": "2026-10-20T19:16:53+00:00",
+      "client": "local"
+    },
+    "modernization": {
+      "status": "approved",
+      "attempts": 1,
+      "summary": "Successfully ported the legacy inventory monolith to a containerized 12-factor microservice. All critical API endpoints (/api/items, /api/items/{id}, /api/orders) have been preserved with exact JSON contract parity for warehouse scanners (FR1). Fixed SQL injection vulnerability (LF-01/SEC5) by using bound parameters with LOWER() for case-insensitive search, implemented atomic conditional UPDATE to prevent overselling (FR4), and added input validation. The nightly report runs as a Kubernetes CronJob instead of local disk (FR3). All platform concerns (probes, non-root containers, read-only FS, secrets management, autoscaling) are handled by the curated pattern with Kubernetes manifests passing policy baseline. Service is ready for deployment with PostgreSQL/RDS.",
+      "metrics": {
+        "model": "deepseek.v3.2",
+        "input_tokens": 85919,
+        "output_tokens": 3238,
+        "cycles": 9,
+        "passes": 1,
+        "submitted": true,
+        "latency_s": 57.0,
+        "time_budget_s": 150,
+        "test_runs": 1,
+        "tests_passed": true,
+        "manifests": "pass"
+      },
+      "error": "",
+      "feedback": [],
+      "updated_at": "2026-10-20T19:17:50+00:00",
+      "client": "local"
+    },
+    "terraform": {
+      "status": "approved",
+      "attempts": 1,
+      "summary": "Built a prod-ready EKS cluster with Graviton nodes (arm64) in us-west-2, a private RDS PostgreSQL 16 instance (multi-AZ, encrypted, 7-day backups), and an ECR repository for the inventory-service image. The node group scales from 2 to 4 nodes on CPU load, meeting the 2-6 replica range and 99.9% availability SLO. All security requirements are met: Secrets Manager, encrypted storage, non-root containers, read-only root FS, and a PodDisruptionBudget.",
+      "metrics": {
+        "model": "us.amazon.nova-2-lite-v1:0",
+        "latency_s": 17.1,
+        "input_tokens": 31277,
+        "output_tokens": 966,
+        "cycles": 6,
+        "stop_reason": "tool_use",
+        "submitted": true,
+        "runs": 1,
+        "validate_attempts": 2,
+        "validation_level": "terraform",
+        "valid": true
+      },
+      "error": "",
+      "feedback": [],
+      "updated_at": "2026-10-20T19:18:07+00:00",
+      "client": "local"
+    },
+    "k8s_validation": {
+      "status": "approved",
+      "attempts": 1,
+      "summary": "Applied fixes for missing resource limits, readOnlyRootFilesystem, image tag pinning, and added pdb to base. All kubeconform and policy checks now pass. Deployed to kind with successful smoke tests.",
+      "metrics": {
+        "model": "us.amazon.nova-2-lite-v1:0",
+        "latency_s": 15.8,
+        "input_tokens": 36563,
+        "output_tokens": 792,
+        "cycles": 9,
+        "stop_reason": "end_turn",
+        "submitted": true,
+        "llm_latency_s": 15.4,
+        "tool_calls": 8,
+        "check_runs": 2,
+        "deploys": 1,
+        "deploy_s": 3.7,
+        "failing_before": 4,
+        "failing_after": 0
+      },
+      "error": "",
+      "feedback": [],
+      "updated_at": "2026-10-20T19:18:23+00:00",
+      "client": "local"
+    },
+    "finops": {
+      "status": "approved",
+      "attempts": 1,
+      "summary": "The legacy EC2 monolith costs USD 71.89/month. The EKS + RDS target as designed costs USD 622.88/month (8.7x today) but the optimized version costs USD 207.57/month, staying within the USD 450/month budget (headroom USD 242.43). The increase over today is USD 135.68/month (2.9x) and buys HA, managed PostgreSQL with automated backups, and autoscaling for the 3x traffic growth.",
+      "metrics": {
+        "model": "us.amazon.nova-2-lite-v1:0",
+        "latency_s": 10.9,
+        "input_tokens": 24187,
+        "output_tokens": 1003,
+        "cycles": 6,
+        "stop_reason": "end_turn",
+        "submitted": true
+      },
+      "error": "",
+      "feedback": [],
+      "updated_at": "2026-10-20T19:18:34+00:00",
+      "client": "local"
+    }
+  }
+}

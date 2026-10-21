@@ -1,0 +1,4388 @@
+{
+ "generated": {
+  "by": "extract_module_inputs.py",
+  "date": "2026-10-19",
+  "aws_provider": "6.69.1"
+ },
+ "modules": {
+  "terraform-aws-modules/vpc/aws": {
+   "constraint": "~> 6.0",
+   "version": "6.7.3",
+   "inputs": {
+    "amazon_side_asn": {
+     "type": "string",
+     "required": false,
+     "description": "The Autonomous System Number (ASN) for the Amazon side of the gateway. By default the virtual private gateway is created with the current default Amazon ASN",
+     "default": "64512"
+    },
+    "azs": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of availability zones names or ids in the region",
+     "default": []
+    },
+    "cidr": {
+     "type": "string",
+     "required": false,
+     "description": "(Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length` & `ipv4_ipam_pool_id`",
+     "default": "10.0.0.0/16"
+    },
+    "create_database_internet_gateway_route": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if an internet gateway route for public database access should be created",
+     "default": false
+    },
+    "create_database_nat_gateway_route": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if a nat gateway route should be created to give internet access to the database subnets",
+     "default": false
+    },
+    "create_database_subnet_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if database subnet group should be created (n.b. database_subnets must also be set)",
+     "default": true
+    },
+    "create_database_subnet_route_table": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if separate route table for database should be created",
+     "default": false
+    },
+    "create_egress_only_igw": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if an Egress Only Internet Gateway is created and its related routes",
+     "default": true
+    },
+    "create_elasticache_subnet_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if elasticache subnet group should be created",
+     "default": true
+    },
+    "create_elasticache_subnet_route_table": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if separate route table for elasticache should be created",
+     "default": false
+    },
+    "create_flow_log_cloudwatch_iam_role": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to create IAM role for VPC Flow Logs",
+     "default": false
+    },
+    "create_flow_log_cloudwatch_log_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to create CloudWatch log group for VPC Flow Logs",
+     "default": false
+    },
+    "create_igw": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if an Internet Gateway is created for public subnets and the related routes that connect them",
+     "default": true
+    },
+    "create_multiple_intra_route_tables": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create a separate route table for each intra subnet. Default: `false`",
+     "default": false
+    },
+    "create_multiple_public_route_tables": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create a separate route table for each public subnet. Default: `false`",
+     "default": false
+    },
+    "create_private_nat_gateway_route": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if a nat gateway route should be created to give internet access to the private subnets",
+     "default": true
+    },
+    "create_redshift_subnet_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if redshift subnet group should be created",
+     "default": true
+    },
+    "create_redshift_subnet_route_table": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if separate route table for redshift should be created",
+     "default": false
+    },
+    "create_vpc": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if VPC should be created (it affects almost all resources)",
+     "default": true
+    },
+    "customer_gateway_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the Customer Gateway",
+     "default": {}
+    },
+    "customer_gateways": {
+     "type": "map(map(any))",
+     "required": false,
+     "description": "Maps of Customer Gateway's attributes (BGP ASN and Gateway's Internet-routable external IP address)",
+     "default": {}
+    },
+    "customer_owned_ipv4_pool": {
+     "type": "string",
+     "required": false,
+     "description": "The customer owned IPv4 address pool. Typically used with the `map_customer_owned_ip_on_launch` argument. The `outpost_arn` argument must be specified when conf",
+     "default": null
+    },
+    "database_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the database subnets network ACL",
+     "default": {}
+    },
+    "database_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for database subnets",
+     "default": false
+    },
+    "database_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Database subnets inbound network ACL rules",
+     "default": "(list, 121 chars)"
+    },
+    "database_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Database subnets outbound network ACL rules",
+     "default": "(list, 121 chars)"
+    },
+    "database_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the database route tables",
+     "default": {}
+    },
+    "database_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "database_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "database_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "database_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "database_subnet_group_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name of database subnet group",
+     "default": null
+    },
+    "database_subnet_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the database subnet group",
+     "default": {}
+    },
+    "database_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "database_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 database subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
+     "default": []
+    },
+    "database_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on database subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "database_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "database_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to database subnets name",
+     "default": "db"
+    },
+    "database_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the database subnets",
+     "default": {}
+    },
+    "database_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of database subnets inside the VPC",
+     "default": []
+    },
+    "default_network_acl_egress": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "List of maps of egress rules to set on the Default Network ACL",
+     "default": "(list, 224 chars)"
+    },
+    "default_network_acl_ingress": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "List of maps of ingress rules to set on the Default Network ACL",
+     "default": "(list, 224 chars)"
+    },
+    "default_network_acl_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to be used on the Default Network ACL",
+     "default": null
+    },
+    "default_network_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the Default Network ACL",
+     "default": {}
+    },
+    "default_route_table_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to be used on the default route table",
+     "default": null
+    },
+    "default_route_table_propagating_vgws": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of virtual gateways for propagation",
+     "default": []
+    },
+    "default_route_table_routes": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Configuration block of routes. See https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/default_route_table#route",
+     "default": []
+    },
+    "default_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the default route table",
+     "default": {}
+    },
+    "default_security_group_egress": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "List of maps of egress rules to set on the default security group",
+     "default": []
+    },
+    "default_security_group_ingress": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "List of maps of ingress rules to set on the default security group",
+     "default": []
+    },
+    "default_security_group_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to be used on the default security group",
+     "default": null
+    },
+    "default_security_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the default security group",
+     "default": {}
+    },
+    "default_vpc_enable_dns_hostnames": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to enable DNS hostnames in the Default VPC",
+     "default": true
+    },
+    "default_vpc_enable_dns_support": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to enable DNS support in the Default VPC",
+     "default": true
+    },
+    "default_vpc_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to be used on the Default VPC",
+     "default": null
+    },
+    "default_vpc_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the Default VPC",
+     "default": {}
+    },
+    "dhcp_options_domain_name": {
+     "type": "string",
+     "required": false,
+     "description": "Specifies DNS name for DHCP options set (requires enable_dhcp_options set to true)",
+     "default": ""
+    },
+    "dhcp_options_domain_name_servers": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Specify a list of DNS server addresses for DHCP options set, default to AWS provided (requires enable_dhcp_options set to true)",
+     "default": [
+      "AmazonProvidedDNS"
+     ]
+    },
+    "dhcp_options_ipv6_address_preferred_lease_time": {
+     "type": "number",
+     "required": false,
+     "description": "How frequently, in seconds, a running instance with an IPv6 assigned to it goes through DHCPv6 lease renewal (requires enable_dhcp_options set to true)",
+     "default": null
+    },
+    "dhcp_options_netbios_name_servers": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Specify a list of netbios servers for DHCP options set (requires enable_dhcp_options set to true)",
+     "default": []
+    },
+    "dhcp_options_netbios_node_type": {
+     "type": "string",
+     "required": false,
+     "description": "Specify netbios node_type for DHCP options set (requires enable_dhcp_options set to true)",
+     "default": ""
+    },
+    "dhcp_options_ntp_servers": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Specify a list of NTP servers for DHCP options set (requires enable_dhcp_options set to true)",
+     "default": []
+    },
+    "dhcp_options_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the DHCP option set (requires enable_dhcp_options set to true)",
+     "default": {}
+    },
+    "elasticache_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the elasticache subnets network ACL",
+     "default": {}
+    },
+    "elasticache_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for elasticache subnets",
+     "default": false
+    },
+    "elasticache_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Elasticache subnets inbound network ACL rules",
+     "default": "(list, 121 chars)"
+    },
+    "elasticache_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Elasticache subnets outbound network ACL rules",
+     "default": "(list, 121 chars)"
+    },
+    "elasticache_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the elasticache route tables",
+     "default": {}
+    },
+    "elasticache_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "elasticache_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "elasticache_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "elasticache_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "elasticache_subnet_group_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name of elasticache subnet group",
+     "default": null
+    },
+    "elasticache_subnet_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the elasticache subnet group",
+     "default": {}
+    },
+    "elasticache_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "elasticache_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 elasticache subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet lis",
+     "default": []
+    },
+    "elasticache_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on elasticache subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "elasticache_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "elasticache_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to elasticache subnets name",
+     "default": "elasticache"
+    },
+    "elasticache_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the elasticache subnets",
+     "default": {}
+    },
+    "elasticache_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of elasticache subnets inside the VPC",
+     "default": []
+    },
+    "enable_dhcp_options": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want to specify a DHCP options set with a custom domain name, DNS servers, NTP servers, netbios servers, and/or netbios server type",
+     "default": false
+    },
+    "enable_dns_hostnames": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to enable DNS hostnames in the VPC",
+     "default": true
+    },
+    "enable_dns_support": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to enable DNS support in the VPC",
+     "default": true
+    },
+    "enable_flow_log": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether or not to enable VPC Flow Logs",
+     "default": false
+    },
+    "enable_ipv6": {
+     "type": "bool",
+     "required": false,
+     "description": "Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or the size of the CIDR block",
+     "default": false
+    },
+    "enable_nat_gateway": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want to provision NAT Gateways for each of your private networks",
+     "default": false
+    },
+    "enable_network_address_usage_metrics": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether network address usage metrics are enabled for the VPC",
+     "default": null
+    },
+    "enable_public_redshift": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if redshift should have public routing table",
+     "default": false
+    },
+    "enable_vpn_gateway": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want to create a new VPN Gateway resource and attach it to the VPC",
+     "default": false
+    },
+    "external_nat_ip_ids": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of EIP IDs to be assigned to the NAT Gateways (used in combination with reuse_nat_ips)",
+     "default": []
+    },
+    "external_nat_ips": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of EIPs to be used for `nat_public_ips` output (used in combination with reuse_nat_ips and external_nat_ip_ids)",
+     "default": []
+    },
+    "flow_log_cloudwatch_iam_role_arn": {
+     "type": "string",
+     "required": false,
+     "description": "The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group. When flow_log_destination_arn is set to ARN of Cloudwatch Logs, this argu",
+     "default": ""
+    },
+    "flow_log_cloudwatch_iam_role_conditions": {
+     "type": "list(object({test = string, variable = string, values = list(string)}))",
+     "required": false,
+     "description": "Additional conditions of the CloudWatch role assumption policy",
+     "default": [],
+     "container": "list",
+     "attributes": [
+      "test",
+      "variable",
+      "values"
+     ]
+    },
+    "flow_log_cloudwatch_log_group_class": {
+     "type": "string",
+     "required": false,
+     "description": "Specified the log class of the log group. Possible values are: `STANDARD` or `INFREQUENT_ACCESS`",
+     "default": null
+    },
+    "flow_log_cloudwatch_log_group_kms_key_id": {
+     "type": "string",
+     "required": false,
+     "description": "The ARN of the KMS Key to use when encrypting log data for VPC flow logs",
+     "default": null
+    },
+    "flow_log_cloudwatch_log_group_name_prefix": {
+     "type": "string",
+     "required": false,
+     "description": "Specifies the name prefix of CloudWatch Log Group for VPC flow logs",
+     "default": "/aws/vpc-flow-log/"
+    },
+    "flow_log_cloudwatch_log_group_name_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Specifies the name suffix of CloudWatch Log Group for VPC flow logs",
+     "default": ""
+    },
+    "flow_log_cloudwatch_log_group_retention_in_days": {
+     "type": "number",
+     "required": false,
+     "description": "Specifies the number of days you want to retain log events in the specified log group for VPC flow logs",
+     "default": null
+    },
+    "flow_log_cloudwatch_log_group_skip_destroy": {
+     "type": "bool",
+     "required": false,
+     "description": "Set to true if you do not wish the log group (and any logs it may contain) to be deleted at destroy time, and instead just remove the log group from the Terrafo",
+     "default": false
+    },
+    "flow_log_deliver_cross_account_role": {
+     "type": "string",
+     "required": false,
+     "description": "(Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.",
+     "default": null
+    },
+    "flow_log_destination_arn": {
+     "type": "string",
+     "required": false,
+     "description": "The ARN of the CloudWatch log group or S3 bucket where VPC Flow Logs will be pushed. If this ARN is a S3 bucket the appropriate permissions need to be set on th",
+     "default": ""
+    },
+    "flow_log_destination_type": {
+     "type": "string",
+     "required": false,
+     "description": "Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`",
+     "default": "cloud-watch-logs"
+    },
+    "flow_log_file_format": {
+     "type": "string",
+     "required": false,
+     "description": "(Optional) The format for the flow log. Valid values: `plain-text`, `parquet`",
+     "default": null
+    },
+    "flow_log_hive_compatible_partitions": {
+     "type": "bool",
+     "required": false,
+     "description": "(Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3",
+     "default": false
+    },
+    "flow_log_log_format": {
+     "type": "string",
+     "required": false,
+     "description": "The fields to include in the flow log record, in the order in which they should appear",
+     "default": null
+    },
+    "flow_log_max_aggregation_interval": {
+     "type": "number",
+     "required": false,
+     "description": "The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. Valid Values: `60` seconds (1 minute) or `600` se",
+     "default": 600
+    },
+    "flow_log_per_hour_partition": {
+     "type": "bool",
+     "required": false,
+     "description": "(Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries",
+     "default": false
+    },
+    "flow_log_traffic_type": {
+     "type": "string",
+     "required": false,
+     "description": "The type of traffic to capture. Valid values: `ACCEPT`, `REJECT`, `ALL`",
+     "default": "ALL"
+    },
+    "igw_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the internet gateway",
+     "default": {}
+    },
+    "instance_tenancy": {
+     "type": "string",
+     "required": false,
+     "description": "A tenancy option for instances launched into the VPC",
+     "default": "default"
+    },
+    "intra_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the intra subnets network ACL",
+     "default": {}
+    },
+    "intra_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for intra subnets",
+     "default": false
+    },
+    "intra_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Intra subnets inbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "intra_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Intra subnets outbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "intra_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the intra route tables",
+     "default": {}
+    },
+    "intra_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "intra_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "intra_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "intra_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "intra_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "intra_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 intra subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
+     "default": []
+    },
+    "intra_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on intra subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "intra_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "intra_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to intra subnets name",
+     "default": "intra"
+    },
+    "intra_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the intra subnets",
+     "default": {}
+    },
+    "intra_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of intra subnets inside the VPC",
+     "default": []
+    },
+    "ipv4_ipam_pool_id": {
+     "type": "string",
+     "required": false,
+     "description": "(Optional) The ID of an IPv4 IPAM pool you want to use for allocating this VPC's CIDR",
+     "default": null
+    },
+    "ipv4_netmask_length": {
+     "type": "number",
+     "required": false,
+     "description": "(Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a ipv4_ipam_pool_id",
+     "default": null
+    },
+    "ipv6_cidr": {
+     "type": "string",
+     "required": false,
+     "description": "(Optional) IPv6 CIDR block to request from an IPAM Pool. Can be set explicitly or derived from IPAM using `ipv6_netmask_length`",
+     "default": null
+    },
+    "ipv6_cidr_block_network_border_group": {
+     "type": "string",
+     "required": false,
+     "description": "By default when an IPv6 CIDR is assigned to a VPC a default ipv6_cidr_block_network_border_group will be set to the region of the VPC. This can be changed to re",
+     "default": null
+    },
+    "ipv6_ipam_pool_id": {
+     "type": "string",
+     "required": false,
+     "description": "(Optional) IPAM Pool ID for a IPv6 pool. Conflicts with `assign_generated_ipv6_cidr_block`",
+     "default": null
+    },
+    "ipv6_netmask_length": {
+     "type": "number",
+     "required": false,
+     "description": "(Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6_cidr_block`. This can be omitted if IPAM pool as a `allocation_default_netmask_length`",
+     "default": null
+    },
+    "manage_default_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to adopt and manage Default Network ACL",
+     "default": true
+    },
+    "manage_default_route_table": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to manage default route table",
+     "default": true
+    },
+    "manage_default_security_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to adopt and manage default security group",
+     "default": true
+    },
+    "manage_default_vpc": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true to adopt and manage Default VPC",
+     "default": false
+    },
+    "map_customer_owned_ip_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpo",
+     "default": false
+    },
+    "map_public_ip_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is `false`",
+     "default": false
+    },
+    "name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to be used on all the resources as identifier",
+     "default": ""
+    },
+    "nat_eip_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the NAT EIP",
+     "default": {}
+    },
+    "nat_gateway_destination_cidr_block": {
+     "type": "string",
+     "required": false,
+     "description": "Used to pass a custom destination route for private NAT Gateway. If not specified, the default 0.0.0.0/0 is used as a destination route",
+     "default": "0.0.0.0/0"
+    },
+    "nat_gateway_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the NAT gateways",
+     "default": {}
+    },
+    "one_nat_gateway_per_az": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want only one NAT Gateway per availability zone. Requires `var.azs` to be set, and the number of `public_subnets` created to be greater th",
+     "default": false
+    },
+    "outpost_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the outpost subnets network ACL",
+     "default": {}
+    },
+    "outpost_arn": {
+     "type": "string",
+     "required": false,
+     "description": "ARN of Outpost you want to create a subnet in",
+     "default": null
+    },
+    "outpost_az": {
+     "type": "string",
+     "required": false,
+     "description": "AZ where Outpost is anchored",
+     "default": null
+    },
+    "outpost_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for outpost subnets",
+     "default": false
+    },
+    "outpost_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Outpost subnets inbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "outpost_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Outpost subnets outbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "outpost_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "outpost_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "outpost_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "outpost_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "outpost_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "outpost_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 outpost subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
+     "default": []
+    },
+    "outpost_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on outpost subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "outpost_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "outpost_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to outpost subnets name",
+     "default": "outpost"
+    },
+    "outpost_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the outpost subnets",
+     "default": {}
+    },
+    "outpost_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of outpost subnets inside the VPC",
+     "default": []
+    },
+    "private_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the private subnets network ACL",
+     "default": {}
+    },
+    "private_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for private subnets",
+     "default": false
+    },
+    "private_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Private subnets inbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "private_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Private subnets outbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "private_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the private route tables",
+     "default": {}
+    },
+    "private_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "private_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "private_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "private_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "private_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "private_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 private subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
+     "default": []
+    },
+    "private_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on private subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "private_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "private_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to private subnets name",
+     "default": "private"
+    },
+    "private_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the private subnets",
+     "default": {}
+    },
+    "private_subnet_tags_per_az": {
+     "type": "map(map(string))",
+     "required": false,
+     "description": "Additional tags for the private subnets where the primary key is the AZ",
+     "default": {}
+    },
+    "private_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of private subnets inside the VPC",
+     "default": []
+    },
+    "propagate_intra_route_tables_vgw": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want route table propagation",
+     "default": false
+    },
+    "propagate_private_route_tables_vgw": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want route table propagation",
+     "default": false
+    },
+    "propagate_public_route_tables_vgw": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want route table propagation",
+     "default": false
+    },
+    "public_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the public subnets network ACL",
+     "default": {}
+    },
+    "public_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for public subnets",
+     "default": false
+    },
+    "public_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Public subnets inbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "public_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Public subnets outbound network ACLs",
+     "default": "(list, 121 chars)"
+    },
+    "public_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the public route tables",
+     "default": {}
+    },
+    "public_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "public_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "public_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "public_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "public_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "public_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 public subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
+     "default": []
+    },
+    "public_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on public subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "public_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "public_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to public subnets name",
+     "default": "public"
+    },
+    "public_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the public subnets",
+     "default": {}
+    },
+    "public_subnet_tags_per_az": {
+     "type": "map(map(string))",
+     "required": false,
+     "description": "Additional tags for the public subnets where the primary key is the AZ",
+     "default": {}
+    },
+    "public_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of public subnets inside the VPC",
+     "default": []
+    },
+    "putin_khuylo": {
+     "type": "bool",
+     "required": false,
+     "description": "Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? More info: https://en.wikipedia.org/wiki/Putin_khuylo!",
+     "default": true
+    },
+    "redshift_acl_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the redshift subnets network ACL",
+     "default": {}
+    },
+    "redshift_dedicated_network_acl": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to use dedicated network ACL (not default) and custom rules for redshift subnets",
+     "default": false
+    },
+    "redshift_inbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Redshift subnets inbound network ACL rules",
+     "default": "(list, 121 chars)"
+    },
+    "redshift_outbound_acl_rules": {
+     "type": "list(map(string))",
+     "required": false,
+     "description": "Redshift subnets outbound network ACL rules",
+     "default": "(list, 121 chars)"
+    },
+    "redshift_route_table_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the redshift route tables",
+     "default": {}
+    },
+    "redshift_subnet_assign_ipv6_address_on_creation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specify true to indicate that network interfaces created in the specified subnet should be assigned an IPv6 address. Default is `false`",
+     "default": false
+    },
+    "redshift_subnet_enable_dns64": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default",
+     "default": true
+    },
+    "redshift_subnet_enable_resource_name_dns_a_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
+     "default": false
+    },
+    "redshift_subnet_enable_resource_name_dns_aaaa_record_on_launch": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `true`",
+     "default": true
+    },
+    "redshift_subnet_group_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name of redshift subnet group",
+     "default": null
+    },
+    "redshift_subnet_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the redshift subnet group",
+     "default": {}
+    },
+    "redshift_subnet_ipv6_native": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether to create an IPv6-only subnet. Default: `false`",
+     "default": false
+    },
+    "redshift_subnet_ipv6_prefixes": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Assigns IPv6 redshift subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
+     "default": []
+    },
+    "redshift_subnet_names": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Explicit values to use in the Name tag on redshift subnets. If empty, Name tags are generated",
+     "default": []
+    },
+    "redshift_subnet_private_dns_hostname_type_on_launch": {
+     "type": "string",
+     "required": false,
+     "description": "The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-sta",
+     "default": null
+    },
+    "redshift_subnet_suffix": {
+     "type": "string",
+     "required": false,
+     "description": "Suffix to append to redshift subnets name",
+     "default": "redshift"
+    },
+    "redshift_subnet_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the redshift subnets",
+     "default": {}
+    },
+    "redshift_subnets": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of redshift subnets inside the VPC",
+     "default": []
+    },
+    "region": {
+     "type": "string",
+     "required": false,
+     "description": "Region where the resource(s) will be managed. Defaults to the Region set in the provider configuration",
+     "default": null
+    },
+    "reuse_nat_ips": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you don't want EIPs to be created for your NAT Gateways and will instead pass them in via the 'external_nat_ip_ids' variable",
+     "default": false
+    },
+    "secondary_cidr_blocks": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of secondary CIDR blocks to associate with the VPC to extend the IP Address pool",
+     "default": []
+    },
+    "single_nat_gateway": {
+     "type": "bool",
+     "required": false,
+     "description": "Should be true if you want to provision a single shared NAT Gateway across all of your private networks",
+     "default": false
+    },
+    "tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of tags to add to all resources",
+     "default": {}
+    },
+    "use_ipam_pool": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether IPAM pool is used for CIDR allocation",
+     "default": false
+    },
+    "vpc_block_public_access_exclusions": {
+     "type": "map(any)",
+     "required": false,
+     "description": "A map of VPC block public access exclusions",
+     "default": {}
+    },
+    "vpc_block_public_access_options": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of VPC block public access options",
+     "default": {}
+    },
+    "vpc_flow_log_iam_policy_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name of the IAM policy",
+     "default": "vpc-flow-log-to-cloudwatch"
+    },
+    "vpc_flow_log_iam_policy_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether the name of the IAM policy (`vpc_flow_log_iam_policy_name`) is used as a prefix",
+     "default": true
+    },
+    "vpc_flow_log_iam_role_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to use on the VPC Flow Log IAM role created",
+     "default": "vpc-flow-log-role"
+    },
+    "vpc_flow_log_iam_role_path": {
+     "type": "string",
+     "required": false,
+     "description": "The path for the VPC Flow Log IAM Role",
+     "default": null
+    },
+    "vpc_flow_log_iam_role_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether the IAM role name (`vpc_flow_log_iam_role_name_name`) is used as a prefix",
+     "default": true
+    },
+    "vpc_flow_log_permissions_boundary": {
+     "type": "string",
+     "required": false,
+     "description": "The ARN of the Permissions Boundary for the VPC Flow Log IAM Role",
+     "default": null
+    },
+    "vpc_flow_log_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the VPC Flow Logs",
+     "default": {}
+    },
+    "vpc_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the VPC",
+     "default": {}
+    },
+    "vpn_gateway_az": {
+     "type": "string",
+     "required": false,
+     "description": "The Availability Zone for the VPN Gateway",
+     "default": null
+    },
+    "vpn_gateway_id": {
+     "type": "string",
+     "required": false,
+     "description": "ID of VPN Gateway to attach to the VPC",
+     "default": ""
+    },
+    "vpn_gateway_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional tags for the VPN gateway",
+     "default": {}
+    }
+   },
+   "outputs": [
+    "azs",
+    "cgw_arns",
+    "cgw_ids",
+    "database_internet_gateway_route_id",
+    "database_ipv6_egress_route_id",
+    "database_nat_gateway_route_ids",
+    "database_network_acl_arn",
+    "database_network_acl_id",
+    "database_route_table_association_ids",
+    "database_route_table_ids",
+    "database_subnet_arns",
+    "database_subnet_group",
+    "database_subnet_group_name",
+    "database_subnet_objects",
+    "database_subnets",
+    "database_subnets_cidr_blocks",
+    "database_subnets_ipv6_cidr_blocks",
+    "default_network_acl_id",
+    "default_route_table_id",
+    "default_security_group_id",
+    "default_vpc_arn",
+    "default_vpc_cidr_block",
+    "default_vpc_default_network_acl_id",
+    "default_vpc_default_route_table_id",
+    "default_vpc_default_security_group_id",
+    "default_vpc_enable_dns_hostnames",
+    "default_vpc_enable_dns_support",
+    "default_vpc_id",
+    "default_vpc_instance_tenancy",
+    "default_vpc_main_route_table_id",
+    "dhcp_options_id",
+    "egress_only_internet_gateway_id",
+    "elasticache_network_acl_arn",
+    "elasticache_network_acl_id",
+    "elasticache_route_table_association_ids",
+    "elasticache_route_table_ids",
+    "elasticache_subnet_arns",
+    "elasticache_subnet_group",
+    "elasticache_subnet_group_name",
+    "elasticache_subnet_objects",
+    "elasticache_subnets",
+    "elasticache_subnets_cidr_blocks",
+    "elasticache_subnets_ipv6_cidr_blocks",
+    "igw_arn",
+    "igw_id",
+    "intra_network_acl_arn",
+    "intra_network_acl_id",
+    "intra_route_table_association_ids",
+    "intra_route_table_ids",
+    "intra_subnet_arns",
+    "intra_subnet_objects",
+    "intra_subnets",
+    "intra_subnets_cidr_blocks",
+    "intra_subnets_ipv6_cidr_blocks",
+    "name",
+    "nat_ids",
+    "nat_public_ips",
+    "natgw_ids",
+    "natgw_interface_ids",
+    "outpost_network_acl_arn",
+    "outpost_network_acl_id",
+    "outpost_subnet_arns",
+    "outpost_subnet_objects",
+    "outpost_subnets",
+    "outpost_subnets_cidr_blocks",
+    "outpost_subnets_ipv6_cidr_blocks",
+    "private_ipv6_egress_route_ids",
+    "private_nat_gateway_route_ids",
+    "private_network_acl_arn",
+    "private_network_acl_id",
+    "private_route_table_association_ids",
+    "private_route_table_ids",
+    "private_subnet_arns",
+    "private_subnet_objects",
+    "private_subnets",
+    "private_subnets_cidr_blocks",
+    "private_subnets_ipv6_cidr_blocks",
+    "public_internet_gateway_ipv6_route_id",
+    "public_internet_gateway_route_id",
+    "public_network_acl_arn",
+    "public_network_acl_id",
+    "public_route_table_association_ids",
+    "public_route_table_ids",
+    "public_subnet_arns",
+    "public_subnet_objects",
+    "public_subnets",
+    "public_subnets_cidr_blocks",
+    "public_subnets_ipv6_cidr_blocks",
+    "redshift_network_acl_arn",
+    "redshift_network_acl_id",
+    "redshift_public_route_table_association_ids",
+    "redshift_route_table_association_ids",
+    "redshift_route_table_ids",
+    "redshift_subnet_arns",
+    "redshift_subnet_group",
+    "redshift_subnet_objects",
+    "redshift_subnets",
+    "redshift_subnets_cidr_blocks",
+    "redshift_subnets_ipv6_cidr_blocks",
+    "this_customer_gateway",
+    "vgw_arn",
+    "vgw_id",
+    "vpc_arn",
+    "vpc_block_public_access_exclusions",
+    "vpc_cidr_block",
+    "vpc_enable_dns_hostnames",
+    "vpc_enable_dns_support",
+    "vpc_flow_log_cloudwatch_iam_role_arn",
+    "vpc_flow_log_deliver_cross_account_role",
+    "vpc_flow_log_destination_arn",
+    "vpc_flow_log_destination_type",
+    "vpc_flow_log_id",
+    "vpc_id",
+    "vpc_instance_tenancy",
+    "vpc_ipv6_association_id",
+    "vpc_ipv6_cidr_block",
+    "vpc_main_route_table_id",
+    "vpc_owner_id",
+    "vpc_secondary_cidr_blocks"
+   ]
+  },
+  "terraform-aws-modules/eks/aws": {
+   "constraint": "~> 21.0",
+   "version": "21.29.0",
+   "inputs": {
+    "access_entries": {
+     "type": "map(object({kubernetes_groups = optional(list(string)), principal_arn = string, type = optional(string, \"STANDARD\"), user_name = optional(string), tags = optional(map(string), {}), policy_associations = optional(map(object({policy_arn = string, access_scope = object({namespaces = optional(list(string)), type = string})})), {})}))",
+     "required": false,
+     "description": "Map of access entries to add to the cluster",
+     "default": {},
+     "container": "map",
+     "attributes": [
+      "kubernetes_groups",
+      "principal_arn",
+      "type",
+      "user_name",
+      "tags",
+      "policy_associations"
+     ]
+    },
+    "additional_security_group_ids": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of additional, externally created security group IDs to attach to the cluster control plane",
+     "default": []
+    },
+    "addons": {
+     "type": "map(object({name = optional(string), before_compute = optional(bool, false), most_recent = optional(bool, true), addon_version = optional(string), configuration_values = optional(string), namespace_config = optional(object({namespace = string})), pod_identity_association = optional(list(object({role_arn = string, service_account = string}))), preserve = optional(bool, true), resolve_conflicts_on_create = optional(string, \"NONE\"), resolve_conflicts_on_update = optional(string, \"OVERWRITE\"), service_account_role_arn = optional(string), timeouts = optional(object({create = optional(string), update = optional(string), delete = optional(string)}), {}), tags = optional(map(string), {})}))",
+     "required": false,
+     "description": "Map of cluster addon configurations to enable for the cluster. Addon name can be the map keys or set with `name`",
+     "default": null,
+     "container": "map",
+     "attributes": [
+      "name",
+      "before_compute",
+      "most_recent",
+      "addon_version",
+      "configuration_values",
+      "namespace_config",
+      "pod_identity_association",
+      "preserve",
+      "resolve_conflicts_on_create",
+      "resolve_conflicts_on_update",
+      "service_account_role_arn",
+      "timeouts",
+      "tags"
+     ]
+    },
+    "addons_timeouts": {
+     "type": "object({create = optional(string), update = optional(string), delete = optional(string)})",
+     "required": false,
+     "description": "Create, update, and delete timeout configurations for the cluster addons",
+     "default": {},
+     "container": "object",
+     "attributes": [
+      "create",
+      "update",
+      "delete"
+     ]
+    },
+    "attach_encryption_policy": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether or not to attach an additional policy for the cluster IAM role to utilize the encryption key provided",
+     "default": true
+    },
+    "authentication_mode": {
+     "type": "string",
+     "required": false,
+     "description": "The authentication mode for the cluster. Valid values are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`",
+     "default": "API_AND_CONFIG_MAP"
+    },
+    "cloudwatch_log_group_class": {
+     "type": "string",
+     "required": false,
+     "description": "Specified the log class of the log group. Possible values are: `STANDARD` or `INFREQUENT_ACCESS`",
+     "default": null
+    },
+    "cloudwatch_log_group_kms_key_id": {
+     "type": "string",
+     "required": false,
+     "description": "If a KMS Key ARN is set, this key will be used to encrypt the corresponding log group. Please be sure that the KMS Key has an appropriate key policy (https://do",
+     "default": null
+    },
+    "cloudwatch_log_group_retention_in_days": {
+     "type": "number",
+     "required": false,
+     "description": "Number of days to retain log events. Default retention - 90 days",
+     "default": 90
+    },
+    "cloudwatch_log_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the cloudwatch log group created",
+     "default": {}
+    },
+    "cluster_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the cluster",
+     "default": {}
+    },
+    "compute_config": {
+     "type": "object({enabled = optional(bool, false), node_pools = optional(list(string)), node_role_arn = optional(string)})",
+     "required": false,
+     "description": "Configuration block for the cluster compute configuration",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "enabled",
+      "node_pools",
+      "node_role_arn"
+     ]
+    },
+    "control_plane_egress_mode": {
+     "type": "string",
+     "required": false,
+     "description": "Egress mode for the EKS control plane. Valid values are `AWS_MANAGED` and `CUSTOMER_ROUTED`",
+     "default": null
+    },
+    "control_plane_scaling_config": {
+     "type": "object({tier = string})",
+     "required": false,
+     "description": "Configuration block for the EKS Provisioned Control Plane scaling tier. Valid values for tier are `standard`, `tier-xl`, `tier-2xl`, `tier-4xl` and `tier-8xl`",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "tier"
+     ]
+    },
+    "control_plane_subnet_ids": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of subnet IDs where the EKS cluster control plane (ENIs) will be provisioned. Used for expanding the pool of subnets used by nodes/node groups without re",
+     "default": []
+    },
+    "create": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if resources should be created (affects nearly all resources)",
+     "default": true
+    },
+    "create_auto_mode_iam_resources": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to create/attach IAM resources for EKS Auto Mode. Useful for when using only custom node pools and not built-in EKS Auto Mode node pools",
+     "default": false
+    },
+    "create_cloudwatch_log_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether a log group is created by this module for the cluster logs. If not, AWS will automatically create one if logging is enabled",
+     "default": true
+    },
+    "create_cni_ipv6_iam_policy": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to create an [`AmazonEKS_CNI_IPv6_Policy`](https://docs.aws.amazon.com/eks/latest/userguide/cni-iam-role.html#cni-iam-role-create-ipv6-policy",
+     "default": false
+    },
+    "create_iam_role": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether an IAM role is created for the cluster",
+     "default": true
+    },
+    "create_kms_key": {
+     "type": "bool",
+     "required": false,
+     "description": "Controls if a KMS key for cluster encryption should be created",
+     "default": true
+    },
+    "create_node_iam_role": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether an EKS Auto node IAM role is created",
+     "default": true
+    },
+    "create_node_security_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to create a security group for the node groups or use the existing `node_security_group_id`",
+     "default": true
+    },
+    "create_primary_security_group_tags": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether or not to tag the cluster's primary security group. This security group is created by the EKS service, not the module, and therefore tagging i",
+     "default": true
+    },
+    "create_security_group": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines if a security group is created for the cluster. Note: the EKS service creates a primary security group for the cluster by default",
+     "default": true
+    },
+    "custom_oidc_thumbprints": {
+     "type": "list(string)",
+     "required": false,
+     "description": "Additional list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s)",
+     "default": []
+    },
+    "dataplane_wait_duration": {
+     "type": "string",
+     "required": false,
+     "description": "Duration to wait after the EKS cluster has become active before creating the dataplane components (EKS managed node group(s), self-managed node group(s), Fargat",
+     "default": "30s"
+    },
+    "deletion_protection": {
+     "type": "bool",
+     "required": false,
+     "description": "Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled",
+     "default": null
+    },
+    "eks_managed_node_groups": {
+     "type": "map(object({create = optional(bool), kubernetes_version = optional(string), name = optional(string), use_name_prefix = optional(bool), subnet_ids = optional(list(string)), min_size = optional(number), max_size = optional(number), desired_size = optional(number), ami_id = optional(string), ami_type = optional(string), ami_release_version = optional(string), use_latest_ami_release_version = optional(bool), capacity_type = optional(string), disk_size = optional(number), force_update_version = optional(bool), instance_types = optional(list(string)), labels = optional(map(string)), node_repair_config = optional(object({enabled = optional(bool), max_parallel_nodes_repaired_count = optional(number), max_parallel_nodes_repaired_percentage = optional(number), max_unhealthy_node_threshold_count = optional(number), max_unhealthy_node_threshold_percentage = optional(number), node_repair_config_overrides = optional(list(object({min_repair_wait_time_mins = number, node_monitoring_condition = string, node_unhealthy_reason = string, repair_action = string})))})), remote_access = optional(object({ec2_ssh_key = optional(string), source_security_group_ids = optional(list(string))})), taints = optional(map(object({key = string, value = optional(string), effect = string}))), update_config = optional(object({max_unavailable = optional(number), max_unavailable_percentage = optional(number), update_strategy = optional(string)})), warm_pool_config = optional(object({max_group_prepared_capacity = optional(number), min_size = optional(number), pool_state = optional(string), reuse_on_scale_in = optional(bool)})), timeouts = optional(object({create = optional(string), update = optional(string), delete = optional(string)})), enable_bootstrap_user_data = optional(bool), pre_bootstrap_user_data = optional(string), post_bootstrap_user_data = optional(string), bootstrap_extra_args = optional(string), user_data_template_path = optional(string), cloudinit_pre_nodeadm = optional(list(object({content = string, content_type = optional(string), filename = optional(string), merge_type = optional(string)}))), cloudinit_post_nodeadm = optional(list(object({content = string, content_type = optional(string), filename = optional(string), merge_type = optional(string)}))), create_launch_template = optional(bool), use_custom_launch_template = optional(bool), launch_template_id = optional(string), launch_template_name = optional(string), launch_template_use_name_prefix = optional(bool), launch_template_version = optional(string), launch_template_default_version = optional(string), update_launch_template_default_version = optional(bool), launch_template_description = optional(string), launch_template_tags = optional(map(string)), tag_specifications = optional(list(string)), ebs_optimized = optional(bool), key_name = optional(string), disable_api_termination = optional(bool), kernel_id = optional(string), ram_disk_id = optional(string), block_device_mappings = optional(map(object({device_name = optional(string), ebs = optional(object({delete_on_termination = optional(bool), encrypted = optional(bool), iops = optional(number), kms_key_id = optional(string), snapshot_id = optional(string), throughput = optional(number), volume_initialization_rate = optional(number), volume_size = optional(number), volume_type = optional(string)})), no_device = optional(string), virtual_name = optional(string)}))), capacity_reservation_specification = optional(object({capacity_reservation_preference = optional(string), capacity_reservation_target = optional(object({capacity_reservation_id = optional(string), capacity_reservation_resource_group_arn = optional(string)}))})), cpu_options = optional(object({amd_sev_snp = optional(string), core_count = optional(number), nested_virtualization = optional(string), threads_per_core = optional(number)})), credit_specification = optional(object({cpu_credits = optional(string)})), enclave_options = optional(object({enabled = optional(bool)})), instance_market_options = optional(object({market_type = optional(string), spot_options = optional(object({block_duration_minutes = optional(number), instance_interruption_behavior = optional(string), max_price = optional(string), spot_instance_type = optional(string), valid_until = optional(string)}))})), license_specifications = optional(list(object({license_configuration_arn = string}))), metadata_options = optional(object({http_endpoint = optional(string), http_protocol_ipv6 = optional(string), http_put_response_hop_limit = optional(number), http_tokens = optional(string), instance_metadata_tags = optional(string)})), enable_monitoring = optional(bool), enable_efa_support = optional(bool), enable_efa_only = optional(bool), efa_indices = optional(list(string)), create_placement_group = optional(bool), placement = optional(object({affinity = optional(string), availability_zone = optional(string), group_name = optional(string), host_id = optional(string), host_resource_group_arn = optional(string), partition_number = optional(number), spread_domain = optional(string), tenancy = optional(string)})), network_interfaces = optional(list(object({associate_carrier_ip_address = optional(bool), associate_public_ip_address = optional(bool), connection_tracking_specification = optional(object({tcp_established_timeout = optional(number), udp_stream_timeout = optional(number), udp_timeout = optional(number)})), delete_on_termination = optional(bool), description = optional(string), device_index = optional(number), ena_srd_specification = optional(object({ena_srd_enabled = optional(bool), ena_srd_udp_specification = optional(object({ena_srd_udp_enabled = optional(bool)}))})), interface_type = optional(string), ipv4_address_count = optional(number), ipv4_addresses = optional(list(string)), ipv4_prefix_count = optional(number), ipv4_prefixes = optional(list(string)), ipv6_address_count = optional(number), ipv6_addresses = optional(list(string)), ipv6_prefix_count = optional(number), ipv6_prefixes = optional(list(string)), network_card_index = optional(number), network_interface_id = optional(string), primary_ipv6 = optional(bool), private_ip_address = optional(string), security_groups = optional(list(string), []), subnet_id = optional(string)}))), network_performance_options = optional(object({bandwidth_weighting = optional(string)})), maintenance_options = optional(object({auto_recovery = optional(string)})), private_dns_name_options = optional(object({enable_resource_name_dns_aaaa_record = optional(bool), enable_resource_name_dns_a_record = optional(bool), hostname_type = optional(string)})), create_iam_role = optional(bool), iam_role_arn = optional(string), iam_role_name = optional(string), iam_role_use_name_prefix = optional(bool), iam_role_path = optional(string), iam_role_description = optional(string), iam_role_permissions_boundary = optional(string), iam_role_tags = optional(map(string)), iam_role_attach_cni_policy = optional(bool), iam_role_additional_policies = optional(map(string)), create_iam_role_policy = optional(bool), iam_role_policy_statements = optional(list(object({sid = optional(string), actions = optional(list(string)), not_actions = optional(list(string)), effect = optional(string), resources = optional(list(string)), not_resources = optional(list(string)), principals = optional(list(object({type = string, identifiers = list(string)}))), not_principals = optional(list(object({type = string, identifiers = list(string)}))), condition = optional(list(object({test = string, values = list(string), variable = string})))}))), vpc_security_group_ids = optional(list(string), []), attach_cluster_primary_security_group = optional(bool, false), cluster_primary_security_group_id = optional(string), create_security_group = optional(bool), security_group_name = optional(string), security_group_use_name_prefix = optional(bool), security_group_description = optional(string), security_group_ingress_rules = optional(map(object({name = optional(string), cidr_ipv4 = optional(string), cidr_ipv6 = optional(string), description = optional(string), from_port = optional(string), ip_protocol = optional(string), prefix_list_id = optional(string), referenced_security_group_id = optional(string), self = optional(bool), tags = optional(map(string)), to_port = optional(string)}))), security_group_egress_rules = optional(map(object({name = optional(string), cidr_ipv4 = optional(string), cidr_ipv6 = optional(string), description = optional(string), from_port = optional(string), ip_protocol = optional(string), prefix_list_id = optional(string), referenced_security_group_id = optional(string), self = optional(bool), tags = optional(map(string)), to_port = optional(string)})), {}), security_group_tags = optional(map(string)), tags = optional(map(string))}))",
+     "required": false,
+     "description": "Map of EKS managed node group definitions to create",
+     "default": null,
+     "container": "map",
+     "attributes": [
+      "create",
+      "kubernetes_version",
+      "name",
+      "use_name_prefix",
+      "subnet_ids",
+      "min_size",
+      "max_size",
+      "desired_size",
+      "ami_id",
+      "ami_type",
+      "ami_release_version",
+      "use_latest_ami_release_version",
+      "capacity_type",
+      "disk_size",
+      "force_update_version",
+      "instance_types",
+      "labels",
+      "node_repair_config",
+      "remote_access",
+      "taints",
+      "update_config",
+      "warm_pool_config",
+      "timeouts",
+      "enable_bootstrap_user_data",
+      "pre_bootstrap_user_data",
+      "post_bootstrap_user_data",
+      "bootstrap_extra_args",
+      "user_data_template_path",
+      "cloudinit_pre_nodeadm",
+      "cloudinit_post_nodeadm",
+      "create_launch_template",
+      "use_custom_launch_template",
+      "launch_template_id",
+      "launch_template_name",
+      "launch_template_use_name_prefix",
+      "launch_template_version",
+      "launch_template_default_version",
+      "update_launch_template_default_version",
+      "launch_template_description",
+      "launch_template_tags",
+      "tag_specifications",
+      "ebs_optimized",
+      "key_name",
+      "disable_api_termination",
+      "kernel_id",
+      "ram_disk_id",
+      "block_device_mappings",
+      "capacity_reservation_specification",
+      "cpu_options",
+      "credit_specification",
+      "enclave_options",
+      "instance_market_options",
+      "license_specifications",
+      "metadata_options",
+      "enable_monitoring",
+      "enable_efa_support",
+      "enable_efa_only",
+      "efa_indices",
+      "create_placement_group",
+      "placement",
+      "network_interfaces",
+      "network_performance_options",
+      "maintenance_options",
+      "private_dns_name_options",
+      "create_iam_role",
+      "iam_role_arn",
+      "iam_role_name",
+      "iam_role_use_name_prefix",
+      "iam_role_path",
+      "iam_role_description",
+      "iam_role_permissions_boundary",
+      "iam_role_tags",
+      "iam_role_attach_cni_policy",
+      "iam_role_additional_policies",
+      "create_iam_role_policy",
+      "iam_role_policy_statements",
+      "vpc_security_group_ids",
+      "attach_cluster_primary_security_group",
+      "cluster_primary_security_group_id",
+      "create_security_group",
+      "security_group_name",
+      "security_group_use_name_prefix",
+      "security_group_description",
+      "security_group_ingress_rules",
+      "security_group_egress_rules",
+      "security_group_tags",
+      "tags"
+     ]
+    },
+    "enable_auto_mode_block_storage_policy_v2": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to use the v2 AmazonEKSBlockStoragePolicy instead of the legacy v1 policy for the EKS Auto Mode cluster IAM role. Defaults to false (uses v1)",
+     "default": false
+    },
+    "enable_auto_mode_custom_tags": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to enable permissions for custom tags resources created by EKS Auto Mode",
+     "default": true
+    },
+    "enable_cluster_creator_admin_permissions": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether or not to add the cluster creator (the identity used by Terraform) as an administrator via access entry",
+     "default": false
+    },
+    "enable_irsa": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to create an OpenID Connect Provider for EKS to enable IRSA",
+     "default": true
+    },
+    "enable_kms_key_rotation": {
+     "type": "bool",
+     "required": false,
+     "description": "Specifies whether key rotation is enabled",
+     "default": true
+    },
+    "enabled_log_types": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of the desired control plane logs to enable. For more information, see Amazon EKS Control Plane Logging documentation (https://docs.aws.amazon.com/eks/la",
+     "default": [
+      "audit",
+      "api",
+      "authenticator"
+     ]
+    },
+    "encryption_config": {
+     "type": "object({provider_key_arn = optional(string), resources = optional(list(string), [\"secrets\"])})",
+     "required": false,
+     "description": "Configuration block with encryption configuration for the cluster",
+     "default": {},
+     "container": "object",
+     "attributes": [
+      "provider_key_arn",
+      "resources"
+     ]
+    },
+    "encryption_policy_description": {
+     "type": "string",
+     "required": false,
+     "description": "Description of the cluster encryption policy created",
+     "default": "Cluster encryption policy to allow cluster role to utilize CMK provided"
+    },
+    "encryption_policy_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to use on cluster encryption policy created",
+     "default": null
+    },
+    "encryption_policy_path": {
+     "type": "string",
+     "required": false,
+     "description": "Cluster encryption policy path",
+     "default": null
+    },
+    "encryption_policy_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the cluster encryption policy created",
+     "default": {}
+    },
+    "encryption_policy_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether cluster encryption policy name (`cluster_encryption_policy_name`) is used as a prefix",
+     "default": true
+    },
+    "endpoint_private_access": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether or not the Amazon EKS private API server endpoint is enabled",
+     "default": true
+    },
+    "endpoint_public_access": {
+     "type": "bool",
+     "required": false,
+     "description": "Indicates whether or not the Amazon EKS public API server endpoint is enabled",
+     "default": false
+    },
+    "endpoint_public_access_cidrs": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of CIDR blocks which can access the Amazon EKS public API server endpoint",
+     "default": [
+      "0.0.0.0/0"
+     ]
+    },
+    "fargate_profiles": {
+     "type": "map(object({create = optional(bool), name = optional(string), subnet_ids = optional(list(string)), selectors = optional(list(object({labels = optional(map(string)), namespace = string}))), timeouts = optional(object({create = optional(string), delete = optional(string)})), create_iam_role = optional(bool), iam_role_arn = optional(string), iam_role_name = optional(string), iam_role_use_name_prefix = optional(bool), iam_role_path = optional(string), iam_role_description = optional(string), iam_role_permissions_boundary = optional(string), iam_role_tags = optional(map(string)), iam_role_attach_cni_policy = optional(bool), iam_role_additional_policies = optional(map(string)), create_iam_role_policy = optional(bool), iam_role_policy_statements = optional(list(object({sid = optional(string), actions = optional(list(string)), not_actions = optional(list(string)), effect = optional(string), resources = optional(list(string)), not_resources = optional(list(string)), principals = optional(list(object({type = string, identifiers = list(string)}))), not_principals = optional(list(object({type = string, identifiers = list(string)}))), condition = optional(list(object({test = string, values = list(string), variable = string})))}))), tags = optional(map(string))}))",
+     "required": false,
+     "description": "Map of Fargate Profile definitions to create",
+     "default": null,
+     "container": "map",
+     "attributes": [
+      "create",
+      "name",
+      "subnet_ids",
+      "selectors",
+      "timeouts",
+      "create_iam_role",
+      "iam_role_arn",
+      "iam_role_name",
+      "iam_role_use_name_prefix",
+      "iam_role_path",
+      "iam_role_description",
+      "iam_role_permissions_boundary",
+      "iam_role_tags",
+      "iam_role_attach_cni_policy",
+      "iam_role_additional_policies",
+      "create_iam_role_policy",
+      "iam_role_policy_statements",
+      "tags"
+     ]
+    },
+    "force_update_version": {
+     "type": "bool",
+     "required": false,
+     "description": "Force version update by overriding upgrade-blocking readiness checks when updating a cluster",
+     "default": null
+    },
+    "iam_role_additional_policies": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional policies to be added to the IAM role",
+     "default": {}
+    },
+    "iam_role_arn": {
+     "type": "string",
+     "required": false,
+     "description": "Existing IAM role ARN for the cluster. Required if `create_iam_role` is set to `false`",
+     "default": null
+    },
+    "iam_role_description": {
+     "type": "string",
+     "required": false,
+     "description": "Description of the role",
+     "default": null
+    },
+    "iam_role_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to use on IAM role created",
+     "default": null
+    },
+    "iam_role_path": {
+     "type": "string",
+     "required": false,
+     "description": "The IAM role path",
+     "default": null
+    },
+    "iam_role_permissions_boundary": {
+     "type": "string",
+     "required": false,
+     "description": "ARN of the policy that is used to set the permissions boundary for the IAM role",
+     "default": null
+    },
+    "iam_role_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the IAM role created",
+     "default": {}
+    },
+    "iam_role_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether the IAM role name (`iam_role_name`) is used as a prefix",
+     "default": true
+    },
+    "identity_providers": {
+     "type": "map(object({client_id = string, groups_claim = optional(string), groups_prefix = optional(string), identity_provider_config_name = optional(string), issuer_url = string, required_claims = optional(map(string)), username_claim = optional(string), username_prefix = optional(string), tags = optional(map(string), {})}))",
+     "required": false,
+     "description": "Map of cluster identity provider configurations to enable for the cluster. Note - this is different/separate from IRSA",
+     "default": null,
+     "container": "map",
+     "attributes": [
+      "client_id",
+      "groups_claim",
+      "groups_prefix",
+      "identity_provider_config_name",
+      "issuer_url",
+      "required_claims",
+      "username_claim",
+      "username_prefix",
+      "tags"
+     ]
+    },
+    "include_oidc_root_ca_thumbprint": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to include the root CA thumbprint in the OpenID Connect (OIDC) identity provider's server certificate(s)",
+     "default": true
+    },
+    "ip_family": {
+     "type": "string",
+     "required": false,
+     "description": "The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you crea",
+     "default": "ipv4"
+    },
+    "kms_key_administrators": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of IAM ARNs for [key administrators](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html#key-policy-default-allow-administrator",
+     "default": []
+    },
+    "kms_key_aliases": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of aliases to create. Note - due to the use of `toset()`, values must be static strings and not computed values",
+     "default": []
+    },
+    "kms_key_deletion_window_in_days": {
+     "type": "number",
+     "required": false,
+     "description": "The waiting period, specified in number of days. After the waiting period ends, AWS KMS deletes the KMS key. If you specify a value, it must be between `7` and ",
+     "default": null
+    },
+    "kms_key_description": {
+     "type": "string",
+     "required": false,
+     "description": "The description of the key as viewed in AWS console",
+     "default": null
+    },
+    "kms_key_enable_default_policy": {
+     "type": "bool",
+     "required": false,
+     "description": "Specifies whether to enable the default key policy",
+     "default": true
+    },
+    "kms_key_override_policy_documents": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of IAM policy documents that are merged together into the exported document. In merging, statements with non-blank `sid`s will override statements with the",
+     "default": []
+    },
+    "kms_key_owners": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of IAM ARNs for those who will have full key permissions (`kms:*`)",
+     "default": []
+    },
+    "kms_key_rotation_period_in_days": {
+     "type": "number",
+     "required": false,
+     "description": "Custom period of time between each key rotation date. If you specify a value, it must be between `90` and `2560`, inclusive. If you do not specify a value, it d",
+     "default": null
+    },
+    "kms_key_service_users": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of IAM ARNs for [key service users](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html#key-policy-service-integration)",
+     "default": []
+    },
+    "kms_key_source_policy_documents": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of IAM policy documents that are merged together into the exported document. Statements must have unique `sid`s",
+     "default": []
+    },
+    "kms_key_users": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of IAM ARNs for [key users](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html#key-policy-default-allow-users)",
+     "default": []
+    },
+    "kube_api_server_config": {
+     "type": "object({event_ttl = optional(string), service_node_port_range = optional(object({min_port = optional(number), max_port = optional(number)}))})",
+     "required": false,
+     "description": "Configuration block for customizing the Kubernetes API server",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "event_ttl",
+      "service_node_port_range"
+     ]
+    },
+    "kube_controller_manager_config": {
+     "type": "object({horizontal_pod_autoscaler_controller_config = optional(object({horizontal_pod_autoscaler_sync_period = optional(string)}))})",
+     "required": false,
+     "description": "Configuration block for customizing the Kubernetes controller manager",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "horizontal_pod_autoscaler_controller_config"
+     ]
+    },
+    "kube_scheduler_config": {
+     "type": "object({node_resources_fit = optional(object({scoring_strategy = optional(object({type = optional(string), resources = optional(list(object({name = string, weight = optional(number)})))}))}))})",
+     "required": false,
+     "description": "Configuration block for the cluster scheduler configuration. Valid values for `scoring_strategy.type` are `LeastAllocated` and `MostAllocated`. Resource `weight",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "node_resources_fit"
+     ]
+    },
+    "kubernetes_version": {
+     "type": "string",
+     "required": false,
+     "description": "Kubernetes `<major>.<minor>` version to use for the EKS cluster (i.e.: `1.33`)",
+     "default": null
+    },
+    "name": {
+     "type": "string",
+     "required": false,
+     "description": "Name of the EKS cluster",
+     "default": ""
+    },
+    "node_iam_role_additional_policies": {
+     "type": "map(string)",
+     "required": false,
+     "description": "Additional policies to be added to the EKS Auto node IAM role",
+     "default": {}
+    },
+    "node_iam_role_description": {
+     "type": "string",
+     "required": false,
+     "description": "Description of the EKS Auto node IAM role",
+     "default": null
+    },
+    "node_iam_role_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to use on the EKS Auto node IAM role created",
+     "default": null
+    },
+    "node_iam_role_path": {
+     "type": "string",
+     "required": false,
+     "description": "The EKS Auto node IAM role path",
+     "default": null
+    },
+    "node_iam_role_permissions_boundary": {
+     "type": "string",
+     "required": false,
+     "description": "ARN of the policy that is used to set the permissions boundary for the EKS Auto node IAM role",
+     "default": null
+    },
+    "node_iam_role_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the EKS Auto node IAM role created",
+     "default": {}
+    },
+    "node_iam_role_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether the EKS Auto node IAM role name (`node_iam_role_name`) is used as a prefix",
+     "default": true
+    },
+    "node_security_group_additional_rules": {
+     "type": "map(object({protocol = optional(string, \"tcp\"), from_port = number, to_port = number, type = optional(string, \"ingress\"), description = optional(string), cidr_blocks = optional(list(string)), ipv6_cidr_blocks = optional(list(string)), prefix_list_ids = optional(list(string)), self = optional(bool), source_cluster_security_group = optional(bool, false), source_security_group_id = optional(string)}))",
+     "required": false,
+     "description": "List of additional security group rules to add to the node security group created. Set `source_cluster_security_group = true` inside rules to set the `cluster_s",
+     "default": {},
+     "container": "map",
+     "attributes": [
+      "protocol",
+      "from_port",
+      "to_port",
+      "type",
+      "description",
+      "cidr_blocks",
+      "ipv6_cidr_blocks",
+      "prefix_list_ids",
+      "self",
+      "source_cluster_security_group",
+      "source_security_group_id"
+     ]
+    },
+    "node_security_group_description": {
+     "type": "string",
+     "required": false,
+     "description": "Description of the node security group created",
+     "default": "EKS node shared security group"
+    },
+    "node_security_group_enable_recommended_rules": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether to enable recommended security group rules for the node security group created. This includes node-to-node TCP ingress on ephemeral ports and",
+     "default": true
+    },
+    "node_security_group_id": {
+     "type": "string",
+     "required": false,
+     "description": "ID of an existing security group to attach to the node groups created",
+     "default": ""
+    },
+    "node_security_group_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to use on node security group created",
+     "default": null
+    },
+    "node_security_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the node security group created",
+     "default": {}
+    },
+    "node_security_group_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether node security group name (`node_security_group_name`) is used as a prefix",
+     "default": true
+    },
+    "openid_connect_audiences": {
+     "type": "list(string)",
+     "required": false,
+     "description": "List of OpenID Connect audience client IDs to add to the IRSA provider",
+     "default": []
+    },
+    "outpost_config": {
+     "type": "object({control_plane_instance_type = optional(string), control_plane_placement = optional(object({group_name = string})), outpost_arns = list(string)})",
+     "required": false,
+     "description": "Configuration for the AWS Outpost to provision the cluster on",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "control_plane_instance_type",
+      "control_plane_placement",
+      "outpost_arns"
+     ]
+    },
+    "prefix_separator": {
+     "type": "string",
+     "required": false,
+     "description": "The separator to use between the prefix and the generated timestamp for resource names",
+     "default": "-"
+    },
+    "putin_khuylo": {
+     "type": "bool",
+     "required": false,
+     "description": "Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? More info: https://en.wikipedia.org/wiki/Putin_khuylo!",
+     "default": true
+    },
+    "region": {
+     "type": "string",
+     "required": false,
+     "description": "Region where the resource(s) will be managed. Defaults to the Region set in the provider configuration",
+     "default": null
+    },
+    "remote_network_config": {
+     "type": "object({remote_node_networks = object({cidrs = optional(list(string))}), remote_pod_networks = optional(object({cidrs = optional(list(string))}))})",
+     "required": false,
+     "description": "Configuration block for the cluster remote network configuration",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "remote_node_networks",
+      "remote_pod_networks"
+     ]
+    },
+    "security_group_additional_rules": {
+     "type": "map(object({protocol = optional(string, \"tcp\"), from_port = number, to_port = number, type = optional(string, \"ingress\"), description = optional(string), cidr_blocks = optional(list(string)), ipv6_cidr_blocks = optional(list(string)), prefix_list_ids = optional(list(string)), self = optional(bool), source_node_security_group = optional(bool, false), source_security_group_id = optional(string)}))",
+     "required": false,
+     "description": "List of additional security group rules to add to the cluster security group created. Set `source_node_security_group = true` inside rules to set the `node_secu",
+     "default": {},
+     "container": "map",
+     "attributes": [
+      "protocol",
+      "from_port",
+      "to_port",
+      "type",
+      "description",
+      "cidr_blocks",
+      "ipv6_cidr_blocks",
+      "prefix_list_ids",
+      "self",
+      "source_node_security_group",
+      "source_security_group_id"
+     ]
+    },
+    "security_group_description": {
+     "type": "string",
+     "required": false,
+     "description": "Description of the cluster security group created",
+     "default": "EKS cluster security group"
+    },
+    "security_group_id": {
+     "type": "string",
+     "required": false,
+     "description": "Existing security group ID to be attached to the cluster",
+     "default": ""
+    },
+    "security_group_name": {
+     "type": "string",
+     "required": false,
+     "description": "Name to use on cluster security group created",
+     "default": null
+    },
+    "security_group_tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of additional tags to add to the cluster security group created",
+     "default": {}
+    },
+    "security_group_use_name_prefix": {
+     "type": "bool",
+     "required": false,
+     "description": "Determines whether cluster security group name (`cluster_security_group_name`) is used as a prefix",
+     "default": true
+    },
+    "self_managed_node_groups": {
+     "type": "map(object({create = optional(bool), kubernetes_version = optional(string), create_autoscaling_group = optional(bool), name = optional(string), use_name_prefix = optional(bool), availability_zones = optional(list(string)), subnet_ids = optional(list(string)), min_size = optional(number), max_size = optional(number), desired_size = optional(number), desired_size_type = optional(string), capacity_rebalance = optional(bool), default_instance_warmup = optional(number), protect_from_scale_in = optional(bool), context = optional(string), create_placement_group = optional(bool), placement_group = optional(string), health_check_type = optional(string), health_check_grace_period = optional(number), ignore_failed_scaling_activities = optional(bool), force_delete = optional(bool), termination_policies = optional(list(string)), suspended_processes = optional(list(string)), max_instance_lifetime = optional(number), enabled_metrics = optional(list(string)), metrics_granularity = optional(string), initial_lifecycle_hooks = optional(list(object({default_result = optional(string), heartbeat_timeout = optional(number), lifecycle_transition = string, name = string, notification_metadata = optional(string), notification_target_arn = optional(string), role_arn = optional(string)}))), instance_maintenance_policy = optional(object({max_healthy_percentage = number, min_healthy_percentage = number})), instance_refresh = optional(object({preferences = optional(object({alarm_specification = optional(object({alarms = optional(list(string))})), auto_rollback = optional(bool), checkpoint_delay = optional(number), checkpoint_percentages = optional(list(number)), instance_warmup = optional(number), max_healthy_percentage = optional(number), min_healthy_percentage = optional(number), scale_in_protected_instances = optional(string), skip_matching = optional(bool), standby_instances = optional(string)})), strategy = optional(string), triggers = optional(list(string))})), use_mixed_instances_policy = optional(bool), mixed_instances_policy = optional(object({instances_distribution = optional(object({on_demand_allocation_strategy = optional(string), on_demand_base_capacity = optional(number), on_demand_percentage_above_base_capacity = optional(number), spot_allocation_strategy = optional(string), spot_instance_pools = optional(number), spot_max_price = optional(string)})), launch_template = object({override = optional(list(object({instance_requirements = optional(object({accelerator_count = optional(object({max = optional(number), min = optional(number)})), accelerator_manufacturers = optional(list(string)), accelerator_names = optional(list(string)), accelerator_total_memory_mib = optional(object({max = optional(number), min = optional(number)})), accelerator_types = optional(list(string)), allowed_instance_types = optional(list(string)), bare_metal = optional(string), baseline_ebs_bandwidth_mbps = optional(object({max = optional(number), min = optional(number)})), burstable_performance = optional(string), cpu_manufacturers = optional(list(string)), excluded_instance_types = optional(list(string)), instance_generations = optional(list(string)), local_storage = optional(string), local_storage_types = optional(list(string)), max_spot_price_as_percentage_of_optimal_on_demand_price = optional(number), memory_gib_per_vcpu = optional(object({max = optional(number), min = optional(number)})), memory_mib = optional(object({max = optional(number), min = optional(number)})), network_bandwidth_gbps = optional(object({max = optional(number), min = optional(number)})), network_interface_count = optional(object({max = optional(number), min = optional(number)})), on_demand_max_price_percentage_over_lowest_price = optional(number), require_hibernate_support = optional(bool), spot_max_price_percentage_over_lowest_price = optional(number), total_local_storage_gb = optional(object({max = optional(number), min = optional(number)})), vcpu_count = optional(object({max = optional(number), min = optional(number)}))})), instance_type = optional(string), launch_template_specification = optional(object({launch_template_id = optional(string), launch_template_name = optional(string), version = optional(string)})), weighted_capacity = optional(string)})))})})), timeouts = optional(object({delete = optional(string)})), autoscaling_group_tags = optional(map(string)), ami_type = optional(string), additional_cluster_dns_ips = optional(list(string)), pre_bootstrap_user_data = optional(string), post_bootstrap_user_data = optional(string), bootstrap_extra_args = optional(string), user_data_template_path = optional(string), cloudinit_pre_nodeadm = optional(list(object({content = string, content_type = optional(string), filename = optional(string), merge_type = optional(string)}))), cloudinit_post_nodeadm = optional(list(object({content = string, content_type = optional(string), filename = optional(string), merge_type = optional(string)}))), create_launch_template = optional(bool), use_custom_launch_template = optional(bool), launch_template_id = optional(string), launch_template_name = optional(string), launch_template_use_name_prefix = optional(bool), launch_template_version = optional(string), launch_template_default_version = optional(string), update_launch_template_default_version = optional(bool), launch_template_description = optional(string), launch_template_tags = optional(map(string)), tag_specifications = optional(list(string)), ebs_optimized = optional(bool), ami_id = optional(string), instance_type = optional(string), key_name = optional(string), disable_api_termination = optional(bool), instance_initiated_shutdown_behavior = optional(string), kernel_id = optional(string), ram_disk_id = optional(string), block_device_mappings = optional(map(object({device_name = optional(string), ebs = optional(object({delete_on_termination = optional(bool), encrypted = optional(bool), iops = optional(number), kms_key_id = optional(string), snapshot_id = optional(string), throughput = optional(number), volume_initialization_rate = optional(number), volume_size = optional(number), volume_type = optional(string)})), no_device = optional(string), virtual_name = optional(string)}))), capacity_reservation_specification = optional(object({capacity_reservation_preference = optional(string), capacity_reservation_target = optional(object({capacity_reservation_id = optional(string), capacity_reservation_resource_group_arn = optional(string)}))})), cpu_options = optional(object({amd_sev_snp = optional(string), core_count = optional(number), nested_virtualization = optional(string), threads_per_core = optional(number)})), credit_specification = optional(object({cpu_credits = optional(string)})), enclave_options = optional(object({enabled = optional(bool)})), instance_requirements = optional(object({accelerator_count = optional(object({max = optional(number), min = optional(number)})), accelerator_manufacturers = optional(list(string)), accelerator_names = optional(list(string)), accelerator_total_memory_mib = optional(object({max = optional(number), min = optional(number)})), accelerator_types = optional(list(string)), allowed_instance_types = optional(list(string)), bare_metal = optional(string), baseline_ebs_bandwidth_mbps = optional(object({max = optional(number), min = optional(number)})), burstable_performance = optional(string), cpu_manufacturers = optional(list(string)), excluded_instance_types = optional(list(string)), instance_generations = optional(list(string)), local_storage = optional(string), local_storage_types = optional(list(string)), max_spot_price_as_percentage_of_optimal_on_demand_price = optional(number), memory_gib_per_vcpu = optional(object({max = optional(number), min = optional(number)})), memory_mib = optional(object({max = optional(number), min = optional(number)})), network_bandwidth_gbps = optional(object({max = optional(number), min = optional(number)})), network_interface_count = optional(object({max = optional(number), min = optional(number)})), on_demand_max_price_percentage_over_lowest_price = optional(number), require_hibernate_support = optional(bool), spot_max_price_percentage_over_lowest_price = optional(number), total_local_storage_gb = optional(object({max = optional(number), min = optional(number)})), vcpu_count = optional(object({max = optional(number), min = string}))})), instance_market_options = optional(object({market_type = optional(string), spot_options = optional(object({block_duration_minutes = optional(number), instance_interruption_behavior = optional(string), max_price = optional(string), spot_instance_type = optional(string), valid_until = optional(string)}))})), license_specifications = optional(list(object({license_configuration_arn = string}))), metadata_options = optional(object({http_endpoint = optional(string), http_protocol_ipv6 = optional(string), http_put_response_hop_limit = optional(number), http_tokens = optional(string), instance_metadata_tags = optional(string)})), enable_monitoring = optional(bool), enable_efa_support = optional(bool), enable_efa_only = optional(bool), efa_indices = optional(list(string)), network_interfaces = optional(list(object({associate_carrier_ip_address = optional(bool), associate_public_ip_address = optional(bool), connection_tracking_specification = optional(object({tcp_established_timeout = optional(number), udp_stream_timeout = optional(number), udp_timeout = optional(number)})), delete_on_termination = optional(bool), description = optional(string), device_index = optional(number), ena_srd_specification = optional(object({ena_srd_enabled = optional(bool), ena_srd_udp_specification = optional(object({ena_srd_udp_enabled = optional(bool)}))})), interface_type = optional(string), ipv4_address_count = optional(number), ipv4_addresses = optional(list(string)), ipv4_prefix_count = optional(number), ipv4_prefixes = optional(list(string)), ipv6_address_count = optional(number), ipv6_addresses = optional(list(string)), ipv6_prefix_count = optional(number), ipv6_prefixes = optional(list(string)), network_card_index = optional(number), network_interface_id = optional(string), primary_ipv6 = optional(bool), private_ip_address = optional(string), security_groups = optional(list(string)), subnet_id = optional(string)}))), network_performance_options = optional(object({bandwidth_weighting = optional(string)})), placement = optional(object({affinity = optional(string), availability_zone = optional(string), group_name = optional(string), host_id = optional(string), host_resource_group_arn = optional(string), partition_number = optional(number), spread_domain = optional(string), tenancy = optional(string)})), maintenance_options = optional(object({auto_recovery = optional(string)})), private_dns_name_options = optional(object({enable_resource_name_dns_aaaa_record = optional(bool), enable_resource_name_dns_a_record = optional(bool), hostname_type = optional(string)})), create_iam_instance_profile = optional(bool), iam_instance_profile_arn = optional(string), iam_role_name = optional(string), iam_role_use_name_prefix = optional(bool), iam_role_path = optional(string), iam_role_description = optional(string), iam_role_permissions_boundary = optional(string), iam_role_tags = optional(map(string)), iam_role_attach_cni_policy = optional(bool), iam_role_additional_policies = optional(map(string)), create_iam_role_policy = optional(bool), iam_role_policy_statements = optional(list(object({sid = optional(string), actions = optional(list(string)), not_actions = optional(list(string)), effect = optional(string), resources = optional(list(string)), not_resources = optional(list(string)), principals = optional(list(object({type = string, identifiers = list(string)}))), not_principals = optional(list(object({type = string, identifiers = list(string)}))), condition = optional(list(object({test = string, values = list(string), variable = string})))}))), create_access_entry = optional(bool), iam_role_arn = optional(string), vpc_security_group_ids = optional(list(string), []), attach_cluster_primary_security_group = optional(bool, false), create_security_group = optional(bool), security_group_name = optional(string), security_group_use_name_prefix = optional(bool), security_group_description = optional(string), security_group_ingress_rules = optional(map(object({name = optional(string), cidr_ipv4 = optional(string), cidr_ipv6 = optional(string), description = optional(string), from_port = optional(string), ip_protocol = optional(string), prefix_list_id = optional(string), referenced_security_group_id = optional(string), self = optional(bool), tags = optional(map(string)), to_port = optional(string)}))), security_group_egress_rules = optional(map(object({name = optional(string), cidr_ipv4 = optional(string), cidr_ipv6 = optional(string), description = optional(string), from_port = optional(string), ip_protocol = optional(string), prefix_list_id = optional(string), referenced_security_group_id = optional(string), self = optional(bool), tags = optional(map(string)), to_port = optional(string)}))), security_group_tags = optional(map(string)), tags = optional(map(string))}))",
+     "required": false,
+     "description": "Map of self-managed node group definitions to create",
+     "default": null,
+     "container": "map",
+     "attributes": [
+      "create",
+      "kubernetes_version",
+      "create_autoscaling_group",
+      "name",
+      "use_name_prefix",
+      "availability_zones",
+      "subnet_ids",
+      "min_size",
+      "max_size",
+      "desired_size",
+      "desired_size_type",
+      "capacity_rebalance",
+      "default_instance_warmup",
+      "protect_from_scale_in",
+      "context",
+      "create_placement_group",
+      "placement_group",
+      "health_check_type",
+      "health_check_grace_period",
+      "ignore_failed_scaling_activities",
+      "force_delete",
+      "termination_policies",
+      "suspended_processes",
+      "max_instance_lifetime",
+      "enabled_metrics",
+      "metrics_granularity",
+      "initial_lifecycle_hooks",
+      "instance_maintenance_policy",
+      "instance_refresh",
+      "use_mixed_instances_policy",
+      "mixed_instances_policy",
+      "timeouts",
+      "autoscaling_group_tags",
+      "ami_type",
+      "additional_cluster_dns_ips",
+      "pre_bootstrap_user_data",
+      "post_bootstrap_user_data",
+      "bootstrap_extra_args",
+      "user_data_template_path",
+      "cloudinit_pre_nodeadm",
+      "cloudinit_post_nodeadm",
+      "create_launch_template",
+      "use_custom_launch_template",
+      "launch_template_id",
+      "launch_template_name",
+      "launch_template_use_name_prefix",
+      "launch_template_version",
+      "launch_template_default_version",
+      "update_launch_template_default_version",
+      "launch_template_description",
+      "launch_template_tags",
+      "tag_specifications",
+      "ebs_optimized",
+      "ami_id",
+      "instance_type",
+      "key_name",
+      "disable_api_termination",
+      "instance_initiated_shutdown_behavior",
+      "kernel_id",
+      "ram_disk_id",
+      "block_device_mappings",
+      "capacity_reservation_specification",
+      "cpu_options",
+      "credit_specification",
+      "enclave_options",
+      "instance_requirements",
+      "instance_market_options",
+      "license_specifications",
+      "metadata_options",
+      "enable_monitoring",
+      "enable_efa_support",
+      "enable_efa_only",
+      "efa_indices",
+      "network_interfaces",
+      "network_performance_options",
+      "placement",
+      "maintenance_options",
+      "private_dns_name_options",
+      "create_iam_instance_profile",
+      "iam_instance_profile_arn",
+      "iam_role_name",
+      "iam_role_use_name_prefix",
+      "iam_role_path",
+      "iam_role_description",
+      "iam_role_permissions_boundary",
+      "iam_role_tags",
+      "iam_role_attach_cni_policy",
+      "iam_role_additional_policies",
+      "create_iam_role_policy",
+      "iam_role_policy_statements",
+      "create_access_entry",
+      "iam_role_arn",
+      "vpc_security_group_ids",
+      "attach_cluster_primary_security_group",
+      "create_security_group",
+      "security_group_name",
+      "security_group_use_name_prefix",
+      "security_group_description",
+      "security_group_ingress_rules",
+      "security_group_egress_rules",
+      "security_group_tags",
+      "tags"
+     ]
+    },
+    "service_ipv4_cidr": {
+     "type": "string",
+     "required": false,
+     "description": "The CIDR block to assign Kubernetes service IP addresses from. If you don't specify a block, Kubernetes assigns addresses from either the 10.100.0.0/16 or 172.2",
+     "default": null
+    },
+    "service_ipv6_cidr": {
+     "type": "string",
+     "required": false,
+     "description": "The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses",
+     "default": null
+    },
+    "subnet_ids": {
+     "type": "list(string)",
+     "required": false,
+     "description": "A list of subnet IDs where the nodes/node groups will be provisioned. If `control_plane_subnet_ids` is not provided, the EKS cluster control plane (ENIs) will b",
+     "default": []
+    },
+    "tags": {
+     "type": "map(string)",
+     "required": false,
+     "description": "A map of tags to add to all resources",
+     "default": {}
+    },
+    "timeouts": {
+     "type": "object({create = optional(string), update = optional(string), delete = optional(string)})",
+     "required": false,
+     "description": "Create, update, and delete timeout configurations for the cluster",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "create",
+      "update",
+      "delete"
+     ]
+    },
+    "upgrade_policy": {
+     "type": "object({support_type = optional(string)})",
+     "required": false,
+     "description": "Configuration block for the cluster upgrade policy",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "support_type"
+     ]
+    },
+    "vpc_id": {
+     "type": "string",
+     "required": false,
+     "description": "ID of the VPC where the cluster security group will be provisioned",
+     "default": null
+    },
+    "zonal_shift_config": {
+     "type": "object({enabled = optional(bool)})",
+     "required": false,
+     "description": "Configuration block for the cluster zonal shift",
+     "default": null,
+     "container": "object",
+     "attributes": [
+      "enabled"
+     ]
+    }
+   },
+   "outputs": [
+    "access_entries",
+    "access_policy_associations",
+    "cloudwatch_log_group_arn",
+    "cloudwatch_log_group_name",
+    "cluster_addons",
+    "cluster_arn",
+    "cluster_certificate_authority_data",
+    "cluster_control_plane_scaling_tier",
+    "cluster_dualstack_oidc_issuer_url",
+    "cluster_endpoint",
+    "cluster_iam_role_arn",
+    "cluster_iam_role_name",
+    "cluster_iam_role_unique_id",
+    "cluster_id",
+    "cluster_identity_providers",
+    "cluster_ip_family",
+    "cluster_name",
+    "cluster_oidc_issuer_url",
+    "cluster_platform_version",
+    "cluster_primary_security_group_id",
+    "cluster_security_group_arn",
+    "cluster_security_group_id",
+    "cluster_service_cidr",
+    "cluster_status",
+    "cluster_tls_certificate_sha1_fingerprint",
+    "cluster_version",
+    "eks_managed_node_groups",
+    "eks_managed_node_groups_autoscaling_group_names",
+    "fargate_profiles",
+    "kms_key_arn",
+    "kms_key_id",
+    "kms_key_policy",
+    "node_iam_role_arn",
+    "node_iam_role_name",
+    "node_iam_role_unique_id",
+    "node_security_group_arn",
+    "node_security_group_id",
+    "oidc_provider",
+    "oidc_provider_arn",
+    "self_managed_node_groups",
+    "self_managed_node_groups_autoscaling_group_names"
+   ]
+  }
+ },
+ "resources": {
+  "aws_db_instance": {
+   "arguments": [
+    "allocated_storage",
+    "allow_major_version_upgrade",
+    "apply_immediately",
+    "auto_minor_version_upgrade",
+    "availability_zone",
+    "backup_retention_period",
+    "backup_target",
+    "backup_window",
+    "ca_cert_identifier",
+    "character_set_name",
+    "copy_tags_to_snapshot",
+    "custom_iam_instance_profile",
+    "customer_owned_ip_enabled",
+    "database_insights_mode",
+    "db_name",
+    "db_subnet_group_name",
+    "dedicated_log_volume",
+    "delete_automated_backups",
+    "deletion_protection",
+    "domain",
+    "domain_auth_secret_arn",
+    "domain_dns_ips",
+    "domain_fqdn",
+    "domain_iam_role_name",
+    "domain_ou",
+    "enabled_cloudwatch_logs_exports",
+    "engine",
+    "engine_lifecycle_support",
+    "engine_version",
+    "final_snapshot_identifier",
+    "iam_database_authentication_enabled",
+    "id",
+    "identifier",
+    "identifier_prefix",
+    "instance_class",
+    "iops",
+    "kms_key_id",
+    "license_model",
+    "maintenance_window",
+    "manage_master_user_password",
+    "master_user_secret_kms_key_id",
+    "max_allocated_storage",
+    "monitoring_interval",
+    "monitoring_role_arn",
+    "multi_az",
+    "nchar_character_set_name",
+    "network_type",
+    "option_group_name",
+    "parameter_group_name",
+    "password",
+    "password_wo",
+    "password_wo_version",
+    "performance_insights_enabled",
+    "performance_insights_kms_key_id",
+    "performance_insights_retention_period",
+    "port",
+    "publicly_accessible",
+    "region",
+    "replica_mode",
+    "replicate_source_db",
+    "skip_final_snapshot",
+    "snapshot_identifier",
+    "storage_encrypted",
+    "storage_throughput",
+    "storage_type",
+    "tags",
+    "tags_all",
+    "timezone",
+    "upgrade_storage_config",
+    "username",
+    "vpc_security_group_ids",
+    "warning_event_categories"
+   ],
+   "required": [
+    "instance_class"
+   ],
+   "blocks": {
+    "blue_green_update": {
+     "arguments": [
+      "enabled"
+     ]
+    },
+    "restore_to_point_in_time": {
+     "arguments": [
+      "restore_time",
+      "source_db_instance_automated_backups_arn",
+      "source_db_instance_identifier",
+      "source_dbi_resource_id",
+      "use_latest_restorable_time"
+     ]
+    },
+    "s3_import": {
+     "arguments": [
+      "bucket_name",
+      "bucket_prefix",
+      "ingestion_role",
+      "source_engine",
+      "source_engine_version"
+     ],
+     "required": [
+      "bucket_name",
+      "ingestion_role",
+      "source_engine",
+      "source_engine_version"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete",
+      "update"
+     ]
+    }
+   }
+  },
+  "aws_db_subnet_group": {
+   "arguments": [
+    "description",
+    "id",
+    "name",
+    "name_prefix",
+    "region",
+    "subnet_ids",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "subnet_ids"
+   ]
+  },
+  "aws_db_parameter_group": {
+   "arguments": [
+    "description",
+    "family",
+    "id",
+    "name",
+    "name_prefix",
+    "region",
+    "skip_destroy",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "family"
+   ],
+   "blocks": {
+    "parameter": {
+     "arguments": [
+      "apply_method",
+      "name",
+      "value"
+     ],
+     "required": [
+      "name",
+      "value"
+     ]
+    }
+   }
+  },
+  "aws_security_group": {
+   "arguments": [
+    "description",
+    "egress",
+    "id",
+    "ingress",
+    "name",
+    "name_prefix",
+    "region",
+    "revoke_rules_on_delete",
+    "tags",
+    "tags_all",
+    "vpc_id"
+   ],
+   "blocks": {
+    "egress": {
+     "arguments": [
+      "cidr_blocks",
+      "description",
+      "from_port",
+      "ipv6_cidr_blocks",
+      "prefix_list_ids",
+      "protocol",
+      "security_groups",
+      "self",
+      "to_port"
+     ]
+    },
+    "ingress": {
+     "arguments": [
+      "cidr_blocks",
+      "description",
+      "from_port",
+      "ipv6_cidr_blocks",
+      "prefix_list_ids",
+      "protocol",
+      "security_groups",
+      "self",
+      "to_port"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete"
+     ]
+    }
+   }
+  },
+  "aws_security_group_rule": {
+   "arguments": [
+    "cidr_blocks",
+    "description",
+    "from_port",
+    "id",
+    "ipv6_cidr_blocks",
+    "prefix_list_ids",
+    "protocol",
+    "region",
+    "security_group_id",
+    "self",
+    "source_security_group_id",
+    "to_port",
+    "type"
+   ],
+   "required": [
+    "from_port",
+    "protocol",
+    "security_group_id",
+    "to_port",
+    "type"
+   ],
+   "blocks": {
+    "timeouts": {
+     "arguments": [
+      "create"
+     ]
+    }
+   }
+  },
+  "aws_vpc_security_group_ingress_rule": {
+   "arguments": [
+    "cidr_ipv4",
+    "cidr_ipv6",
+    "description",
+    "from_port",
+    "ip_protocol",
+    "prefix_list_id",
+    "referenced_security_group_id",
+    "region",
+    "security_group_id",
+    "tags",
+    "to_port"
+   ],
+   "required": [
+    "ip_protocol",
+    "security_group_id"
+   ]
+  },
+  "aws_vpc_security_group_egress_rule": {
+   "arguments": [
+    "cidr_ipv4",
+    "cidr_ipv6",
+    "description",
+    "from_port",
+    "ip_protocol",
+    "prefix_list_id",
+    "referenced_security_group_id",
+    "region",
+    "security_group_id",
+    "tags",
+    "to_port"
+   ],
+   "required": [
+    "ip_protocol",
+    "security_group_id"
+   ]
+  },
+  "aws_ecr_repository": {
+   "arguments": [
+    "force_delete",
+    "id",
+    "image_tag_mutability",
+    "name",
+    "region",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "name"
+   ],
+   "blocks": {
+    "encryption_configuration": {
+     "arguments": [
+      "encryption_type",
+      "kms_key"
+     ]
+    },
+    "image_scanning_configuration": {
+     "arguments": [
+      "scan_on_push"
+     ],
+     "required": [
+      "scan_on_push"
+     ]
+    },
+    "image_tag_mutability_exclusion_filter": {
+     "arguments": [
+      "filter",
+      "filter_type"
+     ],
+     "required": [
+      "filter",
+      "filter_type"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "delete"
+     ]
+    }
+   }
+  },
+  "aws_ecr_lifecycle_policy": {
+   "arguments": [
+    "id",
+    "policy",
+    "region",
+    "repository"
+   ],
+   "required": [
+    "policy",
+    "repository"
+   ]
+  },
+  "aws_ecr_repository_policy": {
+   "arguments": [
+    "id",
+    "policy",
+    "region",
+    "repository"
+   ],
+   "required": [
+    "policy",
+    "repository"
+   ]
+  },
+  "aws_iam_role": {
+   "arguments": [
+    "assume_role_policy",
+    "description",
+    "force_detach_policies",
+    "id",
+    "managed_policy_arns",
+    "max_session_duration",
+    "name",
+    "name_prefix",
+    "path",
+    "permissions_boundary",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "assume_role_policy"
+   ],
+   "blocks": {
+    "inline_policy": {
+     "arguments": [
+      "name",
+      "policy"
+     ]
+    }
+   }
+  },
+  "aws_iam_role_policy": {
+   "arguments": [
+    "id",
+    "name",
+    "name_prefix",
+    "policy",
+    "role"
+   ],
+   "required": [
+    "policy",
+    "role"
+   ]
+  },
+  "aws_iam_policy": {
+   "arguments": [
+    "delay_after_policy_creation_in_ms",
+    "description",
+    "id",
+    "name",
+    "name_prefix",
+    "path",
+    "policy",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "policy"
+   ]
+  },
+  "aws_iam_role_policy_attachment": {
+   "arguments": [
+    "id",
+    "policy_arn",
+    "role"
+   ],
+   "required": [
+    "policy_arn",
+    "role"
+   ]
+  },
+  "aws_eks_pod_identity_association": {
+   "arguments": [
+    "cluster_name",
+    "disable_session_tags",
+    "namespace",
+    "policy",
+    "region",
+    "role_arn",
+    "service_account",
+    "tags",
+    "target_role_arn"
+   ],
+   "required": [
+    "cluster_name",
+    "namespace",
+    "role_arn",
+    "service_account"
+   ]
+  },
+  "aws_eks_addon": {
+   "arguments": [
+    "addon_name",
+    "addon_version",
+    "cluster_name",
+    "configuration_values",
+    "id",
+    "preserve",
+    "region",
+    "resolve_conflicts_on_create",
+    "resolve_conflicts_on_update",
+    "service_account_role_arn",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "addon_name",
+    "cluster_name"
+   ],
+   "blocks": {
+    "namespace_config": {
+     "arguments": [
+      "namespace"
+     ]
+    },
+    "pod_identity_association": {
+     "arguments": [
+      "role_arn",
+      "service_account"
+     ],
+     "required": [
+      "role_arn",
+      "service_account"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete",
+      "update"
+     ]
+    }
+   }
+  },
+  "aws_eks_access_entry": {
+   "arguments": [
+    "cluster_name",
+    "id",
+    "kubernetes_groups",
+    "principal_arn",
+    "region",
+    "tags",
+    "tags_all",
+    "type",
+    "user_name"
+   ],
+   "required": [
+    "cluster_name",
+    "principal_arn"
+   ],
+   "blocks": {
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete"
+     ]
+    }
+   }
+  },
+  "aws_s3_bucket": {
+   "arguments": [
+    "acceleration_status",
+    "acl",
+    "bucket",
+    "bucket_namespace",
+    "bucket_prefix",
+    "force_destroy",
+    "id",
+    "object_lock_enabled",
+    "policy",
+    "region",
+    "request_payer",
+    "tags",
+    "tags_all"
+   ],
+   "blocks": {
+    "cors_rule": {
+     "arguments": [
+      "allowed_headers",
+      "allowed_methods",
+      "allowed_origins",
+      "expose_headers",
+      "max_age_seconds"
+     ],
+     "required": [
+      "allowed_methods",
+      "allowed_origins"
+     ]
+    },
+    "grant": {
+     "arguments": [
+      "id",
+      "permissions",
+      "type",
+      "uri"
+     ],
+     "required": [
+      "permissions",
+      "type"
+     ]
+    },
+    "lifecycle_rule": {
+     "arguments": [
+      "abort_incomplete_multipart_upload_days",
+      "enabled",
+      "id",
+      "prefix",
+      "tags"
+     ],
+     "required": [
+      "enabled"
+     ],
+     "blocks": {
+      "expiration": {
+       "arguments": [
+        "date",
+        "days",
+        "expired_object_delete_marker"
+       ]
+      },
+      "noncurrent_version_expiration": {
+       "arguments": [
+        "days"
+       ]
+      },
+      "noncurrent_version_transition": {
+       "arguments": [
+        "days",
+        "storage_class"
+       ],
+       "required": [
+        "storage_class"
+       ]
+      },
+      "transition": {
+       "arguments": [
+        "date",
+        "days",
+        "storage_class"
+       ],
+       "required": [
+        "storage_class"
+       ]
+      }
+     }
+    },
+    "logging": {
+     "arguments": [
+      "target_bucket",
+      "target_prefix"
+     ],
+     "required": [
+      "target_bucket"
+     ]
+    },
+    "object_lock_configuration": {
+     "arguments": [
+      "object_lock_enabled"
+     ],
+     "blocks": {
+      "rule": {
+       "arguments": [],
+       "blocks": {
+        "default_retention": {
+         "arguments": [
+          "days",
+          "mode",
+          "years"
+         ],
+         "required": [
+          "mode"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "replication_configuration": {
+     "arguments": [
+      "role"
+     ],
+     "required": [
+      "role"
+     ],
+     "blocks": {
+      "rules": {
+       "arguments": [
+        "delete_marker_replication_status",
+        "id",
+        "prefix",
+        "priority",
+        "status"
+       ],
+       "required": [
+        "status"
+       ],
+       "blocks": {
+        "destination": {
+         "arguments": [
+          "account_id",
+          "bucket",
+          "replica_kms_key_id",
+          "storage_class"
+         ],
+         "required": [
+          "bucket"
+         ],
+         "blocks": {
+          "access_control_translation": {
+           "arguments": []
+          },
+          "metrics": {
+           "arguments": []
+          },
+          "replication_time": {
+           "arguments": []
+          }
+         }
+        },
+        "filter": {
+         "arguments": [
+          "prefix",
+          "tags"
+         ]
+        },
+        "source_selection_criteria": {
+         "arguments": [],
+         "blocks": {
+          "sse_kms_encrypted_objects": {
+           "arguments": []
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "server_side_encryption_configuration": {
+     "arguments": [],
+     "blocks": {
+      "rule": {
+       "arguments": [
+        "bucket_key_enabled"
+       ],
+       "blocks": {
+        "apply_server_side_encryption_by_default": {
+         "arguments": [
+          "kms_master_key_id",
+          "sse_algorithm"
+         ],
+         "required": [
+          "sse_algorithm"
+         ]
+        }
+       }
+      }
+     }
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete",
+      "read",
+      "update"
+     ]
+    },
+    "versioning": {
+     "arguments": [
+      "enabled",
+      "mfa_delete"
+     ]
+    },
+    "website": {
+     "arguments": [
+      "error_document",
+      "index_document",
+      "redirect_all_requests_to",
+      "routing_rules"
+     ]
+    }
+   }
+  },
+  "aws_s3_bucket_public_access_block": {
+   "arguments": [
+    "block_public_acls",
+    "block_public_policy",
+    "bucket",
+    "id",
+    "ignore_public_acls",
+    "region",
+    "restrict_public_buckets",
+    "skip_destroy"
+   ],
+   "required": [
+    "bucket"
+   ]
+  },
+  "aws_s3_bucket_server_side_encryption_configuration": {
+   "arguments": [
+    "bucket",
+    "expected_bucket_owner",
+    "id",
+    "region"
+   ],
+   "required": [
+    "bucket"
+   ],
+   "blocks": {
+    "rule": {
+     "arguments": [
+      "blocked_encryption_types",
+      "bucket_key_enabled"
+     ],
+     "blocks": {
+      "apply_server_side_encryption_by_default": {
+       "arguments": [
+        "kms_master_key_id",
+        "sse_algorithm"
+       ],
+       "required": [
+        "sse_algorithm"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "aws_s3_bucket_versioning": {
+   "arguments": [
+    "bucket",
+    "expected_bucket_owner",
+    "id",
+    "mfa",
+    "region"
+   ],
+   "required": [
+    "bucket"
+   ],
+   "blocks": {
+    "versioning_configuration": {
+     "arguments": [
+      "mfa_delete",
+      "status"
+     ],
+     "required": [
+      "status"
+     ]
+    }
+   }
+  },
+  "aws_s3_bucket_lifecycle_configuration": {
+   "arguments": [
+    "bucket",
+    "expected_bucket_owner",
+    "region",
+    "transition_default_minimum_object_size"
+   ],
+   "required": [
+    "bucket"
+   ],
+   "blocks": {
+    "rule": {
+     "arguments": [
+      "id",
+      "prefix",
+      "status"
+     ],
+     "required": [
+      "id",
+      "status"
+     ],
+     "blocks": {
+      "abort_incomplete_multipart_upload": {
+       "arguments": [
+        "days_after_initiation"
+       ]
+      },
+      "expiration": {
+       "arguments": [
+        "date",
+        "days",
+        "expired_object_delete_marker"
+       ]
+      },
+      "filter": {
+       "arguments": [
+        "object_size_greater_than",
+        "object_size_less_than",
+        "prefix"
+       ],
+       "blocks": {
+        "and": {
+         "arguments": [
+          "object_size_greater_than",
+          "object_size_less_than",
+          "prefix",
+          "tags"
+         ]
+        },
+        "tag": {
+         "arguments": [
+          "key",
+          "value"
+         ],
+         "required": [
+          "key",
+          "value"
+         ]
+        }
+       }
+      },
+      "noncurrent_version_expiration": {
+       "arguments": [
+        "newer_noncurrent_versions",
+        "noncurrent_days"
+       ],
+       "required": [
+        "noncurrent_days"
+       ]
+      },
+      "noncurrent_version_transition": {
+       "arguments": [
+        "newer_noncurrent_versions",
+        "noncurrent_days",
+        "storage_class"
+       ],
+       "required": [
+        "noncurrent_days",
+        "storage_class"
+       ]
+      },
+      "transition": {
+       "arguments": [
+        "date",
+        "days",
+        "storage_class"
+       ],
+       "required": [
+        "storage_class"
+       ]
+      }
+     }
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "update"
+     ]
+    }
+   }
+  },
+  "aws_s3_bucket_policy": {
+   "arguments": [
+    "bucket",
+    "id",
+    "policy",
+    "region"
+   ],
+   "required": [
+    "bucket",
+    "policy"
+   ]
+  },
+  "aws_vpc_endpoint": {
+   "arguments": [
+    "auto_accept",
+    "id",
+    "ip_address_type",
+    "policy",
+    "private_dns_enabled",
+    "region",
+    "resource_configuration_arn",
+    "route_table_ids",
+    "security_group_ids",
+    "service_name",
+    "service_network_arn",
+    "service_region",
+    "subnet_ids",
+    "tags",
+    "tags_all",
+    "vpc_endpoint_type",
+    "vpc_id"
+   ],
+   "required": [
+    "vpc_id"
+   ],
+   "blocks": {
+    "dns_options": {
+     "arguments": [
+      "dns_record_ip_type",
+      "private_dns_only_for_inbound_resolver_endpoint",
+      "private_dns_preference",
+      "private_dns_specified_domains"
+     ]
+    },
+    "subnet_configuration": {
+     "arguments": [
+      "ipv4",
+      "ipv6",
+      "subnet_id"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete",
+      "update"
+     ]
+    }
+   }
+  },
+  "aws_kms_key": {
+   "arguments": [
+    "bypass_policy_lockout_safety_check",
+    "custom_key_store_id",
+    "customer_master_key_spec",
+    "deletion_window_in_days",
+    "description",
+    "enable_key_rotation",
+    "id",
+    "is_enabled",
+    "key_usage",
+    "multi_region",
+    "policy",
+    "region",
+    "rotation_period_in_days",
+    "tags",
+    "tags_all",
+    "xks_key_id"
+   ],
+   "blocks": {
+    "timeouts": {
+     "arguments": [
+      "create"
+     ]
+    }
+   }
+  },
+  "aws_kms_alias": {
+   "arguments": [
+    "id",
+    "name",
+    "name_prefix",
+    "region",
+    "target_key_id"
+   ],
+   "required": [
+    "target_key_id"
+   ]
+  },
+  "aws_secretsmanager_secret": {
+   "arguments": [
+    "description",
+    "force_overwrite_replica_secret",
+    "id",
+    "kms_key_id",
+    "name",
+    "name_prefix",
+    "policy",
+    "recovery_window_in_days",
+    "region",
+    "tags",
+    "tags_all",
+    "type"
+   ],
+   "blocks": {
+    "replica": {
+     "arguments": [
+      "kms_key_id",
+      "region"
+     ],
+     "required": [
+      "region"
+     ]
+    }
+   }
+  },
+  "aws_secretsmanager_secret_version": {
+   "arguments": [
+    "id",
+    "region",
+    "secret_binary",
+    "secret_id",
+    "secret_string",
+    "secret_string_wo",
+    "secret_string_wo_version",
+    "version_stages"
+   ],
+   "required": [
+    "secret_id"
+   ]
+  },
+  "aws_cloudwatch_log_group": {
+   "arguments": [
+    "deletion_protection_enabled",
+    "id",
+    "kms_key_id",
+    "log_group_class",
+    "name",
+    "name_prefix",
+    "region",
+    "retention_in_days",
+    "skip_destroy",
+    "tags",
+    "tags_all"
+   ]
+  },
+  "aws_cloudwatch_metric_alarm": {
+   "arguments": [
+    "actions_enabled",
+    "alarm_actions",
+    "alarm_description",
+    "alarm_name",
+    "comparison_operator",
+    "datapoints_to_alarm",
+    "dimensions",
+    "evaluate_low_sample_count_percentiles",
+    "evaluation_interval",
+    "evaluation_periods",
+    "extended_statistic",
+    "id",
+    "insufficient_data_actions",
+    "metric_name",
+    "namespace",
+    "ok_actions",
+    "period",
+    "region",
+    "statistic",
+    "tags",
+    "tags_all",
+    "threshold",
+    "threshold_metric_id",
+    "treat_missing_data",
+    "unit"
+   ],
+   "required": [
+    "alarm_name"
+   ],
+   "blocks": {
+    "evaluation_criteria": {
+     "arguments": [],
+     "blocks": {
+      "promql_criteria": {
+       "arguments": [
+        "pending_period",
+        "query",
+        "recovery_period"
+       ],
+       "required": [
+        "query"
+       ]
+      }
+     }
+    },
+    "evaluation_window": {
+     "arguments": [],
+     "blocks": {
+      "wall_clock_window": {
+       "arguments": [
+        "timezone"
+       ]
+      }
+     }
+    },
+    "metric_query": {
+     "arguments": [
+      "account_id",
+      "expression",
+      "id",
+      "label",
+      "period",
+      "return_data"
+     ],
+     "required": [
+      "id"
+     ],
+     "blocks": {
+      "metric": {
+       "arguments": [
+        "dimensions",
+        "metric_name",
+        "namespace",
+        "period",
+        "stat",
+        "unit"
+       ],
+       "required": [
+        "metric_name",
+        "period",
+        "stat"
+       ]
+      }
+     }
+    },
+    "warm_up_configuration": {
+     "arguments": [
+      "only_start_evaluating_after_warm_up_period_ends",
+      "warm_up_period_duration_in_minutes"
+     ],
+     "required": [
+      "warm_up_period_duration_in_minutes"
+     ]
+    }
+   }
+  },
+  "aws_sns_topic": {
+   "arguments": [
+    "application_failure_feedback_role_arn",
+    "application_success_feedback_role_arn",
+    "application_success_feedback_sample_rate",
+    "archive_policy",
+    "content_based_deduplication",
+    "delivery_policy",
+    "display_name",
+    "fifo_throughput_scope",
+    "fifo_topic",
+    "firehose_failure_feedback_role_arn",
+    "firehose_success_feedback_role_arn",
+    "firehose_success_feedback_sample_rate",
+    "http_failure_feedback_role_arn",
+    "http_success_feedback_role_arn",
+    "http_success_feedback_sample_rate",
+    "id",
+    "kms_master_key_id",
+    "lambda_failure_feedback_role_arn",
+    "lambda_success_feedback_role_arn",
+    "lambda_success_feedback_sample_rate",
+    "maximum_message_size",
+    "name",
+    "name_prefix",
+    "policy",
+    "region",
+    "signature_version",
+    "sqs_failure_feedback_role_arn",
+    "sqs_success_feedback_role_arn",
+    "sqs_success_feedback_sample_rate",
+    "tags",
+    "tags_all",
+    "tracing_config"
+   ]
+  },
+  "aws_backup_vault": {
+   "arguments": [
+    "force_destroy",
+    "id",
+    "kms_key_arn",
+    "name",
+    "region",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "name"
+   ],
+   "blocks": {
+    "timeouts": {
+     "arguments": [
+      "delete"
+     ]
+    }
+   }
+  },
+  "aws_backup_plan": {
+   "arguments": [
+    "id",
+    "name",
+    "region",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "name"
+   ],
+   "blocks": {
+    "advanced_backup_setting": {
+     "arguments": [
+      "backup_options",
+      "resource_type"
+     ],
+     "required": [
+      "backup_options",
+      "resource_type"
+     ]
+    },
+    "rule": {
+     "arguments": [
+      "completion_window",
+      "enable_continuous_backup",
+      "recovery_point_tags",
+      "rule_name",
+      "schedule",
+      "schedule_expression_timezone",
+      "start_window",
+      "target_logically_air_gapped_backup_vault_arn",
+      "target_vault_name"
+     ],
+     "required": [
+      "rule_name",
+      "target_vault_name"
+     ],
+     "blocks": {
+      "copy_action": {
+       "arguments": [
+        "destination_vault_arn"
+       ],
+       "required": [
+        "destination_vault_arn"
+       ],
+       "blocks": {
+        "lifecycle": {
+         "arguments": [
+          "cold_storage_after",
+          "delete_after",
+          "opt_in_to_archive_for_supported_resources"
+         ]
+        }
+       }
+      },
+      "lifecycle": {
+       "arguments": [
+        "cold_storage_after",
+        "delete_after",
+        "opt_in_to_archive_for_supported_resources"
+       ]
+      },
+      "scan_action": {
+       "arguments": [
+        "malware_scanner",
+        "scan_mode"
+       ],
+       "required": [
+        "malware_scanner",
+        "scan_mode"
+       ]
+      }
+     }
+    },
+    "scan_setting": {
+     "arguments": [
+      "malware_scanner",
+      "resource_types",
+      "scanner_role_arn"
+     ],
+     "required": [
+      "malware_scanner",
+      "resource_types",
+      "scanner_role_arn"
+     ]
+    }
+   }
+  },
+  "aws_backup_selection": {
+   "arguments": [
+    "iam_role_arn",
+    "id",
+    "name",
+    "not_resources",
+    "plan_id",
+    "region",
+    "resources"
+   ],
+   "required": [
+    "iam_role_arn",
+    "name",
+    "plan_id"
+   ],
+   "blocks": {
+    "condition": {
+     "arguments": [],
+     "blocks": {
+      "string_equals": {
+       "arguments": [
+        "key",
+        "value"
+       ],
+       "required": [
+        "key",
+        "value"
+       ]
+      },
+      "string_like": {
+       "arguments": [
+        "key",
+        "value"
+       ],
+       "required": [
+        "key",
+        "value"
+       ]
+      },
+      "string_not_equals": {
+       "arguments": [
+        "key",
+        "value"
+       ],
+       "required": [
+        "key",
+        "value"
+       ]
+      },
+      "string_not_like": {
+       "arguments": [
+        "key",
+        "value"
+       ],
+       "required": [
+        "key",
+        "value"
+       ]
+      }
+     }
+    },
+    "selection_tag": {
+     "arguments": [
+      "key",
+      "type",
+      "value"
+     ],
+     "required": [
+      "key",
+      "type",
+      "value"
+     ]
+    }
+   }
+  },
+  "aws_db_option_group": {
+   "arguments": [
+    "engine_name",
+    "id",
+    "major_engine_version",
+    "name",
+    "name_prefix",
+    "option_group_description",
+    "region",
+    "skip_destroy",
+    "tags",
+    "tags_all"
+   ],
+   "required": [
+    "engine_name",
+    "major_engine_version"
+   ],
+   "blocks": {
+    "option": {
+     "arguments": [
+      "db_security_group_memberships",
+      "option_name",
+      "port",
+      "version",
+      "vpc_security_group_memberships"
+     ],
+     "required": [
+      "option_name"
+     ],
+     "blocks": {
+      "option_settings": {
+       "arguments": [
+        "name",
+        "value"
+       ],
+       "required": [
+        "name",
+        "value"
+       ]
+      }
+     }
+    },
+    "timeouts": {
+     "arguments": [
+      "delete"
+     ]
+    }
+   }
+  },
+  "aws_elasticache_cluster": {
+   "arguments": [
+    "apply_immediately",
+    "auto_minor_version_upgrade",
+    "availability_zone",
+    "az_mode",
+    "cluster_id",
+    "engine",
+    "engine_version",
+    "final_snapshot_identifier",
+    "id",
+    "ip_discovery",
+    "maintenance_window",
+    "network_type",
+    "node_type",
+    "notification_topic_arn",
+    "num_cache_nodes",
+    "outpost_mode",
+    "parameter_group_name",
+    "port",
+    "preferred_availability_zones",
+    "preferred_outpost_arn",
+    "region",
+    "replication_group_id",
+    "security_group_ids",
+    "snapshot_arns",
+    "snapshot_name",
+    "snapshot_retention_limit",
+    "snapshot_window",
+    "subnet_group_name",
+    "tags",
+    "tags_all",
+    "transit_encryption_enabled"
+   ],
+   "required": [
+    "cluster_id"
+   ],
+   "blocks": {
+    "log_delivery_configuration": {
+     "arguments": [
+      "destination",
+      "destination_type",
+      "log_format",
+      "log_type"
+     ],
+     "required": [
+      "destination",
+      "destination_type",
+      "log_format",
+      "log_type"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete",
+      "update"
+     ]
+    }
+   }
+  },
+  "aws_lb": {
+   "arguments": [
+    "client_keep_alive",
+    "customer_owned_ipv4_pool",
+    "desync_mitigation_mode",
+    "dns_record_client_routing_policy",
+    "drop_invalid_header_fields",
+    "enable_cross_zone_load_balancing",
+    "enable_deletion_protection",
+    "enable_http2",
+    "enable_prefix_for_ipv6_source_nat",
+    "enable_tls_version_and_cipher_suite_headers",
+    "enable_waf_fail_open",
+    "enable_xff_client_port",
+    "enable_zonal_shift",
+    "enforce_security_group_inbound_rules_on_private_link_traffic",
+    "id",
+    "idle_timeout",
+    "internal",
+    "ip_address_type",
+    "load_balancer_type",
+    "name",
+    "name_prefix",
+    "preserve_host_header",
+    "region",
+    "secondary_ips_auto_assigned_per_subnet",
+    "security_groups",
+    "subnets",
+    "tags",
+    "tags_all",
+    "xff_header_processing_mode"
+   ],
+   "blocks": {
+    "access_logs": {
+     "arguments": [
+      "bucket",
+      "enabled",
+      "prefix"
+     ],
+     "required": [
+      "bucket"
+     ]
+    },
+    "connection_logs": {
+     "arguments": [
+      "bucket",
+      "enabled",
+      "prefix"
+     ],
+     "required": [
+      "bucket"
+     ]
+    },
+    "health_check_logs": {
+     "arguments": [
+      "bucket",
+      "enabled",
+      "prefix"
+     ],
+     "required": [
+      "bucket"
+     ]
+    },
+    "ipam_pools": {
+     "arguments": [
+      "ipv4_ipam_pool_id"
+     ],
+     "required": [
+      "ipv4_ipam_pool_id"
+     ]
+    },
+    "minimum_load_balancer_capacity": {
+     "arguments": [
+      "capacity_units"
+     ],
+     "required": [
+      "capacity_units"
+     ]
+    },
+    "subnet_mapping": {
+     "arguments": [
+      "allocation_id",
+      "ipv6_address",
+      "private_ipv4_address",
+      "subnet_id"
+     ],
+     "required": [
+      "subnet_id"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "create",
+      "delete",
+      "update"
+     ]
+    }
+   }
+  },
+  "aws_acm_certificate": {
+   "arguments": [
+    "certificate_authority_arn",
+    "certificate_body",
+    "certificate_chain",
+    "domain_name",
+    "early_renewal_duration",
+    "id",
+    "key_algorithm",
+    "private_key",
+    "private_key_wo",
+    "private_key_wo_version",
+    "region",
+    "subject_alternative_names",
+    "tags",
+    "tags_all",
+    "validation_method"
+   ],
+   "blocks": {
+    "options": {
+     "arguments": [
+      "certificate_transparency_logging_preference",
+      "export"
+     ]
+    },
+    "validation_option": {
+     "arguments": [
+      "domain_name",
+      "validation_domain"
+     ],
+     "required": [
+      "domain_name",
+      "validation_domain"
+     ]
+    }
+   }
+  }
+ },
+ "data_sources": {
+  "aws_availability_zones": {
+   "arguments": [
+    "all_availability_zones",
+    "exclude_names",
+    "exclude_zone_ids",
+    "id",
+    "region",
+    "state"
+   ],
+   "blocks": {
+    "filter": {
+     "arguments": [
+      "name",
+      "values"
+     ],
+     "required": [
+      "name",
+      "values"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "read"
+     ]
+    }
+   }
+  },
+  "aws_iam_policy_document": {
+   "arguments": [
+    "id",
+    "override_json",
+    "override_policy_documents",
+    "policy_id",
+    "source_json",
+    "source_policy_documents",
+    "version"
+   ],
+   "blocks": {
+    "statement": {
+     "arguments": [
+      "actions",
+      "effect",
+      "not_actions",
+      "not_resources",
+      "resources",
+      "sid"
+     ],
+     "blocks": {
+      "condition": {
+       "arguments": [
+        "test",
+        "values",
+        "variable"
+       ],
+       "required": [
+        "test",
+        "values",
+        "variable"
+       ]
+      },
+      "not_principals": {
+       "arguments": [
+        "identifiers",
+        "type"
+       ],
+       "required": [
+        "identifiers",
+        "type"
+       ]
+      },
+      "principals": {
+       "arguments": [
+        "identifiers",
+        "type"
+       ],
+       "required": [
+        "identifiers",
+        "type"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "aws_caller_identity": {
+   "arguments": [
+    "id"
+   ]
+  },
+  "aws_region": {
+   "arguments": [
+    "endpoint",
+    "id",
+    "name",
+    "region"
+   ]
+  },
+  "aws_partition": {
+   "arguments": [
+    "id"
+   ]
+  },
+  "aws_eks_cluster": {
+   "arguments": [
+    "id",
+    "name",
+    "region",
+    "tags"
+   ],
+   "required": [
+    "name"
+   ]
+  },
+  "aws_eks_cluster_auth": {
+   "arguments": [
+    "id",
+    "name",
+    "region"
+   ],
+   "required": [
+    "name"
+   ]
+  },
+  "aws_ami": {
+   "arguments": [
+    "allow_unsafe_filter",
+    "executable_users",
+    "id",
+    "include_deprecated",
+    "most_recent",
+    "name_regex",
+    "owners",
+    "region",
+    "tags",
+    "uefi_data"
+   ],
+   "blocks": {
+    "filter": {
+     "arguments": [
+      "name",
+      "values"
+     ],
+     "required": [
+      "name",
+      "values"
+     ]
+    },
+    "timeouts": {
+     "arguments": [
+      "read"
+     ]
+    }
+   }
+  },
+  "aws_ssm_parameter": {
+   "arguments": [
+    "id",
+    "name",
+    "region",
+    "with_decryption"
+   ],
+   "required": [
+    "name"
+   ]
+  }
+ }
+}
